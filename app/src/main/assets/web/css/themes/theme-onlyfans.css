@@ -1,0 +1,29 @@
+/* ==========================================================================
+   TEMA 2: ONLYFANS / FANSLY STYLE
+   ========================================================================== */
+body[data-theme="onlyfans"] {
+    --bg-main: #0a111a;
+    --bg-surface: #101c2c;
+    --bg-card: #152438;
+    --bg-card-hover: #1c304a;
+    --bg-header: rgba(10, 17, 26, 0.95);
+    
+    --primary: #00aff0;
+    --primary-hover: #33bfff;
+    --primary-glow: rgba(0, 175, 240, 0.4);
+    
+    --text-main: #e8f3fb;
+    --text-muted: #7e9bb6;
+    --text-dim: #4d6880;
+    
+    --border-color: #1c304a;
+    --border-highlight: #284469;
+}
+
+body[data-theme="onlyfans"] .site-header { border-bottom: 1px solid #1c304a; }
+body[data-theme="onlyfans"] .logo-text { color: #ffffff; }
+body[data-theme="onlyfans"] .logo-badge { background: #00aff0; color: #ffffff; box-shadow: 0 0 10px rgba(0, 175, 240, 0.5); }
+body[data-theme="onlyfans"] .search-btn { background: #00aff0; color: #ffffff; }
+body[data-theme="onlyfans"] .category-pill.active { background: #00aff0; color: #ffffff; }
+body[data-theme="onlyfans"] .video-card { border-radius: 12px; border: 1px solid #1c304a; }
+body[data-theme="onlyfans"] .quality-badge { background: #00aff0; color: #ffffff; }

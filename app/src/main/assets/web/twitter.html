@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <base href="https://appassets.androidplatform.net/assets/web/">
+    <meta name="referrer" content="no-referrer">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>X (Twitter) Timeline - All18</title>
+    <meta name="description" content="Timeline oficial estilo X / Twitter con feed en tiempo real de creadores y videos exclusivos All18">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Main Style & Theme -->
+    <link rel="stylesheet" href="css/style.css?v=9.0">
+    <link rel="stylesheet" href="css/themes/theme-twitter.css?v=9.0">
+</head>
+<body data-theme="twitter" class="twitter-standalone-body">
+
+    <!-- Top Header Bar (1:1 X Mobile & Web Replication) -->
+    <header class="x-site-header">
+        <div class="x-header-top">
+            <!-- Left: User Avatar -->
+            <button class="x-header-avatar-btn" type="button" onclick="window.openProfileModal && window.openProfileModal()" title="Perfil">
+                <img id="xUserAvatar" class="x-header-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" alt="avatar" />
+            </button>
+            
+            <!-- Center: X Logo -->
+            <a href="twitter.html" class="x-header-logo-link" title="X Timeline">
+                <svg class="x-logo-svg" viewBox="0 0 24 24" width="24" height="24" fill="#ffffff">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+            </a>
+
+            <!-- Right: Suscribirse & Theme/Settings -->
+            <div class="x-header-actions">
+                <button class="x-btn-subscribe" type="button" onclick="window.openPublishModal && window.openPublishModal()">
+                    Suscribirse
+                </button>
+                <button class="x-btn-settings" type="button" title="Configuración y Temas" onclick="window.openThemeModal(event)">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs ("Para ti" | "Siguiendo" | "Virgin NSFW 18+") -->
+        <nav class="x-tabs-bar">
+            <button class="x-tab-btn active" type="button" onclick="window.switchXTab('foryou', this)">
+                <span>Para ti</span>
+            </button>
+            <button class="x-tab-btn" type="button" onclick="window.switchXTab('following', this)">
+                <span>Siguiendo</span>
+            </button>
+            <button class="x-tab-btn" type="button" onclick="window.switchXTab('nsfw', this)">
+                <span>Virgin NSFW (18+)</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Spaces Live Audio Pill Banner -->
+    <div class="x-spaces-banner-wrapper">
+        <div class="x-spaces-pill">
+            <div class="x-spaces-avatar-mini">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=40" alt="live" />
+                <span class="x-spaces-dot"></span>
+            </div>
+            <span class="x-spaces-title"><strong>@All18Exclusive</strong> está hablando</span>
+            <div class="x-spaces-wave">
+                <span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Main Wrapper -->
+    <div class="main-wrapper">
+        <main class="main-content x-timeline-container">
+            <div id="mediaGrid" class="media-grid"></div>
+            
+            <div class="pagination-wrapper" style="text-align: center; padding: 24px 16px 80px 16px;">
+                <button id="btnLoadMore" class="x-btn-load-more" type="button" onclick="window.loadMoreVideos && window.loadMoreVideos()">
+                    Cargar más posts
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Tweet / Compose Action Button (Blue Feather Quill) -->
+    <button class="x-compose-fab" type="button" onclick="window.openPublishModal && window.openPublishModal()" title="Postear">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="#ffffff">
+            <path d="M23 3c-6.62-.1-10.38 2.41-13.05 6.08C7.29 12.65 6 17.15 6 22h2c0-4.32 1.15-8.31 3.52-11.56C13.85 7.23 17.03 5.09 23 5V3zM3 13h2v7h7v2H3v-9z"/>
+        </svg>
+    </button>
+
+    <!-- X Bottom Navigation Bar (1:1 Mobile App) -->
+    <nav class="x-bottom-nav">
+        <!-- Home -->
+        <a href="twitter.html" class="x-nav-item active" title="Inicio">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+        </a>
+
+        <!-- Search / Explore -->
+        <button class="x-nav-item" type="button" onclick="window.toggleSearchModal && window.toggleSearchModal()" title="Buscar">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.79 0 3.42-.73 4.6-1.9l4.45 4.45 1.41-1.41-4.45-4.45c1.17-1.18 1.9-2.81 1.9-4.6 0-3.59-2.91-6.5-6.5-6.5zm-4.5 6.5c0-2.48 2.02-4.5 4.5-4.5s4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5-4.5-2.02-4.5-4.5z"/>
+            </svg>
+        </button>
+
+        <!-- Grok / Shorts (Links to TikTok vertical player) -->
+        <a href="tiktok.html" class="x-nav-item" title="Shorts / Grok">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"/>
+            </svg>
+        </a>
+
+        <!-- Notifications -->
+        <button class="x-nav-item" type="button" onclick="window.showToast && window.showToast('🔔 No tienes notificaciones nuevas')" title="Notificaciones">
+            <div class="x-nav-icon-wrap">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M21.697 16.468c-.02-.016-.793-.536-1.697-.842V10c0-4.411-3.589-8-8-8s-8 3.589-8 8v5.626c-.904.306-1.677.826-1.697.842a.997.997 0 0 0-.303.719V19c0 .552.448 1 1 1h4.101a4.004 4.004 0 0 0 7.798 0H21c.552 0 1-.448 1-1v-1.813a.997.997 0 0 0-.303-.719zM12 21.9a2.003 2.003 0 0 1-1.9-1.4h3.8a2.003 2.003 0 0 1-1.9 1.4zm7.9-3.9H4.1V16.7c1.38-.63 2.9-1.47 2.9-6.7 0-3.31 2.69-6 6-6s6 2.69 6 6c0 5.23 1.52 6.07 2.9 6.7v1.3z"/>
+                </svg>
+                <span class="x-nav-badge">1</span>
+            </div>
+        </button>
+
+        <!-- Messages -->
+        <button class="x-nav-item" type="button" onclick="window.showToast && window.showToast('✉️ Bandeja de mensajes vacía')" title="Mensajes">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M1.998 5.5v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-13c0-1.1-.9-2-2-2h-16c-1.1 0-2 .9-2 2zm18 0l-8 5-8-5h16zm-16 2.236l8 5 8-5V18.5h-16V7.736z"/>
+            </svg>
+        </button>
+    </nav>
+
+    
+    <!-- Dedicated 1:1 Fullscreen X Media Viewer Modal (Captura) -->
+    <div id="xMediaModal" class="x-media-lightbox" style="display: none;">
+        <!-- Top Bar -->
+        <div class="x-lightbox-topbar">
+            <button class="x-lightbox-close-btn" type="button" onclick="window.closeXMediaModal()" title="Cerrar">
+                ✕
+            </button>
+            <button class="x-lightbox-more-btn" type="button" title="Más opciones" onclick="window.showToast && window.showToast('Más opciones')">
+                ···
+            </button>
+        </div>
+
+        <!-- Center Media Container -->
+        <div class="x-lightbox-media-container" id="xLightboxMedia">
+            <!-- Dynamic <img> or <video> injected here -->
+        </div>
+
+        <!-- Bottom Action Bar (1:1 Captura) -->
+        <div class="x-lightbox-bottom-bar" id="xLightboxActions">
+            <button class="x-lightbox-action-item" type="button" id="xLbReplyBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-1.602.89 1.002 3.43c.18.61-.41 1.15-.99.91l-4.75-2.02-1.96.18c-.66.06-1.32.09-1.98.09-4.421 0-8.004-3.58-8.004-8.02zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.744 6.02 6.085 6.02.69 0 1.38-.03 2.08-.1l.6-.05 3.39 1.44-.69-2.36.27-.15c2.15-1.19 3.49-3.46 3.49-5.93 0-3.38-2.75-6.13-6.13-6.13H9.756z"/></svg>
+                <span id="xLbReplyCount">205</span>
+            </button>
+            <button class="x-lightbox-action-item" type="button" id="xLbRepostBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.9 2 2 2H16v2H7.5c-2.21 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 20.12l-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.9-2-2-2H8V4h8.5c2.21 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14z"/></svg>
+                <span id="xLbRepostCount">306</span>
+            </button>
+            <button class="x-lightbox-action-item" type="button" id="xLbLikeBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.807 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-2.427.12-4.504 2.21-4.298 5.05.318 4.39 6.816 9.45 8.994 10.95.54.37 1.27.37 1.81 0 2.18-1.5 8.68-6.56 8.99-10.95.21-2.84-1.87-4.93-4.3-5.05zm-4.697 14.5c-2.42-1.72-8.08-6.17-8.3-9.52-.16-2.22 1.44-3.79 3.32-3.88.94-.05 2.13.43 3.08 1.71l1.9 2.57 1.9-2.57c.95-1.28 2.14-1.76 3.08-1.71 1.88.09 3.48 1.66 3.32 3.88-.22 3.35-5.88 7.8-8.3 9.52z"/></svg>
+                <span id="xLbLikeCount">15 mil</span>
+            </button>
+            <button class="x-lightbox-action-item" type="button" id="xLbViewsBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg>
+                <span id="xLbViewsCount">142 mil</span>
+            </button>
+            <button class="x-lightbox-action-item" type="button" id="xLbShareBtn">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41L7.71 9.71 6.3 8.29 12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21.01 3 19.9 3 18.51V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5V15h2.02z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Theme Selector Modal -->
+    <div id="themeModal" class="theme-modal-backdrop" onclick="window.closeThemeModal(event)">
+        <div class="theme-modal-sheet" onclick="event.stopPropagation()">
+            <div class="theme-modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#1d9bf0"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.58 10.54 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800;">Personalizar Tema / Diseño</h3>
+                </div>
+                <button class="theme-modal-close" type="button" onclick="window.closeThemeModal(event)" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: 700;">✕</button>
+            </div>
+            <div class="theme-modal-list">
+                <button class="theme-modal-item" data-theme="pornhub" type="button" onclick="window.location.href='index.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #ff9000, #ff5500); color: #000; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">PH</div>
+                    <div class="theme-item-info">
+                        <strong>All18 Tube (Pornhub)</strong>
+                        <span>Estilo clásico negro y naranja</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <button class="theme-modal-item" data-theme="onlyfans" type="button" onclick="window.location.href='onlyfans.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #00aff0, #0080c0); color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">OF</div>
+                    <div class="theme-item-info">
+                        <strong>OnlyFans / Fansly</strong>
+                        <span>Azul marino y cian moderno</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <button class="theme-modal-item" data-theme="instagram" type="button" onclick="window.location.href='instagram.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">IG</div>
+                    <div class="theme-item-info">
+                        <strong>Instagram / Reels</strong>
+                        <span>Degradado rosa y morado</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <button class="theme-modal-item" data-theme="tiktok" type="button" onclick="window.location.href='tiktok.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #00f2fe, #fe0979); color: #000; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">TT</div>
+                    <div class="theme-item-info">
+                        <strong>TikTok / Swipe</strong>
+                        <span>Reproductor vertical y luces neón</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <button class="theme-modal-item active" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
+                    <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
+                    <div class="theme-item-info">
+                        <strong>X / Twitter Timeline</strong>
+                        <span>Feed cronológico negro puro</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publish Modal -->
+    <div id="publishModal" class="modal-overlay">
+        <div class="modal-content publish-modal-box">
+            <button class="modal-close" type="button" onclick="window.closePublishModal && window.closePublishModal()">&times;</button>
+            <div class="publish-header">
+                <h2>🚀 Publicar en X Timeline</h2>
+                <p>Comparte contenido exclusivo con la comunidad All18</p>
+            </div>
+            <form id="publishForm" class="publish-form">
+                <div class="form-group">
+                    <label class="form-label">Texto del Post</label>
+                    <textarea id="publishTitle" class="form-input" rows="3" placeholder="¿Qué está pasando?" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL del Video (MP4 o RedGifs / Iframe)</label>
+                    <input type="url" id="publishUrl" class="form-input" placeholder="https://..." required>
+                </div>
+                <button type="submit" id="btnSubmitPublish" class="btn-submit-publish" style="background: #1d9bf0;">
+                    <span>✍</span> Postear Ahora
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=9.0"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.applyTheme === 'function') {
+                window.applyTheme('twitter', false);
+            }
+            if (typeof window.loadVideos === 'function') {
+                window.loadVideos(1, true);
+            }
+            
+            // Sync user avatar on header
+            try {
+                const saved = localStorage.getItem('all18_user_profile');
+                if (saved) {
+                    const p = JSON.parse(saved);
+                    const el = document.getElementById('xUserAvatar');
+                    if (el && p.photoURL) el.src = p.photoURL;
+                }
+            } catch(e) {}
+        });
+
+        window.switchXTab = function(tabName, btnEl) {
+            document.querySelectorAll('.x-tab-btn').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            if (tabName === 'foryou') {
+                window.state.source = 'all';
+                window.loadVideos(1, true);
+            } else if (tabName === 'following') {
+                window.state.source = 'user_posts';
+                window.loadVideos(1, true);
+            } else if (tabName === 'nsfw') {
+                window.state.source = 'redgifs';
+                window.state.query = 'amateur';
+                window.loadVideos(1, true);
+            }
+        };
+    </script>
+</body>
+</html>

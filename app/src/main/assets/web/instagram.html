@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <base href="https://appassets.androidplatform.net/assets/web/">
+    <meta name="referrer" content="no-referrer">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Instagram - All18</title>
+    <meta name="description" content="Feed oficial estilo Instagram con historias, reels, fotos y creadores exclusivos All18">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Main Style & Theme -->
+    <link rel="stylesheet" href="css/style.css?v=9.0">
+    <link rel="stylesheet" href="css/themes/theme-instagram.css?v=9.0">
+</head>
+<body data-theme="instagram" class="instagram-standalone-body">
+
+    <!-- Top Header Bar (1:1 Instagram Mobile App) -->
+    <header class="ig-site-header">
+        <div class="ig-header-row">
+            <!-- Left: Create (+) -->
+            <button class="ig-header-icon-btn" type="button" onclick="window.openPublishModal && window.openPublishModal()" title="Crear publicación">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            
+            <!-- Center: Instagram Script Logo -->
+            <a href="instagram.html" class="ig-logo-link" title="Instagram">
+                <span class="ig-script-logo">Instagram</span>
+            </a>
+
+            <!-- Right: Notifications (Heart with red badge) & Theme Selector -->
+            <div class="ig-header-right">
+                <button class="ig-header-icon-btn" type="button" onclick="window.showToast && window.showToast('❤️ No tienes notificaciones nuevas')" title="Notificaciones">
+                    <div class="ig-heart-wrap">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span class="ig-notif-dot"></span>
+                    </div>
+                </button>
+                <button class="ig-header-icon-btn" type="button" onclick="window.openThemeModal(event)" title="Temas y Estilos">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Instagram Stories Bar (Captura 3) -->
+    <div class="ig-stories-wrapper">
+        <div class="ig-stories-container" id="igStoriesContainer">
+            <!-- Your Story -->
+            <div class="ig-story-item" onclick="window.openPublishModal && window.openPublishModal()">
+                <div class="ig-story-avatar-wrap your-story">
+                    <img id="igYourStoryImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Tu historia" />
+                    <span class="ig-story-plus">+</span>
+                </div>
+                <span class="ig-story-username">Tu historia</span>
+            </div>
+
+            <!-- Creator Stories with Gradient Rings -->
+            <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
+                <div class="ig-story-avatar-wrap has-story">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" alt="v4mpier.zabbi" />
+                </div>
+                <span class="ig-story-username">v4mpier.zabbi</span>
+            </div>
+
+            <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
+                <div class="ig-story-avatar-wrap has-story">
+                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80" alt="_valeriesss" />
+                </div>
+                <span class="ig-story-username">_valeriesss</span>
+            </div>
+
+            <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
+                <div class="ig-story-avatar-wrap has-story">
+                    <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&auto=format&fit=crop&q=80" alt="vmore.tti" />
+                </div>
+                <span class="ig-story-username">vmore.tti</span>
+            </div>
+
+            <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
+                <div class="ig-story-avatar-wrap has-story">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="leomessi" />
+                </div>
+                <span class="ig-story-username">leomessi</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Feed Wrapper -->
+    <div class="main-wrapper">
+        <main class="main-content ig-feed-container">
+            <div id="mediaGrid" class="media-grid ig-media-grid"></div>
+
+            <!-- Interstitial: Sugerencias para ti (Captura 1 y 2) -->
+            <div class="ig-suggestions-box">
+                <div class="ig-suggestions-header">
+                    <span>Sugerencias para ti</span>
+                    <button class="ig-see-all-btn" type="button" onclick="window.showToast && window.showToast('✨ Explorando creadores destacados')">Ver todo</button>
+                </div>
+                <div class="ig-suggestions-carousel">
+                    <!-- Suggestion 1 -->
+                    <div class="ig-sug-card">
+                        <button class="ig-sug-close" type="button" onclick="this.parentElement.remove()">✕</button>
+                        <div class="ig-sug-avatar">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" alt="Bren" />
+                        </div>
+                        <strong class="ig-sug-name">Bren ♫</strong>
+                        <span class="ig-sug-mutual">1 seguidor en común</span>
+                        <button class="ig-sug-follow-btn" type="button" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
+                    </div>
+
+                    <!-- Suggestion 2 -->
+                    <div class="ig-sug-card">
+                        <button class="ig-sug-close" type="button" onclick="this.parentElement.remove()">✕</button>
+                        <div class="ig-sug-avatar">
+                            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120" alt="K17M" />
+                        </div>
+                        <strong class="ig-sug-name">♛K¹⁷M♛</strong>
+                        <span class="ig-sug-mutual">1 seguidor en común</span>
+                        <button class="ig-sug-follow-btn" type="button" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
+                    </div>
+
+                    <!-- Suggestion 3 -->
+                    <div class="ig-sug-card">
+                        <button class="ig-sug-close" type="button" onclick="this.parentElement.remove()">✕</button>
+                        <div class="ig-sug-avatar">
+                            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120" alt="Juice" />
+                        </div>
+                        <strong class="ig-sug-name">🧃 juice</strong>
+                        <span class="ig-sug-mutual">1 seguidor en común</span>
+                        <button class="ig-sug-follow-btn" type="button" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination-wrapper" style="text-align: center; padding: 24px 16px 80px 16px;">
+                <button id="btnLoadMore" class="ig-btn-load-more" type="button" onclick="window.loadMoreVideos && window.loadMoreVideos()">
+                    Cargar más publicaciones
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Instagram Profile Modal (1:1 Captura 1) -->
+    <div id="igProfileModal" class="ig-profile-modal" onclick="window.closeProfileModal(event)">
+        <div class="ig-profile-sheet" onclick="event.stopPropagation()">
+            <!-- Top Bar -->
+            <div class="ig-prof-topbar">
+                <button class="ig-prof-top-icon" type="button" onclick="window.openPublishModal && window.openPublishModal()">+</button>
+                <div class="ig-prof-title-dropdown">
+                    <span id="igModalUsername">brunodiaz2944</span>
+                    <span class="ig-prof-arrow">⌵</span>
+                </div>
+                <div class="ig-prof-top-actions">
+                    <button class="ig-prof-top-icon" type="button" onclick="window.showToast && window.showToast('Threads conectado')">@</button>
+                    <button class="ig-prof-top-icon" type="button" onclick="window.closeProfileModal()">✕</button>
+                </div>
+            </div>
+
+            <!-- Profile Info & Stats -->
+            <div class="ig-prof-info-row">
+                <div class="ig-prof-avatar-box">
+                    <div class="ig-thought-bubble">Pregunta lo que quieras...</div>
+                    <img id="igProfAvatarImg" class="ig-prof-avatar-circle" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" alt="Avatar" />
+                    <span class="ig-prof-story-add">+</span>
+                </div>
+                <div class="ig-prof-stats-box">
+                    <div class="ig-stat-col">
+                        <strong id="igProfPostCount">1</strong>
+                        <span>publicación</span>
+                    </div>
+                    <div class="ig-stat-col">
+                        <strong>865</strong>
+                        <span>seguidores</span>
+                    </div>
+                    <div class="ig-stat-col">
+                        <strong>486</strong>
+                        <span>seguidos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="ig-prof-bio-box">
+                <strong id="igProfDisplayName" class="ig-prof-display-name">Bruno</strong> <span class="ig-prof-pronoun">die</span>
+                <div class="ig-prof-music-tag">
+                    <span>▷ hold me in your arms Blood Nose</span>
+                    <button type="button" class="ig-music-add">+ Agregar</button>
+                </div>
+            </div>
+
+            <!-- Professional Dashboard Box -->
+            <div class="ig-prof-panel-box">
+                <strong>Tu panel</strong>
+                <span>2 visualizaciones en los últimos 30 días.</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="ig-prof-btn-row">
+                <button class="ig-prof-btn" type="button" onclick="window.loginWithGoogle && window.loginWithGoogle()">Editar / Iniciar sesión</button>
+                <button class="ig-prof-btn" type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(window.location.href); window.showToast('🔗 Perfil copiado');">Compartir perfil</button>
+                <button class="ig-prof-btn-icon" type="button" title="Descubrir personas">+👤</button>
+            </div>
+
+            <!-- Profile Tabs: Grid / Tagged -->
+            <div class="ig-prof-tabs">
+                <button class="ig-prof-tab active" type="button">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 3h7v7H3zm11 0h7v7h-7zm-11 11h7v7H3zm11 0h7v7h-7z"/></svg>
+                </button>
+                <button class="ig-prof-tab" type="button">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </button>
+            </div>
+
+            <!-- User Uploaded Posts Grid -->
+            <div class="ig-prof-posts-grid" id="igProfPostsGrid">
+                <div class="ig-prof-grid-item">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" alt="post" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instagram Bottom Navigation Bar (1:1 Captura 1, 2, 3) -->
+    <nav class="ig-bottom-nav">
+        <!-- Home -->
+        <a href="instagram.html" class="ig-nav-btn active" title="Inicio">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+        </a>
+
+        <!-- Reels (Links to vertical shorts TikTok) -->
+        <a href="tiktok.html" class="ig-nav-btn" title="Reels">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+        </a>
+
+        <!-- Direct Messages / DMs -->
+        <a href="twitter.html" class="ig-nav-btn" title="Mensajes">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </a>
+
+        <!-- Search -->
+        <button class="ig-nav-btn" type="button" onclick="window.toggleSearchModal && window.toggleSearchModal()" title="Buscar">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        </button>
+
+        <!-- Profile Avatar Circle -->
+        <button class="ig-nav-btn ig-nav-profile-btn" type="button" onclick="window.openProfileModal()" title="Perfil">
+            <img id="igNavAvatar" class="ig-nav-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" alt="perfil" />
+        </button>
+    </nav>
+
+    
+    <!-- Dedicated 1:1 Fullscreen Instagram Reels / Player Viewer Modal (Capturas 1 & 2) -->
+    <div id="igMediaModal" class="ig-media-lightbox" style="display: none;">
+        <!-- Top Bar -->
+        <div class="ig-lightbox-topbar">
+            <div class="ig-lb-top-left">
+                <button class="ig-lightbox-close-btn" type="button" onclick="window.closeIgMediaModal()" title="Cerrar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <h2 class="ig-lb-title">Reels</h2>
+            </div>
+            <div class="ig-lb-top-amigos" onclick="window.showToast && window.showToast('👥 Viendo Reels con amigos')">
+                <span>Amigos</span>
+                <div class="ig-lb-friends-avatars">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50" alt="amigo1" />
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=50" alt="amigo2" />
+                </div>
+            </div>
+            <button class="ig-lightbox-camera-btn" type="button" onclick="window.openPublishModal && window.openPublishModal()" title="Crear">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Video Player / Media Viewport -->
+        <div class="ig-lightbox-media-container" id="igLightboxMedia">
+            <!-- Dynamic <video> injected here -->
+        </div>
+
+        <!-- Right Vertical Action Column (Captura 2) -->
+        <div class="ig-lightbox-right-actions">
+            <!-- Like -->
+            <button class="ig-lb-action-btn" type="button" id="igLbLikeBtn" title="Me gusta">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span id="igLbLikeCount">49.2 mil</span>
+            </button>
+
+            <!-- Comments -->
+            <button class="ig-lb-action-btn" type="button" id="igLbCommentBtn" title="Comentarios">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                <span id="igLbCommentCount">652</span>
+            </button>
+
+            <!-- Repost -->
+            <button class="ig-lb-action-btn" type="button" id="igLbRepostBtn" title="Repostear">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                <span id="igLbRepostCount">3,718</span>
+            </button>
+
+            <!-- Share / DM -->
+            <button class="ig-lb-action-btn" type="button" id="igLbShareBtn" title="Compartir">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span id="igLbShareCount">65.5 mil</span>
+            </button>
+
+            <!-- More Options -->
+            <button class="ig-lb-action-btn" type="button" onclick="window.showToast && window.showToast('⋯ Opciones del Reel')" title="Opciones">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <circle cx="19" cy="12" r="2"></circle>
+                    <circle cx="5" cy="12" r="2"></circle>
+                </svg>
+            </button>
+
+            <!-- Mini Audio Disc -->
+            <div class="ig-lb-disc-wrap">
+                <img id="igLbDiscImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60" alt="sound disc" />
+            </div>
+        </div>
+
+        <!-- Bottom-Left Creator & Feedback Info (Captura 2) -->
+        <div class="ig-lightbox-bottom-info">
+            <!-- Author Row -->
+            <div class="ig-lb-author-row">
+                <div class="ig-lb-author-avatar-ring">
+                    <img id="igLbAuthorImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80" alt="avatar" />
+                </div>
+                <strong id="igLbAuthorName" class="ig-lb-author-handle">asmr_hair.haven</strong>
+                <button class="ig-lb-follow-btn" type="button" id="igLbFollowBtn" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
+            </div>
+
+            <!-- Description & Hashtags -->
+            <p id="igLbCaption" class="ig-lb-caption-text">
+                #asmr #asmrsound #relaxing #barber
+            </p>
+
+            <!-- Algorithmic Interest Feedback Pills (1:1 Captura 2) -->
+            <div class="ig-lb-feedback-pills">
+                <button class="ig-feedback-pill no-interest" type="button" id="igLbNoInterestBtn">
+                    ✕ No me interesa
+                </button>
+                <button class="ig-feedback-pill interest" type="button" id="igLbInterestBtn">
+                    ✓ Me interesa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Selector Modal -->
+    <div id="themeModal" class="theme-modal-backdrop" onclick="window.closeThemeModal(event)">
+        <div class="theme-modal-sheet" onclick="event.stopPropagation()">
+            <div class="theme-modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#dc2743"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.58 10.54 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800;">Personalizar Tema / Diseño</h3>
+                </div>
+                <button class="theme-modal-close" type="button" onclick="window.closeThemeModal(event)" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: 700;">✕</button>
+            </div>
+            <div class="theme-modal-list">
+                <button class="theme-modal-item" data-theme="pornhub" type="button" onclick="window.location.href='index.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #ff9000, #ff5500); color: #000; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">PH</div>
+                    <div class="theme-item-info">
+                        <strong>All18 Tube (Pornhub)</strong>
+                        <span>Estilo clásico negro y naranja</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+                <button class="theme-modal-item" data-theme="onlyfans" type="button" onclick="window.location.href='onlyfans.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #00aff0, #0080c0); color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">OF</div>
+                    <div class="theme-item-info">
+                        <strong>OnlyFans / Fansly</strong>
+                        <span>Azul marino y cian moderno</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+                <button class="theme-modal-item active" data-theme="instagram" type="button" onclick="window.location.href='instagram.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">IG</div>
+                    <div class="theme-item-info">
+                        <strong>Instagram / Reels</strong>
+                        <span>Degradado rosa y morado</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+                <button class="theme-modal-item" data-theme="tiktok" type="button" onclick="window.location.href='tiktok.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #00f2fe, #fe0979); color: #000; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">TT</div>
+                    <div class="theme-item-info">
+                        <strong>TikTok / Swipe</strong>
+                        <span>Reproductor vertical y luces neón</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+                <button class="theme-modal-item" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
+                    <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
+                    <div class="theme-item-info">
+                        <strong>X / Twitter Timeline</strong>
+                        <span>Feed cronológico negro puro</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publish Modal -->
+    <div id="publishModal" class="modal-overlay">
+        <div class="modal-content publish-modal-box">
+            <button class="modal-close" type="button" onclick="window.closePublishModal && window.closePublishModal()">&times;</button>
+            <div class="publish-header">
+                <h2>📸 Nueva Publicación en Instagram</h2>
+                <p>Comparte fotos o reels con tu comunidad</p>
+            </div>
+            <form id="publishForm" class="publish-form">
+                <div class="form-group">
+                    <label class="form-label">Pie de foto / Descripción</label>
+                    <textarea id="publishTitle" class="form-input" rows="3" placeholder="Escribe un pie de foto..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL de la Foto o Video (MP4)</label>
+                    <input type="url" id="publishUrl" class="form-input" placeholder="https://..." required>
+                </div>
+                <button type="submit" id="btnSubmitPublish" class="btn-submit-publish" style="background: linear-gradient(135deg, #f09433, #dc2743, #bc1888);">
+                    <span>📸</span> Compartir
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=9.0"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.applyTheme === 'function') window.applyTheme('instagram', false);
+            if (typeof window.loadVideos === 'function') window.loadVideos(1, true);
+
+            // Sync user avatar
+            try {
+                const saved = localStorage.getItem('all18_user_profile');
+                if (saved) {
+                    const p = JSON.parse(saved);
+                    if (p.photoURL) {
+                        const yourStory = document.getElementById('igYourStoryImg');
+                        const navAv = document.getElementById('igNavAvatar');
+                        const profAv = document.getElementById('igProfAvatarImg');
+                        if (yourStory) yourStory.src = p.photoURL;
+                        if (navAv) navAv.src = p.photoURL;
+                        if (profAv) profAv.src = p.photoURL;
+                    }
+                    if (p.displayName) {
+                        const el = document.getElementById('igProfDisplayName');
+                        if (el) el.innerText = p.displayName;
+                    }
+                    if (p.handle) {
+                        const el = document.getElementById('igModalUsername');
+                        if (el) el.innerText = p.handle.replace('@', '');
+                    }
+                }
+            } catch(e) {}
+        });
+
+        window.openProfileModal = function() {
+            const m = document.getElementById('igProfileModal');
+            if (m) {
+                m.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.closeProfileModal = function() {
+            const m = document.getElementById('igProfileModal');
+            if (m) {
+                m.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        };
+    </script>
+</body>
+</html>

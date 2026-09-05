@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <base href="https://appassets.androidplatform.net/assets/web/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <title>All18 - Videos y Fotos Exclusivas +18</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css?v=9.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔞</text></svg>">
+</head>
+<body data-theme="pornhub">
+
+    <!-- Age Verification Gate (+18 Modal) -->
+    <div id="welcomeModal" class="welcome-modal-overlay">
+        <div class="welcome-box">
+            <div class="welcome-icon">🔞</div>
+            <h2 class="welcome-title">Advertencia de Contenido Adulto (+18)</h2>
+            <p class="welcome-desc">
+                Este sitio web contiene material sexualmente explícito destinado únicamente a adultos mayores de 18 años (o la mayoría de edad legal en su jurisdicción).
+            </p>
+            <div class="welcome-buttons">
+                <button id="btnWelcomeEnter" class="btn-welcome-enter">Soy mayor de 18 años</button>
+                <button id="btnWelcomeLeave" class="btn-welcome-leave">Salir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-top">
+            <!-- Brand Logo -->
+            <a href="index.html" class="logo">
+                <span class="logo-text">All</span>
+                <span class="logo-badge">18</span>
+                <svg class="x-theme-logo" viewBox="0 0 24 24" width="26" height="26" fill="%23121212"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+
+            <!-- Search Form with Instant Autocomplete -->
+            <div class="search-container search-wrapper">
+                <form id="searchForm" class="search-form">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar videos, actrices, categorías o tags..." autocomplete="off">
+                    <button type="submit" class="search-btn">
+                        <span>🔍</span> Buscar
+                    </button>
+                </form>
+                <div id="searchSuggestions" class="search-suggestions-dropdown">
+                    <div class="suggestion-header">🔥 Tendencias y Categorías Populares</div>
+                    <div class="suggestion-item" data-search="Latinas">💃 Latinas Calientes</div>
+                    <div class="suggestion-item" data-search="Casero">🎥 Casero / Amateur</div>
+                    <div class="suggestion-item" data-search="POV">📹 POV Primera Persona</div>
+                    <div class="suggestion-item" data-search="Culos">🍑 Culos Grandes (Big Ass)</div>
+                    <div class="suggestion-item" data-search="Tetas">🍒 Tetas Grandes (Big Tits)</div>
+                    <div class="suggestion-item" data-search="MILF">💄 MILF / Maduras</div>
+                    <div class="suggestion-item" data-search="Shorts">⚡ Shorts & Loops 4K</div>
+                </div>
+            </div>
+
+            <!-- Actions, Publish & Theme Selector -->
+            <div class="header-actions">
+
+                <!-- Google Login & Profile Widget -->
+                <div id="authContainer" class="auth-container">
+                    <button id="btnGoogleLogin" class="btn-google-login" type="button" title="Iniciar sesión con Google">
+                        <svg class="google-icon" viewBox="0 0 24 24" width="16" height="16">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        <span>Entrar</span>
+                    </button>
+
+                    <div id="userProfileMenu" class="user-profile-menu" style="display: none;">
+                        <button id="userAvatarBtn" class="user-avatar-btn" type="button" title="Mi Perfil" onclick="window.toggleUserMenu(event)" ontouchstart="window.toggleUserMenu(event)">
+                            <img id="userAvatarImg" src="" alt="Avatar" class="user-avatar-img">
+                            <span id="userNameSpan" class="user-name-text">Usuario</span>
+                            <span class="user-arrow">▼</span>
+                        </button>
+                        <div id="userDropdown" class="user-dropdown-panel">
+                            <div class="user-dropdown-header">
+                                <strong id="userDropdownName">Usuario</strong>
+                                <span id="userDropdownEmail">correo@gmail.com</span>
+                            </div>
+                            <div class="user-dropdown-links">
+                                <button id="btnOpenPublish" class="user-dropdown-item" type="button" onclick="window.openPublishModal && window.openPublishModal()" style="color: var(--primary-color); font-weight: bold;">
+                                    <span>?</span> Publicar Video
+                                </button>
+                                <button class="user-dropdown-item" type="button" onclick="window.openProfileModal && window.openProfileModal('videos')">
+                                    <span>👤</span> Mi Perfil Completo
+                                </button>
+                                <button class="user-dropdown-item" type="button" onclick="window.openProfileModal && window.openProfileModal('videos')">
+                                    <span>📹</span> Mis Publicaciones
+                                </button>
+                                <button class="user-dropdown-item" type="button" onclick="window.openProfileModal && window.openProfileModal('favorites')">
+                                    <span>❤️</span> Mis Favoritos
+                                </button>
+                                <button class="user-dropdown-item" type="button" onclick="window.openProfileModal && window.openProfileModal('edit')">
+                                    <span>⚙️</span> Editar Datos
+                                </button>
+                            </div>
+                            <button id="btnLogout" class="btn-logout" type="button" onclick="window.logoutUser && window.logoutUser()">
+                                🚪 Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme Switcher -->
+                <div class="theme-dropdown">
+                    <button id="themeDropdownBtn" class="theme-selector-btn" type="button" title="Configuración y Temas" onclick="window.openThemeModal(event)"><svg class="icon-gear" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+                </div>
+
+                <!-- Favorites Nav Button -->
+                <button id="btnHeaderFavs" class="btn-icon nav-link nav-link-fav" data-view="favorites" title="Mis Favoritos"><svg class="icon-heart" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span id="favCountBadge" class="badge-count" style="display: none;">0</span></button>
+            </div>
+        </div>
+
+        
+    </header>
+
+    <!-- Main Content Catalog Area -->
+    <main id="catalogView" class="main-wrapper" style="display: none;">
+        
+
+        <!-- Toolbar & Filter Options -->
+        <div class="toolbar">
+            <h2 id="toolbarTitle" class="toolbar-title">
+                Videos Populares <span id="itemCount" class="count">(cargando...)</span>
+            </h2>
+
+            <div class="toolbar-filters">
+                <!-- Source Filter (All APIs) -->
+                <select id="sourceSelect" class="source-select">
+                    <option value="all">⚡ Todas las APIs (Mix)</option>
+                    <option value="pornhub">Pornhub API</option>
+                    <option value="redtube">RedTube API</option>
+                    <option value="redgifs">RedGifs (Shorts / HD Loops)</option>
+                </select>
+
+                <!-- Order Filters -->
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="trending">🔥 Tendencias</button>
+                    <button class="filter-btn" data-filter="toprated">⭐ Más Votados</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Grid -->
+        <div id="mediaGrid" class="media-grid">
+            <!-- Dynamically Populated Cards -->
+        </div>
+
+        <!-- Pagination / Load More -->
+        <div class="pagination-wrap">
+            <button id="btnLoadMore" class="btn-load-more" style="display: none;">
+                ⚡ Cargar más videos
+            </button>
+        </div>
+    </main>
+
+    <!-- Dedicated Full Screen Watch Section (Pantalla Completa Nativa) -->
+    <section id="watchView" class="watch-view-section dedicated-full-page" style="display: block;">
+        <div class="watch-container">
+            <!-- Top Nav & Breadcrumb -->
+            <div class="watch-top-nav">
+                <a href="index.html" class="btn-back-feed">
+                    <span>◀</span> Volver al Catálogo
+                </a>
+                <span id="watchCategoryPill" class="watch-category-badge">🔥 VIDEO EXCLUSIVO</span>
+            </div>
+
+            <!-- Cinema Mode Video Player with Sticky PiP Support -->
+            <div id="watchPlayerCard" class="watch-player-card">
+                <div class="pip-controls-bar">
+                    <button type="button" class="btn-pip-control" title="Volver al reproductor grande" onclick="window.expandStickyPiP && window.expandStickyPiP()">▲</button>
+                    <button type="button" class="btn-pip-control" title="Cerrar mini-reproductor" onclick="window.closeStickyPiP && window.closeStickyPiP()">✕</button>
+                </div>
+                <div id="watchPlayerWrapper" class="watch-player-wrapper">
+                    <!-- Embedded iframe or video tag injected here -->
+                </div>
+            </div>
+
+            <!-- Video Information & Metadata Card -->
+            <div class="watch-details-card">
+                <h1 id="watchVideoTitle" class="watch-video-title">Título del Video</h1>
+                
+                <div class="watch-meta-row">
+                    <!-- Creator Profile Box -->
+                    <div class="watch-creator-box">
+                        <img id="watchCreatorAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Creador" class="watch-creator-avatar" style="cursor: pointer;" onclick="window.openCreatorProfile && window.openCreatorProfile()">
+                        <div class="watch-creator-info">
+                            <span id="watchCreatorName" class="watch-creator-name" style="cursor: pointer;" onclick="window.openCreatorProfile && window.openCreatorProfile()">Modelo / Canal</span>
+                            <span id="watchCreatorSource" class="watch-creator-source">🌟 Creador Oficial</span>
+                        </div>
+                        <button type="button" id="btnFollowCreator" class="btn-follow" onclick="window.toggleFollowCreator && window.toggleFollowCreator()">
+                            + Seguir
+                        </button>
+                    </div>
+
+                    <!-- Actions & Metrics -->
+                    <div class="watch-actions-box">
+                        <div class="watch-metrics">
+                            <span id="watchViewsCount">👁️ 0 vistas</span>
+                            <span id="watchRatingScore">👍 100%</span>
+                        </div>
+                        <div class="watch-buttons-group">
+                            <button type="button" id="watchFavBtn" class="btn-watch-action" onclick="window.toggleWatchFavorite && window.toggleWatchFavorite()">
+                                <span id="watchFavHeart">🤍</span> Favorito
+                            </button>
+                            <button type="button" id="watchShareBtn" class="btn-watch-action" onclick="window.shareCurrentVideo && window.shareCurrentVideo()">
+                                <span>🔗</span> Compartir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tags Cloud -->
+                <div id="watchTagsCloud" class="tags-cloud"></div>
+            </div>
+
+            <!-- Live Community Comments & Reactions Section -->
+            <div id="watchCommentsSection" class="watch-comments-section">
+                <div class="comments-header-row">
+                    <h3 class="comments-count-title">
+                        <span>💬</span> Comentarios de la Comunidad <span id="commentsCountBadge" style="font-size: 13px; color: var(--primary);">(0)</span>
+                    </h3>
+                    
+                    <!-- Quick Reaction Chips -->
+                    <div class="reactions-quick-bar">
+                        <button type="button" class="btn-reaction-chip" data-reaction="🔥" onclick="window.toggleReaction('🔥', this)">🔥 <span id="reactCount_fire">14</span></button>
+                        <button type="button" class="btn-reaction-chip" data-reaction="💦" onclick="window.toggleReaction('💦', this)">💦 <span id="reactCount_water">9</span></button>
+                        <button type="button" class="btn-reaction-chip" data-reaction="❤️" onclick="window.toggleReaction('❤️', this)">❤️ <span id="reactCount_heart">23</span></button>
+                        <button type="button" class="btn-reaction-chip" data-reaction="👑" onclick="window.toggleReaction('👑', this)">👑 <span id="reactCount_crown">8</span></button>
+                    </div>
+                </div>
+
+                <!-- Post Comment Form -->
+                <div class="comment-input-box">
+                    <img id="commentMyAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="Mi Avatar" class="comment-user-avatar">
+                    <div class="comment-form-wrap">
+                        <textarea id="commentTextInput" class="comment-textarea" placeholder="Escribe un comentario caliente o tu opinión sobre este video..." rows="2"></textarea>
+                        <div class="comment-actions-row">
+                            <div class="quick-emojis-row">
+                                <button type="button" class="btn-quick-emoji" onclick="window.addEmojiToComment('🔥')">🔥</button>
+                                <button type="button" class="btn-quick-emoji" onclick="window.addEmojiToComment('💦')">💦</button>
+                                <button type="button" class="btn-quick-emoji" onclick="window.addEmojiToComment('❤️')">❤️</button>
+                                <button type="button" class="btn-quick-emoji" onclick="window.addEmojiToComment('🍑')">🍑</button>
+                                <button type="button" class="btn-quick-emoji" onclick="window.addEmojiToComment('🍒')">🍒</button>
+                                <button type="button" class="btn-quick-emoji" onclick="window.addEmojiToComment('👑')">👑</button>
+                            </div>
+                            <button type="button" id="btnPostComment" class="btn-send-comment" onclick="window.submitComment && window.submitComment()">
+                                Publicar Comentario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Feed List -->
+                <div id="commentsFeedList" class="comments-list">
+                    <!-- Dynamic Comments Injected via Firestore / Local -->
+                </div>
+            </div>
+
+            <!-- Related / Recommended Videos Section with Category Filters -->
+            <div class="watch-related-section">
+                <div class="related-header-bar">
+                    <div class="section-title-row">
+                        <h3 class="watch-section-title">🔥 Videos Recomendados</h3>
+                        <span id="relatedCountLabel" class="related-count-label">(Sugerencias para ti)</span>
+                    </div>
+
+                    <!-- Quick Next Video Button -->
+                    <button type="button" id="btnNextRecommended" class="btn-next-video" onclick="window.playNextRecommendedVideo && window.playNextRecommendedVideo()">
+                        <span>Siguiente Video</span> <span>▶</span>
+                    </button>
+                </div>
+
+                <!-- Recommendation Filter Pills -->
+                <div id="watchRelatedPills" class="related-pills-bar">
+                    <button class="related-pill active" data-rel-filter="similar" onclick="window.filterRelatedVideos('similar', this)">🔥 Similares</button>
+                    <button id="pillCreatorFilter" class="related-pill" data-rel-filter="creator" onclick="window.filterRelatedVideos('creator', this)">⭐ Del Creador</button>
+                    <button class="related-pill" data-rel-filter="latina" onclick="window.filterRelatedVideos('latina', this)">💃 Latinas</button>
+                    <button class="related-pill" data-rel-filter="amateur" onclick="window.filterRelatedVideos('amateur', this)">🎥 Casero</button>
+                    <button class="related-pill" data-rel-filter="big-ass" onclick="window.filterRelatedVideos('big-ass', this)">🍑 Culos Grandes</button>
+                    <button class="related-pill" data-rel-filter="milf" onclick="window.filterRelatedVideos('milf', this)">💄 MILF</button>
+                    <button class="related-pill" data-rel-filter="shorts" onclick="window.filterRelatedVideos('shorts', this)">⚡ Shorts & Loops</button>
+                </div>
+
+                <!-- Recommendations Grid -->
+                <div id="watchRelatedGrid" class="media-grid"></div>
+
+                <!-- Load More Related Button -->
+                <div class="pagination-wrap" style="margin-top: 24px;">
+                    <button id="btnLoadMoreRelated" class="btn-load-more" type="button" onclick="window.loadMoreRelatedVideos && window.loadMoreRelatedVideos()">
+                        ⚡ Cargar Más Recomendados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Publish Video Modal -->
+    <div id="publishModal" class="modal-overlay">
+        <div class="publish-modal-container">
+            <div class="publish-modal-header">
+                <div class="publish-modal-title">
+                    <span>🎬</span> Publicar Video en All18
+                </div>
+                <button id="publishCloseBtn" class="modal-close-btn" type="button" style="position: static; width: 30px; height: 30px; font-size: 14px;" onclick="window.closePublishModal && window.closePublishModal()">✕</button>
+            </div>
+
+            <!-- Tab Selector -->
+            <div class="publish-tabs">
+                <button id="tabLinkBtn" class="publish-tab-btn active" type="button" onclick="window.switchPublishTab && window.switchPublishTab('link')">
+                    <span>🔗</span> Por Enlace / Embed
+                </button>
+                <button id="tabFileBtn" class="publish-tab-btn" type="button" onclick="window.switchPublishTab && window.switchPublishTab('file')">
+                    <span>📁</span> Subir Archivo de Video
+                </button>
+            </div>
+
+            <form id="publishForm" class="publish-form">
+                <!-- Link Mode Input -->
+                <div id="linkInputGroup" class="form-group">
+                    <label class="form-label">Enlace del Video (Pornhub, RedGifs, RedTube, Streamtape, MP4...)</label>
+                    <input type="url" id="publishUrl" class="form-input" placeholder="https://www.redgifs.com/watch/... o https://www.pornhub.com/view_video.php?viewkey=...">
+                    <small style="color: var(--text-dim); font-size: 11px;">El sistema detectará el video y la miniatura automáticamente.</small>
+                </div>
+
+                <!-- File Mode Input -->
+                <div id="fileInputGroup" class="form-group" style="display: none;">
+                    <label class="form-label">Seleccionar Video desde tu Dispositivo</label>
+                    <div id="dropzone" class="dropzone">
+                        <div class="dropzone-icon">📤</div>
+                        <div class="dropzone-text">Arrastra tu video aquí o haz clic para seleccionarlo</div>
+                        <div class="dropzone-subtext">Formatos soportados: MP4, WebM, MOV, GIF</div>
+                        <input type="file" id="publishFile" accept="video/mp4,video/webm,video/ogg,video/quicktime" style="display: none;">
+                    </div>
+                    <div id="videoFilePreview" class="video-file-preview">
+                        <video id="previewVideoTag" controls playsinline></video>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Título del Video *</label>
+                    <input type="text" id="publishTitle" class="form-input" placeholder="Ej: Morena ardiente jugando en la cama..." required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">Tu Nombre de Creador / Modelo</label>
+                        <input type="text" id="publishAuthor" class="form-input" placeholder="@TuNombre" value="@CreadorAll18">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Categoría</label>
+                        <select id="publishCategory" class="form-select">
+                            <option value="latina">💃 Latinas</option>
+                            <option value="amateur" selected>🎥 Casero / Amateur</option>
+                            <option value="verified-models">⭐ Modelos Populares</option>
+                            <option value="milf">💄 MILF</option>
+                            <option value="big-ass">🍑 Culos Grandes</option>
+                            <option value="big-tits">🍒 Tetas Grandes</option>
+                            <option value="cosplay">🎭 Cosplay Hot</option>
+                            <option value="teen-18">✨ Jovencitas (18+)</option>
+                            <option value="blowjob">💋 Oral / Mamadas</option>
+                            <option value="anal">🔥 Anal</option>
+                            <option value="lesbian">👭 Lesbiana</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Etiquetas (separadas por coma)</label>
+                    <input type="text" id="publishTags" class="form-input" placeholder="latina, amateur, exclusivo, hot">
+                </div>
+
+                <button type="submit" id="btnSubmitPublish" class="btn-submit-publish">
+                    <span>🚀</span> Publicar Video Ahora
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Profile Modal (Sistema de Perfiles) -->
+    <div id="userProfileModal" class="modal-overlay">
+        <div class="modal-content profile-modal-box">
+            <button class="modal-close" type="button" onclick="window.closeProfileModal && window.closeProfileModal()">&times;</button>
+            
+            <!-- Banner & Avatar Header -->
+            <div class="profile-card-header">
+                <div class="profile-avatar-container">
+                    <img id="pModalAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" alt="Avatar" class="profile-avatar-large">
+                    <span class="profile-status-online" title="Conectado"></span>
+                </div>
+                <div class="profile-meta-info">
+                    <div class="profile-badge-row">
+                        <h2 id="pModalDisplayName" class="profile-display-name">Usuario All18</h2>
+                        <span class="badge-creator">🌟 Creador Oficial</span>
+                    </div>
+                    <span id="pModalHandle" class="profile-handle">@usuario</span>
+                    <p id="pModalBio" class="profile-bio-text">Creador y miembro de la comunidad All18.</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="profile-stats-bar">
+                <div class="profile-stat-box">
+                    <strong id="statUserPosts">0</strong>
+                    <span>Videos Subidos</span>
+                </div>
+                <div class="profile-stat-box">
+                    <strong id="statUserViews">0</strong>
+                    <span>Reproducciones</span>
+                </div>
+                <div class="profile-stat-box">
+                    <strong id="statUserFavs">0</strong>
+                    <span>Favoritos</span>
+                </div>
+                <div class="profile-stat-box">
+                    <strong>100%</strong>
+                    <span>Reputación</span>
+                </div>
+            </div>
+
+            <!-- Profile Nav Tabs -->
+            <div class="profile-nav-tabs">
+                <button id="pTabBtnVideos" class="profile-tab-button active" type="button" onclick="window.switchProfileTab('videos')">
+                    📹 Mis Videos
+                </button>
+                <button id="pTabBtnFavs" class="profile-tab-button" type="button" onclick="window.switchProfileTab('favorites')">
+                    ❤️ Mis Favoritos
+                </button>
+                <button id="pTabBtnEdit" class="profile-tab-button" type="button" onclick="window.switchProfileTab('edit')">
+                    ⚙️ Editar Perfil
+                </button>
+            </div>
+
+            <!-- Tab Content Panes -->
+            <div class="profile-tab-content">
+                <!-- Videos Tab Pane -->
+                <div id="pPaneVideos" class="profile-pane active">
+                    <div id="userProfileVideosGrid" class="media-grid"></div>
+                    <div id="userProfileNoVideos" class="empty-state" style="display: none; padding: 25px 15px;">
+                        <div class="empty-icon" style="font-size: 38px; margin-bottom: 8px;">🎬</div>
+                        <h3 style="font-size: 16px; margin-bottom: 6px;">Aún no has publicado videos</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Comparte tus videos o enlaces caseros con la comunidad.</p>
+                        <button class="btn-publish" type="button" onclick="window.closeProfileModal(); window.openPublishModal();">
+                            ➕ Publicar mi primer video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Favorites Tab Pane -->
+                <div id="pPaneFavs" class="profile-pane" style="display: none;">
+                    <div id="userProfileFavsGrid" class="media-grid"></div>
+                    <div id="userProfileNoFavs" class="empty-state" style="display: none; padding: 25px 15px;">
+                        <div class="empty-icon" style="font-size: 38px; margin-bottom: 8px;">❤️</div>
+                        <h3 style="font-size: 16px; margin-bottom: 6px;">No tienes favoritos guardados</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Haz clic en el corazón de cualquier video para guardarlo aquí.</p>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Tab Pane -->
+                <div id="pPaneEdit" class="profile-pane" style="display: none;">
+                    <form id="editProfileForm" class="edit-profile-form">
+                        <div class="form-group">
+                            <label class="form-label">Nombre para Mostrar:</label>
+                            <input type="text" id="editDisplayName" class="form-input" placeholder="Tu nombre artístico o apodo" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Handle de Usuario:</label>
+                            <input type="text" id="editHandle" class="form-input" placeholder="@tu_apodo">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">URL de Foto de Perfil:</label>
+                            <input type="url" id="editPhotoURL" class="form-input" placeholder="https://ejemplo.com/tu-foto.jpg">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Biografía / Presentación:</label>
+                            <textarea id="editBio" class="form-textarea" rows="2" placeholder="Escribe unas palabras sobre tu perfil o contenido..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit-publish">
+                            💾 Guardar Cambios de Perfil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Identity Onboarding Modal (Selector de Modo Anónimo vs Google) -->
+    <div id="identityModal" class="modal-overlay">
+        <div class="modal-content identity-modal-box">
+            <div class="identity-modal-header">
+                <div class="identity-badge">✨ Configura tu Perfil</div>
+                <h2 class="identity-title">¿Cómo quieres identificarte en All18?</h2>
+                <p class="identity-subtitle">Tu privacidad es 100% tu elección. Puedes elegir un perfil anónimo o usar tu cuenta de Google.</p>
+            </div>
+
+            <!-- Identity Options Radio Cards -->
+            <div class="identity-cards-grid">
+                <!-- Anonymous Option Card -->
+                <div id="cardModeAnon" class="identity-card selected" onclick="window.selectIdentityMode('anon')">
+                    <div class="identity-card-radio"></div>
+                    <div class="identity-card-icon">🕶️</div>
+                    <div class="identity-card-text">
+                        <strong>Perfil 100% Anónimo (Recomendado)</strong>
+                        <span>Tu nombre real y correo de Google quedan 100% ocultos. Usa un apodo y avatar anónimo.</span>
+                    </div>
+                </div>
+
+                <!-- Google Option Card -->
+                <div id="cardModeGoogle" class="identity-card" onclick="window.selectIdentityMode('google')">
+                    <div class="identity-card-radio"></div>
+                    <div class="identity-card-icon">👤</div>
+                    <div class="identity-card-text">
+                        <strong>Usar mi Perfil de Google</strong>
+                        <span>Mostrar tu foto de perfil y nombre público de Google.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anonymous Identity Customization Area -->
+            <div id="anonConfigArea" class="anon-config-area">
+                <!-- Nickname with Dice button -->
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label">Tu Nombre / Apodo Artístico:</label>
+                        <button type="button" class="btn-dice" onclick="window.rollRandomNickname()" title="Generar otro nombre al azar">
+                            🎲 Generar Nombre Hot
+                        </button>
+                    </div>
+                    <div class="input-with-prefix">
+                        <span class="input-prefix">@</span>
+                        <input type="text" id="inputAnonHandle" class="form-input" placeholder="DiablaHot" value="DiablaHot">
+                    </div>
+                </div>
+
+                <!-- Anonymous Avatar Gallery -->
+                <div class="form-group">
+                    <label class="form-label">Elige tu Avatar Anónimo:</label>
+                    <div id="anonAvatarGallery" class="avatar-gallery-grid"></div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="identity-footer-actions">
+                <button type="button" id="btnSaveIdentity" class="btn-submit-publish" onclick="window.saveIdentityConfig()">
+                    🚀 Guardar Identidad y Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Required to Publish Modal -->
+    <div id="authRequiredModal" class="modal-overlay">
+        <div class="identity-modal-box" style="text-align: center; max-width: 440px;">
+            <button class="modal-close-btn" type="button" onclick="window.closeAuthRequiredModal && window.closeAuthRequiredModal()">✕</button>
+            <div style="font-size: 48px; margin-bottom: 12px;">🎬🔒</div>
+            <h2 style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 8px;">
+                Inicia Sesión para Publicar
+            </h2>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5;">
+                Para garantizar la seguridad de la comunidad y proteger a los creadores, la publicación de videos está reservada para usuarios autenticados con <strong>Google</strong>.
+            </p>
+            <button type="button" class="btn-google-login" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px; margin-bottom: 12px;" onclick="window.closeAuthRequiredModal(); window.loginWithGoogle();">
+                <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Entrar con Google y Publicar</span>
+            </button>
+            <button type="button" class="btn-action" style="width: 100%; border: none; background: transparent; color: var(--text-dim);" onclick="window.closeAuthRequiredModal()">
+                Cancelar
+            </button>
+        </div>
+    </div>
+
+    <!-- Public Creator Profile Modal -->
+    <div id="publicCreatorModal" class="modal-overlay">
+        <div class="creator-profile-modal-box">
+            <button id="creatorModalCloseBtn" class="modal-close-btn" type="button" onclick="window.closeCreatorProfile && window.closeCreatorProfile()">✕</button>
+            <div class="creator-profile-banner"></div>
+            <div class="creator-profile-head">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <img id="creatorHeadAvatar" src="" alt="Avatar Creador" class="creator-head-avatar">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <h2 id="creatorHeadName" style="font-size: 20px; font-weight: 800; color: #fff;">Creador</h2>
+                        <span id="creatorHeadHandle" style="font-size: 13px; color: var(--primary); font-weight: 700;">@creador</span>
+                    </div>
+                </div>
+                <button type="button" id="btnCreatorModalFollow" class="btn-follow" style="padding: 8px 20px; font-size: 13px;" onclick="window.toggleFollowCreator && window.toggleFollowCreator()">
+                    + Seguir Creador
+                </button>
+            </div>
+            
+            <div style="padding: 0 24px 24px 24px;">
+                <p id="creatorHeadBio" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+                    Contenido exclusivo y oficial en All18.
+                </p>
+
+                <h3 style="font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 14px;">
+                    🎬 Videos y Publicaciones de este Creador
+                </h3>
+                <div id="creatorVideosGrid" class="media-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas for Video Frame Capture -->
+    <canvas id="thumbCanvas" style="display: none;"></canvas>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-links">
+            <a href="#">Términos y Condiciones</a>
+            <a href="#">Política de Privacidad</a>
+            <a href="#">Cumplimiento 18 U.S.C. 2257</a>
+            <a href="#">Contacto & Soporte</a>
+            <a href="#">Creadores</a>
+        </div>
+        <p>&copy; 2026 All18. Todos los derechos reservados. Todo el contenido está restringido para mayores de 18 años.</p>
+    </footer>
+
+    <!-- Firebase App, Auth & Firestore SDK (v10 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Main JavaScript Logic -->
+    <script src="js/app.js?v=9.0"></script>
+
+    <!-- Twitter X Floating Action Button (FAB) -->
+    <button id="xComposeFab" class="x-compose-fab" type="button" title="Publicar Video" onclick="window.openPublishModal && window.openPublishModal()">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="%23121212"><path d="M11 11V4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></svg>
+    </button>
+
+    <!-- Theme Selector Modal / Sheet -->
+        <!-- Theme Selection Modal (Bottom Sheet / Modal) -->
+        <!-- Theme Selection Modal (Bottom Sheet / Modal) -->
+    <div id="themeModal" class="theme-modal-backdrop" onclick="window.closeThemeModal(event)">
+        <div class="theme-modal-sheet" onclick="event.stopPropagation()">
+            <div class="theme-modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#fe2c55"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.58 10.54 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800;">Personalizar Tema / Diseño</h3>
+                </div>
+                <button class="theme-modal-close" type="button" onclick="window.closeThemeModal(event)" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: 700;">✕</button>
+            </div>
+            <div class="theme-modal-list">
+                <!-- Theme Option 1: Pornhub -->
+                <button class="theme-modal-item" data-theme="pornhub" type="button" onclick="window.location.href='index.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #ff9000, #ff5500); color: #000; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">PH</div>
+                    <div class="theme-item-info">
+                        <strong>All18 Tube (Pornhub)</strong>
+                        <span>Estilo clásico negro y naranja</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <!-- Theme Option 2: OnlyFans -->
+                <button class="theme-modal-item" data-theme="onlyfans" type="button" onclick="window.location.href='onlyfans.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #00aff0, #0080c0); color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">OF</div>
+                    <div class="theme-item-info">
+                        <strong>OnlyFans / Fansly</strong>
+                        <span>Azul marino y cian moderno</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <!-- Theme Option 3: Instagram -->
+                <button class="theme-modal-item" data-theme="instagram" type="button" onclick="window.location.href='instagram.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">IG</div>
+                    <div class="theme-item-info">
+                        <strong>Instagram / Reels</strong>
+                        <span>Degradado rosa y morado</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <!-- Theme Option 4: TikTok -->
+                <button class="theme-modal-item" data-theme="tiktok" type="button" onclick="window.location.href='tiktok.html'">
+                    <div class="theme-item-icon" style="background: linear-gradient(135deg, #00f2fe, #fe0979); color: #000; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">TT</div>
+                    <div class="theme-item-info">
+                        <strong>TikTok / Swipe</strong>
+                        <span>Reproductor vertical y luces neón</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <!-- Theme Option 5: Twitter / X -->
+                <button class="theme-modal-item" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
+                    <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
+                    <div class="theme-item-info">
+                        <strong>X / Twitter Timeline</strong>
+                        <span>Feed cronológico negro puro</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- TikTok Bottom Navigation Bar -->
+    
+
+
+    <!-- TikTok Profile Modal / Fullscreen View -->
+    <div id="tiktokProfileModal" class="tiktok-profile-modal">
+        <!-- Logged Out View -->
+        <div id="ttLoggedOutView" class="tt-logged-out-box" style="display: none;">
+            <div class="tt-top-header">
+                <div class="tt-header-left"></div>
+                <h2 class="tt-header-title">Perfil</h2>
+                <div class="tt-header-right">
+                    <button class="tt-icon-btn" type="button" onclick="window.openThemeModal(event)">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tt-logout-content">
+                <div class="tt-guest-avatar">
+                    <svg viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="#666" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <p class="tt-guest-text">Iniciar sesión en cuenta existente</p>
+                <button class="tt-btn-login-main" type="button" onclick="window.loginWithGoogle && window.loginWithGoogle()">
+                    Inicio de sesión
+                </button>
+            </div>
+            <button class="tt-profile-close-btn" type="button" onclick="window.closeProfileModal && window.closeProfileModal()" title="Cerrar">✕</button>
+        </div>
+
+        <!-- Logged In View -->
+        <div id="ttLoggedInView" class="tt-logged-in-box">
+            <!-- Top Header -->
+            <div class="tt-top-header">
+                <div class="tt-header-left">
+                    <button class="tt-icon-btn tt-add-friends-btn" type="button" title="Añadir amigos">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        <span class="tt-badge-count">2</span>
+                    </button>
+                </div>
+                <div class="tt-header-center">
+                    <span id="ttHeaderTitle" class="tt-header-title-small">Usuario</span>
+                </div>
+                <div class="tt-header-right">
+                    <div class="tt-story-bubble">
+                        <img id="ttStoryAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&auto=format&fit=crop&q=80" alt="story" />
+                        <span class="tt-story-badge">4</span>
+                    </div>
+                    <button class="tt-icon-btn" type="button" title="Compartir">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z"/></svg>
+                    </button>
+                    <button class="tt-icon-btn" type="button" onclick="window.openThemeModal(event)" title="Ajustes">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                        <span class="tt-badge-count">1</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile Info Section -->
+            <div class="tt-profile-hero">
+                <div class="tt-avatar-wrapper">
+                    <div class="tt-thought-bubble">¿Qué piensas?</div>
+                    <div class="tt-avatar-main">
+                        <img id="ttProfileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" alt="Avatar" />
+                        <button class="tt-avatar-plus" type="button" onclick="window.openPublishModal && window.openPublishModal()">+</button>
+                    </div>
+                </div>
+
+                <div class="tt-identity-row">
+                    <h2 id="ttProfileName" class="tt-profile-display-name">Usuario</h2>
+                    <span class="tt-arrow-down">⌵</span>
+                    <button class="tt-edit-pencil-btn" type="button" onclick="window.openEditProfileModal && window.openEditProfileModal()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
+                </div>
+
+                <div id="ttProfileHandle" class="tt-profile-handle">@usuario</div>
+
+                <!-- Stats Row -->
+                <div class="tt-stats-row">
+                    <div class="tt-stat-col">
+                        <strong id="ttStatFollowing">139</strong>
+                        <span>Siguiendo</span>
+                    </div>
+                    <div class="tt-stat-col">
+                        <strong id="ttStatFollowers">2</strong>
+                        <span>Seguidores</span>
+                    </div>
+                    <div class="tt-stat-col">
+                        <strong id="ttStatLikes">0</strong>
+                        <span>Me gusta</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="tt-action-buttons-row">
+                    <button class="tt-btn-action" type="button" onclick="window.openEditProfileModal && window.openEditProfileModal()">
+                        + Agregar descripción
+                    </button>
+                    <button class="tt-btn-action" type="button" onclick="window.switchTikTokProfileTab && window.switchTikTokProfileTab('favorites')">
+                        ❤️ Me interesa...
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile Nav Tabs (4 Icons) -->
+            <div class="tt-profile-nav-tabs">
+                <button class="tt-tab-btn active" type="button" data-tab="videos" onclick="window.switchTikTokProfileTab('videos')">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 3h4v18H3zm7 0h4v18h-4zm7 0h4v18h-4z"/></svg>
+                </button>
+                <button class="tt-tab-btn" type="button" data-tab="private" onclick="window.switchTikTokProfileTab('private')">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                </button>
+                <button class="tt-tab-btn" type="button" data-tab="favorites" onclick="window.switchTikTokProfileTab('favorites')">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                </button>
+                <button class="tt-tab-btn" type="button" data-tab="liked" onclick="window.switchTikTokProfileTab('liked')">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </button>
+            </div>
+
+            <!-- Profile Tab Panes -->
+            <div class="tt-profile-tab-content">
+                <!-- Videos Pane -->
+                <div id="ttPaneVideos" class="tt-tab-pane active">
+                    <div id="ttUserVideosGrid" class="tt-videos-grid"></div>
+                    <div id="ttNoVideosBox" class="tt-empty-profile-box">
+                        <div class="tt-empty-gallery-icon">
+                            <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                        </div>
+                        <p class="tt-empty-text">4 personas vieron tu perfil en los últimos 30 días, comparte lo que estás haciendo</p>
+                        <button class="tt-btn-cargar" type="button" onclick="window.openPublishModal && window.openPublishModal()">
+                            Cargar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Favorites Pane -->
+                <div id="ttPaneFavs" class="tt-tab-pane" style="display: none;">
+                    <div id="ttUserFavsGrid" class="tt-videos-grid"></div>
+                    <div id="ttNoFavsBox" class="tt-empty-profile-box" style="display: none;">
+                        <p class="tt-empty-text">Aún no has guardado videos en tus favoritos</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="tt-profile-close-btn" type="button" onclick="window.closeProfileModal && window.closeProfileModal()" title="Cerrar">✕</button>
+        </div>
+    </div>
+
+
+    
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

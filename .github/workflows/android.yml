@@ -1,0 +1,43 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Ensure Release Keystore exists
+      run: |
+        if [ ! -f app/release.keystore ]; then
+          keytool -genkey -v -keystore app/release.keystore -alias all18 -keyalg RSA -keysize 2048 -validity 10000 -storepass all18_release -keypass all18_release -dname "CN=All18 Official, OU=Mobile, O=All18, L=Madrid, ST=Madrid, C=ES"
+        else
+          echo "Using committed app/release.keystore"
+        fi
+
+    - name: Build Release APK with Gradle
+      run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+    - name: Upload Release APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: all18-release-apk
+        path: app/build/outputs/apk/release/*.apk
+        if-no-files-found: error

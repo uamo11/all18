@@ -1,0 +1,533 @@
+/* ==========================================================================
+   TEMA 1: ALL18 TUBE (PORNHUB 1:1 MOBILE WEB REPLICATION)
+   Fondo negro #0e0e10, logo naranja/negro, selector de orientación ♀♂,
+   chips horizontales con Shorties, carrusel de Suscripciones estilo historias,
+   sección 'Recomendado para ti', tarjetas con duración en esquina inferior derecha,
+   fila de Creador + Badge azul + Vistas con icono de ojo (👁) y menú de 3 puntos (⋮).
+   ========================================================================== */
+
+:root, body[data-theme="pornhub"] {
+    --bg-main: #000000;
+    --bg-surface: #0e0e10;
+    --bg-card: #151518;
+    --bg-card-hover: #1c1c20;
+    --bg-header: #000000;
+    
+    --primary: #ff9000;
+    --primary-hover: #ffa526;
+    --primary-glow: rgba(255, 144, 0, 0.4);
+    
+    --text-main: #ffffff;
+    --text-muted: #8c8c9a;
+    --text-dim: #60606e;
+    
+    --border-color: #1f1f24;
+    --border-highlight: #2e2e36;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* ==========================================
+   1. PORNHUB HEADER
+   ========================================== */
+.ph-site-header {
+    background: #000000 !important;
+    border-bottom: 1px solid #1a1a1e !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    width: 100% !important;
+}
+
+.ph-header-row {
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px !important;
+    height: 48px !important;
+    box-sizing: border-box !important;
+}
+
+.ph-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* Hamburger 3 orange bars */
+.ph-hamburger-btn {
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    width: 20px !important;
+    height: 14px !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+}
+
+.ph-hamburger-btn span {
+    display: block !important;
+    width: 100% !important;
+    height: 2.5px !important;
+    background: #ff9000 !important;
+    border-radius: 1px !important;
+}
+
+/* Gender / Orientation Selector */
+.ph-gender-btn {
+    background: #18181c !important;
+    border: 1px solid #282830 !important;
+    border-radius: 4px !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    padding: 3px 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    cursor: pointer !important;
+}
+
+.ph-gender-symbols {
+    font-size: 15px !important;
+    letter-spacing: -1px !important;
+}
+
+.ph-gender-arrow {
+    font-size: 10px !important;
+    color: #8c8c9a !important;
+}
+
+/* Logo */
+.ph-logo-link {
+    display: flex !important;
+    align-items: center !important;
+    text-decoration: none !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.5px !important;
+}
+
+.ph-logo-text {
+    color: #ffffff !important;
+}
+
+.ph-logo-badge {
+    background: #ff9000 !important;
+    color: #000000 !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
+    margin-left: 2px !important;
+}
+
+/* Header Right */
+.ph-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+.ph-search-btn,
+.ph-user-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4px !important;
+}
+
+/* Inline Search Dropdown */
+.ph-search-dropdown {
+    padding: 8px 12px 12px 12px !important;
+    background: #0e0e10 !important;
+    border-bottom: 1px solid #282830 !important;
+}
+
+.ph-search-form {
+    display: flex !important;
+    align-items: center !important;
+    background: #18181c !important;
+    border: 1px solid #33333d !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+.ph-search-input {
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 10px 12px !important;
+    color: #ffffff !important;
+    font-size: 14px !important;
+    outline: none !important;
+}
+
+.ph-search-submit-btn {
+    background: #ff9000 !important;
+    border: none !important;
+    color: #000000 !important;
+    padding: 0 16px !important;
+    height: 40px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ==========================================
+   2. SUBHEADER: HOT VIDEOS & CHIPS BAR
+   ========================================== */
+.ph-sub-header {
+    padding: 12px 12px 8px 12px !important;
+    background: #000000 !important;
+}
+
+.ph-section-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+.ph-section-title {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+}
+
+.ph-chips-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.ph-chips-bar::-webkit-scrollbar {
+    display: none !important;
+}
+
+.ph-chip {
+    background: #18181c !important;
+    border: 1px solid #282830 !important;
+    color: #e0e0e6 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.ph-chip.active {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.ph-chip-shorties {
+    background: #1c1810 !important;
+    border-color: #ff9000 !important;
+    color: #ff9000 !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.ph-chip-arrow {
+    font-size: 11px !important;
+}
+
+/* ==========================================
+   3. SUBSCRIPTIONS & STORIES STRIP
+   ========================================== */
+.ph-subs-section {
+    padding: 10px 12px 14px 12px !important;
+    border-bottom: 1px solid #16161a !important;
+    background: #000000 !important;
+}
+
+.ph-section-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 10px !important;
+    cursor: pointer !important;
+}
+
+.ph-section-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.ph-section-title-text {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+}
+
+.ph-section-toggle {
+    font-size: 14px !important;
+    color: #8c8c9a !important;
+    font-weight: 700 !important;
+}
+
+.ph-subs-carousel {
+    display: flex !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+}
+
+.ph-subs-carousel::-webkit-scrollbar {
+    display: none !important;
+}
+
+.ph-sub-card {
+    flex: 0 0 120px !important;
+    cursor: pointer !important;
+}
+
+.ph-sub-thumb-box {
+    position: relative !important;
+    width: 120px !important;
+    height: 170px !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    background: #18181c !important;
+    border: 1px solid #222228 !important;
+}
+
+.ph-sub-thumb-box img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.ph-sub-stats-overlay {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    padding: 20px 6px 6px 6px !important;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    box-sizing: border-box !important;
+}
+
+.ph-sub-author {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.ph-sub-meta-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #d0d0d8 !important;
+}
+
+.ph-sub-title {
+    font-size: 11px !important;
+    color: #8c8c9a !important;
+    margin: 4px 0 0 0 !important;
+    line-height: 1.25 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+/* ==========================================
+   4. MAIN FEED & 1:1 VIDEO CARDS
+   ========================================== */
+.ph-main-feed {
+    padding: 12px 12px 80px 12px !important;
+    background: #000000 !important;
+}
+
+.ph-video-grid.media-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 0 !important;
+}
+
+@media (min-width: 640px) {
+    .ph-video-grid.media-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .ph-video-grid.media-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 20px !important;
+    }
+}
+
+/* 1:1 Pornhub Video Card Item */
+body[data-theme="pornhub"] .video-card {
+    background: transparent !important;
+    border-radius: 6px !important;
+    border: none !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+body[data-theme="pornhub"] .thumb-container {
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    aspect-ratio: 16/9 !important;
+    background: #141418 !important;
+    position: relative !important;
+    width: 100% !important;
+}
+
+body[data-theme="pornhub"] .thumb-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+body[data-theme="pornhub"] .duration-badge {
+    position: absolute !important;
+    bottom: 6px !important;
+    right: 6px !important;
+    left: auto !important;
+    top: auto !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(4px) !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    border: none !important;
+    z-index: 10 !important;
+    display: inline-block !important;
+}
+
+/* Pornhub Metadata Block */
+body[data-theme="pornhub"] .video-info {
+    padding: 8px 0 0 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    background: transparent !important;
+}
+
+body[data-theme="pornhub"] .ph-meta-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 13px !important;
+}
+
+body[data-theme="pornhub"] .ph-author-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+body[data-theme="pornhub"] .ph-views-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #8c8c9a !important;
+    flex-shrink: 0 !important;
+}
+
+body[data-theme="pornhub"] .ph-title-row {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+}
+
+body[data-theme="pornhub"] .video-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    flex: 1 !important;
+}
+
+body[data-theme="pornhub"] .ph-more-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #8c8c9a !important;
+    font-size: 16px !important;
+    padding: 0 4px !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+}
+
+.ph-btn-load-more {
+    background: #18181c !important;
+    color: #ff9000 !important;
+    border: 1px solid #282830 !important;
+    border-radius: 4px !important;
+    padding: 10px 24px !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease !important;
+}
+
+.ph-btn-load-more:hover {
+    background: #222228 !important;
+}
+
+/* Hide incompatible elements in Pornhub Theme */
+body[data-theme="pornhub"] .x-avatar-col,
+body[data-theme="pornhub"] .x-post-header,
+body[data-theme="pornhub"] .x-post-text,
+body[data-theme="pornhub"] .x-action-bar,
+body[data-theme="pornhub"] .x-compose-fab,
+body[data-theme="pornhub"] .x-bottom-nav,
+body[data-theme="pornhub"] .tiktok-overlay,
+body[data-theme="pornhub"] .tiktok-bottom-nav {
+    display: none !important;
+}
