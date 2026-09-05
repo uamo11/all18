@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit
 class All18ApiInterceptor(private val context: Context) {
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
         .followRedirects(true)
         .build()
 
@@ -26,8 +26,15 @@ class All18ApiInterceptor(private val context: Context) {
 
     fun shouldIntercept(request: WebResourceRequest): WebResourceResponse? {
         val uri = request.url
+        val host = uri.host ?: ""
         val path = uri.path ?: ""
 
+        // 1. Intercept direct RedGifs API to completely eliminate CORS blocks in WebView
+        if (host.contains("redgifs.com") && path.contains("/v2/")) {
+            return proxyRedGifsRequest(request)
+        }
+
+        // 2. Intercept api.php calls
         if (!path.endsWith("api.php") && !path.contains("/api.php")) {
             return null
         }
@@ -37,6 +44,39 @@ class All18ApiInterceptor(private val context: Context) {
         } catch (e: Exception) {
             Log.e("All18Api", "Error handling API request: ${e.message}", e)
             createJsonResponse("{\"status\":\"error\",\"message\":\"${e.message}\",\"data\":[]}")
+        }
+    }
+
+    private fun proxyRedGifsRequest(request: WebResourceRequest): WebResourceResponse? {
+        return try {
+            val reqBuilder = Request.Builder().url(request.url.toString())
+            for ((key, value) in request.requestHeaders) {
+                if (!key.equals("Origin", ignoreCase = true) && !key.equals("Referer", ignoreCase = true)) {
+                    reqBuilder.header(key, value)
+                }
+            }
+            reqBuilder.header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0 Mobile")
+            val resp = client.newCall(reqBuilder.build()).execute()
+            val bodyBytes = resp.body?.bytes() ?: ByteArray(0)
+            val contentType = resp.header("Content-Type", "application/json; charset=utf-8") ?: "application/json"
+
+            val headers = mutableMapOf<String, String>()
+            headers["Access-Control-Allow-Origin"] = "*"
+            headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            headers["Access-Control-Allow-Headers"] = "*"
+            headers["Content-Type"] = contentType
+
+            WebResourceResponse(
+                "application/json",
+                "UTF-8",
+                resp.code,
+                resp.message.ifEmpty { "OK" },
+                headers,
+                ByteArrayInputStream(bodyBytes)
+            )
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error proxying RedGifs: ${e.message}")
+            null
         }
     }
 
@@ -57,30 +97,32 @@ class All18ApiInterceptor(private val context: Context) {
     }
 
     private fun getCategoriesResponse(): WebResourceResponse {
-        val categories = """
-            [
-                {"slug": "", "name": "🔥 Todo"},
-                {"slug": "latina", "name": "💃 Latinas"},
-                {"slug": "amateur", "name": "🎥 Casero / Amateur"},
-                {"slug": "verified-models", "name": "⭐ Modelos Populares"},
-                {"slug": "milf", "name": "💄 MILF"},
-                {"slug": "big-ass", "name": "🍑 Culos Grandes"},
-                {"slug": "big-tits", "name": "🍒 Tetas Grandes"},
-                {"slug": "cosplay", "name": "🎭 Cosplay Hot"},
-                {"slug": "teen-18", "name": "✨ Jovencitas (18+)"},
-                {"slug": "blowjob", "name": "💋 Oral / Mamadas"},
-                {"slug": "anal", "name": "🔥 Anal"},
-                {"slug": "lesbian", "name": "👭 Lesbiana"},
-                {"slug": "threesome", "name": "⚡ Tríos"},
-                {"slug": "pov", "name": "👀 POV"}
-            ]
+        val categoriesJson = """
+            {
+                "status": "success",
+                "data": [
+                    {"slug": "", "name": "🔥 Todo"},
+                    {"slug": "latina", "name": "💃 Latinas"},
+                    {"slug": "amateur", "name": "🎥 Casero / Amateur"},
+                    {"slug": "verified-models", "name": "⭐ Modelos Populares"},
+                    {"slug": "milf", "name": "💄 MILF"},
+                    {"slug": "big-ass", "name": "🍑 Culos Grandes"},
+                    {"slug": "big-tits", "name": "🍒 Tetas Grandes"},
+                    {"slug": "cosplay", "name": "🎭 Cosplay Hot"},
+                    {"slug": "teen-18", "name": "✨ Jovencitas (18+)"},
+                    {"slug": "blowjob", "name": "💋 Oral / Mamadas"},
+                    {"slug": "anal", "name": "🔥 Anal"},
+                    {"slug": "lesbian", "name": "👭 Lesbiana"},
+                    {"slug": "threesome", "name": "⚡ Tríos"},
+                    {"slug": "pov", "name": "👀 POV"}
+                ]
+            }
         """.trimIndent()
-        return createJsonResponse(categories)
+        return createJsonResponse(categoriesJson)
     }
 
     private fun getUserPostsResponse(q: String, category: String): WebResourceResponse {
         val jsonArray = JSONArray()
-        // Try reading local user_posts.json if exists
         try {
             val file = File(context.filesDir, "user_posts.json")
             if (file.exists()) {
@@ -102,9 +144,32 @@ class All18ApiInterceptor(private val context: Context) {
     }
 
     private fun getSearchResponse(q: String, category: String, source: String, page: Int, filter: String): WebResourceResponse {
+        // Direct ID lookup support (e.g. from watch.html)
+        if (q.startsWith("ph_") || q.startsWith("rt_") || q.startsWith("rg_")) {
+            val directItem = createDirectItemFromId(q)
+            if (directItem != null) {
+                val singleArr = JSONArray().apply { put(directItem) }
+                val respObj = JSONObject().apply {
+                    put("status", "success")
+                    put("count", 1)
+                    put("page", 1)
+                    put("data", singleArr)
+                }
+                return createJsonResponse(respObj.toString())
+            }
+        }
+
+        val catMap = mapOf(
+            "teen-18" to "teen",
+            "big-ass" to "big ass",
+            "big-tits" to "big tits",
+            "verified-models" to "model",
+            "blowjob" to "blowjob"
+        )
+        val mappedCat = catMap[category] ?: category
         val queryTerm = when {
             q.isNotBlank() -> q
-            category.isNotBlank() -> category
+            mappedCat.isNotBlank() -> mappedCat
             else -> "latina"
         }
 
@@ -130,8 +195,8 @@ class All18ApiInterceptor(private val context: Context) {
 
                 val maxLen = maxOf(rgItems.length(), phItems.length(), rtItems.length())
                 for (i in 0 until maxLen) {
-                    if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
                     if (i < phItems.length()) allItems.put(phItems.getJSONObject(i))
+                    if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
                     if (i < rtItems.length()) allItems.put(rtItems.getJSONObject(i))
                 }
             }
@@ -140,10 +205,78 @@ class All18ApiInterceptor(private val context: Context) {
         val responseJson = JSONObject()
         responseJson.put("status", "success")
         responseJson.put("page", page)
+        responseJson.put("query", q)
+        responseJson.put("category", category)
+        responseJson.put("source", source)
         responseJson.put("count", allItems.length())
         responseJson.put("data", allItems)
 
         return createJsonResponse(responseJson.toString())
+    }
+
+    private fun createDirectItemFromId(id: String): JSONObject? {
+        return when {
+            id.startsWith("ph_") -> {
+                val rawId = id.removePrefix("ph_")
+                JSONObject().apply {
+                    put("id", id)
+                    put("raw_id", rawId)
+                    put("title", "Video All18")
+                    put("duration", "10:00")
+                    put("views", "180K vistas")
+                    put("rating", "96%")
+                    put("author", "@PornhubStar")
+                    put("thumb", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600")
+                    put("thumbs", JSONArray().put("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"))
+                    put("url", "https://www.pornhub.com/embed/$rawId")
+                    put("embed_url", "https://www.pornhub.com/embed/$rawId")
+                    put("media_url", "")
+                    put("source", "Pornhub")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+            }
+            id.startsWith("rt_") -> {
+                val rawId = id.removePrefix("rt_")
+                JSONObject().apply {
+                    put("id", id)
+                    put("raw_id", rawId)
+                    put("title", "Video All18")
+                    put("duration", "08:45")
+                    put("views", "150K vistas")
+                    put("rating", "94%")
+                    put("author", "@RedTubeStar")
+                    put("thumb", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600")
+                    put("thumbs", JSONArray().put("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"))
+                    put("url", "https://embed.redtube.com/?id=$rawId")
+                    put("embed_url", "https://embed.redtube.com/?id=$rawId")
+                    put("media_url", "")
+                    put("source", "RedTube")
+                    put("type", "video")
+                    put("quality", "720p HD")
+                }
+            }
+            id.startsWith("rg_") -> {
+                val rawId = id.removePrefix("rg_")
+                JSONObject().apply {
+                    put("id", id)
+                    put("raw_id", rawId)
+                    put("title", "Short Clip Hot")
+                    put("duration", "Short")
+                    put("views", "85K vistas")
+                    put("rating", "98%")
+                    put("author", "@All18Creator")
+                    put("thumb", "https://media.redgifs.com/$rawId-poster.jpg")
+                    put("thumbs", JSONArray().put("https://media.redgifs.com/$rawId-poster.jpg"))
+                    put("media_url", "https://media.redgifs.com/$rawId.mp4")
+                    put("embed_url", "https://www.redgifs.com/ifr/$rawId?autoplay=1")
+                    put("source", "RedGifs")
+                    put("type", "short")
+                    put("quality", "1080p 60fps")
+                }
+            }
+            else -> null
+        }
     }
 
     private fun getRedGifsToken(): String? {
@@ -177,7 +310,7 @@ class All18ApiInterceptor(private val context: Context) {
         val token = getRedGifsToken() ?: return list
 
         val cleanQuery = if (query.isBlank()) "hot" else query
-        val url = "https://api.redgifs.com/v2/gifs/search?search_text=${Uri.encode(cleanQuery)}&count=18&page=$page&order=trending"
+        val url = "https://api.redgifs.com/v2/gifs/search?search_text=${Uri.encode(cleanQuery)}&count=24&page=$page&order=trending"
 
         try {
             val req = Request.Builder()
@@ -225,8 +358,7 @@ class All18ApiInterceptor(private val context: Context) {
                 item.put("rating", "98%")
                 item.put("author", "@" + g.optString("userName", "All18Creator"))
                 item.put("thumb", poster)
-                val thumbsArr = JSONArray()
-                thumbsArr.put(poster)
+                val thumbsArr = JSONArray().apply { put(poster) }
                 item.put("thumbs", thumbsArr)
                 item.put("media_url", mp4)
                 item.put("embed_url", "https://www.redgifs.com/ifr/$gid?autoplay=1")
@@ -243,7 +375,7 @@ class All18ApiInterceptor(private val context: Context) {
 
     private fun fetchPornhub(query: String, page: Int, filter: String): JSONArray {
         val list = JSONArray()
-        var search = if (query.isBlank()) "hot" else query
+        var search = if (query.isBlank()) "hot trending" else query
         if (filter == "toprated") search += " top"
         val url = "https://www.pornhub.com/webmasters/search?search=${Uri.encode(search)}&page=$page&thumbsize=large&output=json"
 
@@ -263,22 +395,40 @@ class All18ApiInterceptor(private val context: Context) {
                 val vid = v.optString("video_id")
                 if (vid.isEmpty()) continue
 
+                val thumbsArr = JSONArray()
+                val rawThumbs = v.optJSONArray("thumbs")
+                if (rawThumbs != null) {
+                    for (j in 0 until rawThumbs.length()) {
+                        val tObj = rawThumbs.optJSONObject(j)
+                        val src = tObj?.optString("src") ?: rawThumbs.optString(j)
+                        if (!src.isNullOrEmpty()) thumbsArr.put(src)
+                    }
+                }
+                val defaultThumb = v.optString("default_thumb").ifEmpty { v.optString("thumb") }
+                if (thumbsArr.length() == 0 && defaultThumb.isNotEmpty()) {
+                    thumbsArr.put(defaultThumb)
+                }
+                val mainThumb = if (defaultThumb.isNotEmpty()) defaultThumb else (if (thumbsArr.length() > 0) thumbsArr.getString(0) else "")
+
+                val views = v.optInt("views", 25000)
+                val viewsStr = if (views > 1_000_000) "${views / 1_000_000}M" else "${views / 1000}K"
+
                 val item = JSONObject()
                 item.put("id", "ph_$vid")
                 item.put("raw_id", vid)
-                item.put("title", v.optString("title"))
-                item.put("duration", v.optString("duration"))
-                item.put("views", v.optString("views") + " vistas")
+                item.put("title", v.optString("title").ifEmpty { "Video All18" })
+                item.put("duration", v.optString("duration").ifEmpty { "10:00" })
+                item.put("views", "$viewsStr vistas")
                 item.put("rating", v.optString("rating") + "%")
                 item.put("author", "@PornhubStar")
-                item.put("thumb", v.optString("default_thumb"))
-                item.put("thumbs", v.optJSONArray("thumbs") ?: JSONArray())
+                item.put("thumb", mainThumb)
+                item.put("thumbs", thumbsArr)
                 item.put("url", v.optString("url"))
                 item.put("embed_url", "https://www.pornhub.com/embed/$vid")
                 item.put("media_url", "")
                 item.put("source", "Pornhub")
                 item.put("type", "video")
-                item.put("quality", "HD 1080p")
+                item.put("quality", "1080p HD")
                 list.put(item)
             }
         } catch (e: Exception) {
@@ -290,7 +440,7 @@ class All18ApiInterceptor(private val context: Context) {
     private fun fetchRedTube(query: String, page: Int): JSONArray {
         val list = JSONArray()
         val search = if (query.isBlank()) "hot" else query
-        val url = "https://api.redtube.com/?data=redtube.Videos.searchVideos&output=json&search=${Uri.encode(search)}&page=$page&thumbsize=medium"
+        val url = "https://api.redtube.com/?data=redtube.Videos.searchVideos&output=json&search=${Uri.encode(search)}&page=$page&thumbsize=big"
 
         try {
             val req = Request.Builder()
@@ -305,20 +455,38 @@ class All18ApiInterceptor(private val context: Context) {
 
             for (i in 0 until videos.length()) {
                 val wrap = videos.getJSONObject(i)
-                val v = wrap.optJSONObject("video") ?: continue
+                val v = wrap.optJSONObject("video") ?: wrap
                 val vid = v.optString("video_id")
                 if (vid.isEmpty()) continue
+
+                val thumbsArr = JSONArray()
+                val rawThumbs = v.optJSONArray("thumbs")
+                if (rawThumbs != null) {
+                    for (j in 0 until rawThumbs.length()) {
+                        val tObj = rawThumbs.optJSONObject(j)
+                        val src = tObj?.optString("src") ?: rawThumbs.optString(j)
+                        if (!src.isNullOrEmpty()) thumbsArr.put(src)
+                    }
+                }
+                val defaultThumb = v.optString("default_thumb").ifEmpty { v.optString("thumb") }
+                if (thumbsArr.length() == 0 && defaultThumb.isNotEmpty()) {
+                    thumbsArr.put(defaultThumb)
+                }
+                val mainThumb = if (defaultThumb.isNotEmpty()) defaultThumb else (if (thumbsArr.length() > 0) thumbsArr.getString(0) else "")
+
+                val views = v.optInt("views", 18000)
+                val viewsStr = if (views > 1_000_000) "${views / 1_000_000}M" else "${views / 1000}K"
 
                 val item = JSONObject()
                 item.put("id", "rt_$vid")
                 item.put("raw_id", vid)
-                item.put("title", v.optString("title"))
-                item.put("duration", v.optString("duration"))
-                item.put("views", v.optString("views") + " vistas")
+                item.put("title", v.optString("title").ifEmpty { "Video All18" })
+                item.put("duration", v.optString("duration").ifEmpty { "08:45" })
+                item.put("views", "$viewsStr vistas")
                 item.put("rating", v.optString("rating") + "%")
                 item.put("author", "@RedTubeStar")
-                item.put("thumb", v.optString("default_thumb"))
-                item.put("thumbs", v.optJSONArray("thumbs") ?: JSONArray())
+                item.put("thumb", mainThumb)
+                item.put("thumbs", thumbsArr)
                 item.put("url", v.optString("url"))
                 item.put("embed_url", "https://embed.redtube.com/?id=$vid")
                 item.put("media_url", "")

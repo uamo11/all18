@@ -3,17 +3,17 @@ package com.all18.app
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import android.view.WindowManager
 import android.webkit.ConsoleMessage
+import android.webkit.CookieManager
 import android.webkit.DownloadListener
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -38,15 +38,13 @@ class MainActivity : AppCompatActivity() {
 
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
-    private var originalSystemUiVisibility = 0
     private var originalOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
     private var backPressedTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // AMOLED Pure Black navigation & status bar
+        // AMOLED Pure Black bars
         window.statusBarColor = Color.BLACK
         window.navigationBarColor = Color.BLACK
 
@@ -80,6 +78,13 @@ class MainActivity : AppCompatActivity() {
         settings.builtInZoomControls = false
         settings.displayZoomControls = false
         settings.cacheMode = WebSettings.LOAD_DEFAULT
+        settings.javaScriptCanOpenWindowsAutomatically = true
+        settings.safeBrowsingEnabled = false
+
+        // Enable third party cookies for video embeds (Pornhub, RedGifs, RedTube)
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        cookieManager.setAcceptThirdPartyCookies(webView, true)
 
         // Compliance with User Global Rules
         settings.allowFileAccessFromFileURLs = true
@@ -103,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(All18JsBridge(this), "AndroidApp")
 
         // Safe DownloadListener (Rule compliance: abort file://, about:, data:)
-        webView.setDownloadListener(DownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
+        webView.setDownloadListener(DownloadListener { url, _, _, _, _ ->
             if (url.startsWith("file://", ignoreCase = true) ||
                 url.startsWith("about:", ignoreCase = true) ||
                 url.startsWith("data:", ignoreCase = true)
@@ -151,7 +156,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                // Go immersive fullscreen landscape
                 hideSystemUI()
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             }
@@ -172,6 +176,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                Log.d("All18Console", "[${consoleMessage?.messageLevel()}] ${consoleMessage?.message()} (${consoleMessage?.sourceId()}:${consoleMessage?.lineNumber()})")
                 return super.onConsoleMessage(consoleMessage)
             }
         }
@@ -184,7 +189,7 @@ class MainActivity : AppCompatActivity() {
             ): WebResourceResponse? {
                 if (request == null) return null
 
-                // 1. Intercept api.php calls
+                // 1. Intercept API & RedGifs CORS proxy
                 val apiResponse = apiInterceptor.shouldIntercept(request)
                 if (apiResponse != null) {
                     return apiResponse
@@ -198,22 +203,42 @@ class MainActivity : AppCompatActivity() {
                 view: WebView?,
                 request: WebResourceRequest?
             ): Boolean {
-                val url = request?.url?.toString() ?: return false
+                if (request == null) return false
 
+                // NEVER hijack iframe navigations! Allow all video embeds to load inside WebView!
+                if (!request.isForMainFrame) {
+                    return false
+                }
+
+                val url = request.url.toString()
+
+                // Stay inside WebView for internal pages and all media embed providers
                 if (url.startsWith("https://appassets.androidplatform.net") ||
-                    url.startsWith("file:///android_asset")
+                    url.startsWith("file:///android_asset") ||
+                    url.contains("/embed/") ||
+                    url.contains("/ifr/") ||
+                    url.contains("pornhub.com") ||
+                    url.contains("redtube.com") ||
+                    url.contains("redgifs.com") ||
+                    url.endsWith(".html") ||
+                    url.contains(".html?")
                 ) {
                     return false
                 }
 
-                // External intents
-                return try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                    startActivity(intent)
-                    true
-                } catch (e: Exception) {
-                    false
+                // External intents for communication schemes
+                if (url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("tg:") || url.startsWith("whatsapp:")) {
+                    return try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        startActivity(intent)
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
                 }
+
+                // Allow all standard web navigations within WebView
+                return false
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -241,7 +266,6 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (customView != null) {
-                    // Exit fullscreen video
                     binding.webView.webChromeClient?.onHideCustomView()
                     return
                 }
@@ -285,9 +309,6 @@ class MainActivity : AppCompatActivity() {
     private fun showSystemUI() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = originalSystemUiVisibility
         }
     }
 

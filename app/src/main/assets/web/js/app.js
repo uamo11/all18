@@ -140,7 +140,7 @@
         }
 
         if (videoId || isWatchPage) {
-            const cachedItem = sessionStorage.getItem('all18_current_watch');
+            let cachedItem = sessionStorage.getItem('all18_current_watch') || localStorage.getItem('all18_current_watch');
             if (cachedItem) {
                 try {
                     const item = JSON.parse(cachedItem);
@@ -152,12 +152,27 @@
             }
 
             if (videoId) {
+                let directItem = null;
+                if (videoId.startsWith('ph_')) {
+                    const rawId = videoId.replace('ph_', '');
+                    directItem = { id: videoId, raw_id: rawId, title: 'Video All18', source: 'Pornhub', embed_url: 'https://www.pornhub.com/embed/' + rawId, author: '@PornhubStar', views: '240K vistas', rating: '96%', category: 'Latina' };
+                } else if (videoId.startsWith('rt_')) {
+                    const rawId = videoId.replace('rt_', '');
+                    directItem = { id: videoId, raw_id: rawId, title: 'Video All18', source: 'RedTube', embed_url: 'https://embed.redtube.com/?id=' + rawId, author: '@RedTubeStar', views: '180K vistas', rating: '94%', category: 'Latina' };
+                } else if (videoId.startsWith('rg_')) {
+                    const rawId = videoId.replace('rg_', '');
+                    directItem = { id: videoId, raw_id: rawId, title: 'Short Clip Hot', source: 'RedGifs', type: 'short', embed_url: 'https://www.redgifs.com/ifr/' + rawId + '?autoplay=1', media_url: 'https://media.redgifs.com/' + rawId + '.mp4', author: '@All18Creator', views: '95K vistas', rating: '98%', category: 'Shorts' };
+                }
+                if (directItem) {
+                    openWatchView(directItem, false);
+                }
+
                 fetch(`api.php?action=search&source=all&q=${encodeURIComponent(videoId)}&page=1`)
                     .then(res => res.json())
                     .then(data => {
                         if (data && data.data && data.data.length > 0) {
                             const found = data.data.find(i => i.id === videoId) || data.data[0];
-                            openWatchView(found, false);
+                            if (found) openWatchView(found, false);
                         }
                     })
                     .catch(() => {});
@@ -672,13 +687,16 @@
     function preloadThumbnails(items) {
         if (!items || !items.length) return;
         items.forEach(item => {
-            const urls = [item.thumb, ...(item.thumbs || [])].filter(Boolean);
+            const rawList = [item.thumb, ...(item.thumbs || [])];
+            const urls = rawList.map(u => (typeof u === 'string' ? u : (u && u.src ? u.src : ''))).filter(Boolean);
             urls.forEach(url => {
-                if (url && !preloadedThumbs.has(url) && !url.startsWith('data:')) {
+                if (typeof url === 'string' && !preloadedThumbs.has(url) && !url.startsWith('data:')) {
                     preloadedThumbs.add(url);
-                    const img = new Image();
-                    img.referrerPolicy = 'no-referrer';
-                    img.src = url;
+                    try {
+                        const img = new Image();
+                        img.referrerPolicy = 'no-referrer';
+                        img.src = url;
+                    } catch(e) {}
                 }
             });
         });
@@ -1144,7 +1162,7 @@
 
             // Other themes or standard tube: open watch view
             if (!window.location.pathname.includes('watch.html') && !window.location.pathname.includes('watch.php') && !document.body.classList.contains('watch-page-body')) {
-                try { sessionStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch (err) {}
+                try { try { localStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch(e){}; sessionStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch (err) {}
                 window.location.href = 'watch.html?v=' + encodeURIComponent(item.id);
             } else {
                 openWatchView(item);
@@ -1246,7 +1264,7 @@
 
     function openWatchView(item, pushHistory = true) {
         state.activeModalItem = item;
-        try { sessionStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch (e) {}
+        try { try { localStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch(e){}; sessionStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch (e) {}
         const catalogView = document.getElementById('catalogView');
         const watchView = document.getElementById('watchView');
         
@@ -1293,12 +1311,12 @@
                     `;
                 } else {
                     playerWrapper.innerHTML = `
-                        <iframe src="${ifrUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="no-referrer"></iframe>
+                        <iframe src="${ifrUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" referrerpolicy="no-referrer"></iframe>
                     `;
                 }
             } else if (item.embed_url) {
                 playerWrapper.innerHTML = `
-                    <iframe src="${item.embed_url}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="no-referrer"></iframe>
+                    <iframe src="${item.embed_url}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" referrerpolicy="no-referrer"></iframe>
                 `;
             } else if (item.media_url) {
                 playerWrapper.innerHTML = `

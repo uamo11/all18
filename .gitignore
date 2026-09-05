@@ -9,3 +9,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+.kotlin
+*.apk
+*.zip
+patch_app_js.py
+deploy_all18.py
