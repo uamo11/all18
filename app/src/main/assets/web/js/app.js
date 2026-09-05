@@ -802,7 +802,7 @@
         const isFav = state.favorites.some(f => f.id === item.id);
         const isUserPost = !!item.is_user_post;
         const initialThumb = item.thumb || FALLBACK_THUMB;
-        const mediaVideoUrl = item.media_url || (isUserPost && item.video_url ? item.video_url : '');
+        const mediaVideoUrl = item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '');
 
         // Dynamic realistic stats
         const seed = Math.abs(String(item.id || '123').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0));
@@ -837,9 +837,14 @@
                             <span class="x-post-dot">&middot;</span>
                             <span class="x-post-time">${timeAgo}</span>
                         </div>
-                        <span class="x-more-btn" title="Más opciones">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
-                        </span>
+                        <div class="x-header-right-actions" style="display: flex; align-items: center; gap: 4px;">
+                            <button class="x-card-cinema-btn" type="button" title="Ver en Modo Cine / Watch" onclick="event.stopPropagation(); window.openWatchCinemaItem && window.openWatchCinemaItem('${item.id}');">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 6h16v12H4z M10 9v6l5-3z"/></svg>
+                            </button>
+                            <span class="x-more-btn" title="Más opciones">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                            </span>
+                        </div>
                     </div>
                     <p class="x-post-text">
                         ${escapeHTML(item.title || '').replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>').replace(/(@[a-zA-Z0-9_]+)/g, '<span class="x-mention">$1</span>')}
@@ -1219,7 +1224,7 @@
 
         // Click Card -> Toggle Play/Pause or Open Player
         card.addEventListener('click', (e) => {
-            if (e.target.closest('.x-action-item') || e.target.closest('.card-fav-btn') || e.target.closest('.x-more-btn') || e.target.closest('.tiktok-action-item') || e.target.closest('.ig-action-item') || e.target.closest('.ig-post-more-btn') || e.target.closest('.ig-media-mute-btn')) {
+            if (e.target.closest('.x-action-item') || e.target.closest('.card-fav-btn') || e.target.closest('.x-more-btn') || e.target.closest('.x-card-cinema-btn') || e.target.closest('.tiktok-action-item') || e.target.closest('.ig-action-item') || e.target.closest('.ig-post-more-btn') || e.target.closest('.ig-media-mute-btn')) {
                 return;
             }
 
@@ -1459,7 +1464,32 @@
                     </div>
                 `;
             }
+
+            const activeVideo = playerWrapper.querySelector('video');
+            if (activeVideo) {
+                activeVideo.muted = false;
+                const p = activeVideo.play();
+                if (p !== undefined) {
+                    p.catch(() => {
+                        activeVideo.muted = true;
+                        activeVideo.play().catch(() => {});
+                    });
+                }
+            }
         }
+
+        // Check if navigated from Twitter timeline to update back link
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromParam = urlParams.get('from') || sessionStorage.getItem('all18_from_page');
+            if (fromParam === 'twitter' || fromParam === 'twitter.html' || (document.referrer && document.referrer.includes('twitter.html'))) {
+                const backBtn = document.querySelector('.btn-back-feed');
+                if (backBtn) {
+                    backBtn.href = 'twitter.html';
+                    backBtn.innerHTML = '<span>◀</span> Volver a Timeline (𝕏)';
+                }
+            }
+        } catch(e) {}
 
         // Tags
         if (tagsCloud) {
@@ -1879,7 +1909,17 @@
         }
     };
 
-    window.backToCatalog = function (pushHistory = true) { if (window.location.pathname.includes('watch.html') || window.location.pathname.includes('watch.php') || document.body.classList.contains('watch-page-body')) { window.location.href = 'index.html'; return; }
+    window.backToCatalog = function (pushHistory = true) {
+        if (window.location.pathname.includes('watch.html') || window.location.pathname.includes('watch.php') || document.body.classList.contains('watch-page-body')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const from = urlParams.get('from') || sessionStorage.getItem('all18_from_page');
+            if (from === 'twitter' || from === 'twitter.html' || (document.referrer && document.referrer.includes('twitter.html'))) {
+                window.location.href = 'twitter.html';
+                return;
+            }
+            window.location.href = 'index.html';
+            return;
+        }
         const catalogView = document.getElementById('catalogView');
         const watchView = document.getElementById('watchView');
         const playerWrapper = document.getElementById('watchPlayerWrapper');
@@ -3220,23 +3260,199 @@
     // =========================================================================
     // X (TWITTER) 1:1 FULLSCREEN MEDIA LIGHTBOX PLAYER
     // =========================================================================
+    window.currentXModalItem = null;
+
+    function resolveVideoSources(item) {
+        if (!item) return { mediaUrl: '', embedUrl: '' };
+        const isUserPost = !!item.is_user_post;
+        let mediaUrl = item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '');
+        let embedUrl = item.embed_url || '';
+        const rawId = item.raw_id || (item.id ? String(item.id).replace(/^[a-z]+_/, '') : '');
+
+        // Fallback provider URL resolution based on standard ID prefixes
+        if (!mediaUrl && !embedUrl && item.id) {
+            const id = String(item.id);
+            if (id.startsWith('ph_')) {
+                embedUrl = `https://www.pornhub.com/embed/${rawId}`;
+            } else if (id.startsWith('xv_')) {
+                embedUrl = `https://www.xvideos.com/embedframe/${rawId}`;
+            } else if (id.startsWith('xn_')) {
+                embedUrl = `https://www.xnxx.com/embedframe/${rawId}`;
+            } else if (id.startsWith('yp_')) {
+                embedUrl = `https://www.youporn.com/embed/${rawId}`;
+            } else if (id.startsWith('rt_')) {
+                embedUrl = `https://embed.redtube.com/?id=${rawId}`;
+            } else if (id.startsWith('rg_')) {
+                mediaUrl = `https://media.redgifs.com/${rawId}.mp4`;
+                embedUrl = `https://www.redgifs.com/ifr/${rawId}?autoplay=1`;
+            }
+        }
+        if (!embedUrl && item.url && !item.url.endsWith('.mp4') && !item.url.endsWith('.webm')) {
+            embedUrl = item.url;
+        }
+        if (!mediaUrl && item.url && (item.url.endsWith('.mp4') || item.url.endsWith('.webm') || item.url.includes('.mp4?'))) {
+            mediaUrl = item.url;
+        }
+        if (!embedUrl && item.source === 'RedGifs' && rawId) {
+            embedUrl = `https://www.redgifs.com/ifr/${rawId}?autoplay=1`;
+        }
+        if (!mediaUrl && item.source === 'RedGifs' && rawId) {
+            mediaUrl = `https://media.redgifs.com/${rawId}.mp4`;
+        }
+
+        return { mediaUrl, embedUrl };
+    }
+
+    window.openCurrentWatchCinema = function(targetSection = '') {
+        const item = window.currentXModalItem;
+        if (!item) return;
+        try {
+            sessionStorage.setItem('all18_current_watch', JSON.stringify(item));
+            localStorage.setItem('all18_current_watch', JSON.stringify(item));
+            sessionStorage.setItem('all18_from_page', 'twitter.html');
+        } catch(e) {}
+        window.closeXMediaModal(false);
+        const hash = targetSection === 'comments' ? '#watchCommentsSection' : '';
+        window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&from=twitter${hash}`;
+    };
+
+    window.openWatchCinemaItem = function(itemId) {
+        const item = state.items.find(i => String(i.id) === String(itemId)) || { id: itemId };
+        try {
+            sessionStorage.setItem('all18_current_watch', JSON.stringify(item));
+            localStorage.setItem('all18_current_watch', JSON.stringify(item));
+            sessionStorage.setItem('all18_from_page', 'twitter.html');
+        } catch(e) {}
+        window.location.href = `watch.html?v=${encodeURIComponent(itemId)}&from=twitter`;
+    };
+
     window.openXMediaModal = function(item) {
+        if (!item) return;
+        window.currentXModalItem = item;
+
         const modal = document.getElementById('xMediaModal');
         const mediaContainer = document.getElementById('xLightboxMedia');
         if (!modal || !mediaContainer) return;
 
-        const isUserPost = !!item.is_user_post;
-        const mediaVideoUrl = item.media_url || (isUserPost && item.video_url ? item.video_url : '');
+        // Pause any running videos in the feed to avoid competing sound/decoders
+        document.querySelectorAll('.feed-video-player').forEach(v => {
+            try { v.pause(); } catch(e) {}
+        });
+
+        const { mediaUrl, embedUrl } = resolveVideoSources(item);
         const initialThumb = item.thumb || FALLBACK_THUMB;
 
-        if (mediaVideoUrl) {
+        // Clear previous media
+        mediaContainer.innerHTML = '';
+
+        function renderEmbedPlayer(ifrSrc) {
+            let finalUrl = ifrSrc;
+            if (!finalUrl.includes('autoplay=')) {
+                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+            }
             mediaContainer.innerHTML = `
-                <video src="${mediaVideoUrl}" poster="${initialThumb}" autoplay loop playsinline controls style="max-width: 100%; max-height: 100%; object-fit: contain; width: 100%;"></video>
+                <div class="x-lightbox-iframe-container">
+                    <iframe id="xLightboxIframe" src="${finalUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" referrerpolicy="no-referrer"></iframe>
+                </div>
             `;
+        }
+
+        if (mediaUrl) {
+            // Render native video player with sound button & full controls
+            const wrapper = document.createElement('div');
+            wrapper.className = 'x-lightbox-video-wrapper';
+            wrapper.innerHTML = `
+                <video id="xLightboxVideo" class="x-lightbox-video" src="${mediaUrl}" poster="${initialThumb}" autoplay loop playsinline controls referrerpolicy="no-referrer"></video>
+                <button type="button" class="x-lightbox-sound-btn" id="xLbSoundBtn" title="Activar/Silenciar sonido">
+                    <span class="x-sound-icon">🔊</span>
+                    <span class="x-sound-text">Sonido</span>
+                </button>
+            `;
+            mediaContainer.appendChild(wrapper);
+
+            const v = wrapper.querySelector('video');
+            const soundBtn = wrapper.querySelector('#xLbSoundBtn');
+
+            function updateSoundUI(muted) {
+                if (!soundBtn) return;
+                const icon = soundBtn.querySelector('.x-sound-icon');
+                const text = soundBtn.querySelector('.x-sound-text');
+                if (muted) {
+                    if (icon) icon.textContent = '🔇';
+                    if (text) text.textContent = 'Activar Sonido';
+                    soundBtn.classList.add('muted');
+                } else {
+                    if (icon) icon.textContent = '🔊';
+                    if (text) text.textContent = 'Sonido';
+                    soundBtn.classList.remove('muted');
+                }
+            }
+
+            if (soundBtn && v) {
+                soundBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    v.muted = !v.muted;
+                    updateSoundUI(v.muted);
+                    if (v.paused) v.play().catch(() => {});
+                };
+            }
+
+            if (v) {
+                // Video tap toggle
+                v.onclick = (e) => {
+                    // Clicking video toggles un-mute if it was muted during autoplay
+                    if (v.muted) {
+                        v.muted = false;
+                        updateSoundUI(false);
+                    }
+                };
+
+                // Autoplay with sound attempt (inside user gesture of opening post)
+                v.muted = false;
+                v.volume = 1.0;
+                const playPromise = v.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        updateSoundUI(false);
+                    }).catch((err) => {
+                        // Policy fallback to muted autoplay
+                        console.warn('Unmuted autoplay blocked, falling back to muted:', err);
+                        v.muted = true;
+                        v.play().catch(() => {});
+                        updateSoundUI(true);
+                    });
+                }
+
+                // If direct video fails to load, fallback to embed iframe if available
+                v.onerror = () => {
+                    console.warn('Direct video error, attempting embed fallback:', item.id);
+                    if (embedUrl) {
+                        renderEmbedPlayer(embedUrl);
+                    }
+                };
+            }
+        } else if (embedUrl) {
+            renderEmbedPlayer(embedUrl);
         } else {
             mediaContainer.innerHTML = `
                 <img src="${initialThumb}" alt="${escapeHTML(item.title || 'Media')}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
             `;
+        }
+
+        // Populate Creator Info in Header
+        const avatarEl = document.getElementById('xLbAvatar');
+        const authorEl = document.getElementById('xLbAuthor');
+        const handleEl = document.getElementById('xLbHandle');
+        const captionEl = document.getElementById('xLbCaption');
+
+        const authorHandle = (item.author || 'creador').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() || 'all18creator';
+        const authorAvatar = item.author_avatar || getCreatorAvatar(item.author, item.id);
+
+        if (avatarEl) avatarEl.src = authorAvatar;
+        if (authorEl) authorEl.textContent = item.author || 'Creador Oficial';
+        if (handleEl) handleEl.textContent = '@' + authorHandle;
+        if (captionEl) {
+            captionEl.innerHTML = escapeHTML(item.title || '').replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>');
         }
 
         // Realistic stats
@@ -3261,12 +3477,14 @@
         const likeBtn = document.getElementById('xLbLikeBtn');
         if (likeBtn) {
             const isFav = state.favorites.some(f => f.id === item.id);
-            likeBtn.style.color = isFav ? '#f91880' : '#ffffff';
+            likeBtn.style.color = isFav ? '#f91880' : '#71767b';
             likeBtn.onclick = (e) => {
                 e.stopPropagation();
                 toggleFavorite(item);
                 const nowFav = state.favorites.some(f => f.id === item.id);
-                likeBtn.style.color = nowFav ? '#f91880' : '#ffffff';
+                likeBtn.style.color = nowFav ? '#f91880' : '#71767b';
+                AlgorithmEngine.recordEngagement(item, 'like');
+                showToast(nowFav ? '❤️ Me gusta guardado' : 'Me gusta eliminado');
             };
         }
 
@@ -3274,8 +3492,9 @@
         if (repostBtn) {
             repostBtn.onclick = (e) => {
                 e.stopPropagation();
-                repostBtn.style.color = repostBtn.style.color === 'rgb(0, 186, 124)' ? '#ffffff' : '#00ba7c';
-                showToast('🔁 Reposteado');
+                const isActive = repostBtn.style.color === 'rgb(0, 186, 124)' || repostBtn.style.color === '#00ba7c';
+                repostBtn.style.color = isActive ? '#71767b' : '#00ba7c';
+                showToast(isActive ? 'Repost eliminado' : '🔁 Reposteado en tu perfil');
             };
         }
 
@@ -3283,7 +3502,7 @@
         if (replyBtn) {
             replyBtn.onclick = (e) => {
                 e.stopPropagation();
-                showToast('💬 Respuestas abiertas');
+                window.openCurrentWatchCinema('comments');
             };
         }
 
@@ -3291,9 +3510,14 @@
         if (shareBtn) {
             shareBtn.onclick = (e) => {
                 e.stopPropagation();
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(window.location.href);
-                    showToast('🔗 Enlace copiado');
+                const shareUrl = window.location.origin + window.location.pathname.replace('twitter.html', 'watch.html') + '?v=' + encodeURIComponent(item.id) + '&from=twitter';
+                if (window.AndroidApp && typeof window.AndroidApp.shareLink === 'function') {
+                    window.AndroidApp.shareLink(item.title || 'Video All18', shareUrl);
+                } else if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl);
+                    showToast('🔗 Enlace copiado al portapapeles');
+                } else {
+                    showToast('🔗 ' + shareUrl);
                 }
             };
         }
@@ -3301,22 +3525,44 @@
         modal.classList.add('active');
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+
+        try {
+            history.pushState({ modal: 'xMediaModal' }, '');
+        } catch(e) {}
     };
 
-    window.closeXMediaModal = function() {
+    window.closeXMediaModal = function(popHistory = true) {
         const modal = document.getElementById('xMediaModal');
         const mediaContainer = document.getElementById('xLightboxMedia');
         if (modal) {
             if (mediaContainer) {
                 const v = mediaContainer.querySelector('video');
-                if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+                if (v) {
+                    try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {}
+                }
+                const ifr = mediaContainer.querySelector('iframe');
+                if (ifr) {
+                    try { ifr.src = 'about:blank'; } catch(e) {}
+                }
                 mediaContainer.innerHTML = '';
             }
+            window.currentXModalItem = null;
             modal.classList.remove('active');
             modal.style.display = 'none';
             document.body.style.overflow = '';
+
+            if (popHistory && history.state && history.state.modal === 'xMediaModal') {
+                try { history.back(); } catch(e) {}
+            }
         }
     };
+
+    window.addEventListener('popstate', (e) => {
+        const modal = document.getElementById('xMediaModal');
+        if (modal && modal.classList.contains('active')) {
+            window.closeXMediaModal(false);
+        }
+    });
 
     // =========================================================================
     // INSTAGRAM 1:1 FULLSCREEN REELS / PLAYER VIEWER
