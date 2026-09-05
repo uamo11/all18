@@ -11,6 +11,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import android.text.Html
@@ -282,18 +284,33 @@ class All18ApiInterceptor(private val context: Context) {
                 val xnItems = fetchXNXX(queryTerm, page)
                 for (i in 0 until xnItems.length()) allItems.put(xnItems.getJSONObject(i))
             }
-            else -> { // "all"
-                val phItems = fetchPornhub(queryTerm, page, filter)
-                val xvItems = fetchXVideos(queryTerm, page)
-                val xnItems = fetchXNXX(queryTerm, page)
-                val rtItems = fetchRedTube(queryTerm, page)
-                val rgItems = fetchRedGifs(queryTerm, page)
+            "youporn" -> {
+                val ypItems = fetchYouPorn(queryTerm, page)
+                for (i in 0 until ypItems.length()) allItems.put(ypItems.getJSONObject(i))
+            }
+            else -> { // "all" - Concurrent parallel queries across all 6 networks
+                val executor = Executors.newFixedThreadPool(6)
+                val fPH = executor.submit(Callable { fetchPornhub(queryTerm, page, filter) })
+                val fXV = executor.submit(Callable { fetchXVideos(queryTerm, page) })
+                val fXN = executor.submit(Callable { fetchXNXX(queryTerm, page) })
+                val fYP = executor.submit(Callable { fetchYouPorn(queryTerm, page) })
+                val fRT = executor.submit(Callable { fetchRedTube(queryTerm, page) })
+                val fRG = executor.submit(Callable { fetchRedGifs(queryTerm, page) })
 
-                val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), rtItems.length(), rgItems.length())
+                val phItems = try { fPH.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                val xvItems = try { fXV.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                val xnItems = try { fXN.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                val ypItems = try { fYP.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                val rtItems = try { fRT.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                val rgItems = try { fRG.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                executor.shutdown()
+
+                val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), ypItems.length(), rtItems.length(), rgItems.length())
                 for (i in 0 until maxLen) {
                     if (i < phItems.length()) allItems.put(phItems.getJSONObject(i))
                     if (i < xvItems.length()) allItems.put(xvItems.getJSONObject(i))
                     if (i < xnItems.length()) allItems.put(xnItems.getJSONObject(i))
+                    if (i < ypItems.length()) allItems.put(ypItems.getJSONObject(i))
                     if (i < rtItems.length()) allItems.put(rtItems.getJSONObject(i))
                     if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
                 }
@@ -536,132 +553,217 @@ class All18ApiInterceptor(private val context: Context) {
 
     private fun fetchPornhub(query: String, page: Int, filter: String): JSONArray {
         val list = JSONArray()
-        var search = if (query.isBlank()) "hot trending" else query
-        if (filter == "toprated") search += " top"
-        val url = "https://www.pornhub.com/webmasters/search?search=${Uri.encode(search)}&page=$page&thumbsize=large&output=json"
+        val cleanQuery = query.trim()
+        val url = if (cleanQuery.isBlank() || cleanQuery == "hot" || cleanQuery == "trending" || cleanQuery == "latina") {
+            "https://www.pornhub.com/video?o=tr&page=$page"
+        } else {
+            "https://www.pornhub.com/video/search?search=${Uri.encode(cleanQuery)}&page=$page"
+        }
 
         try {
             val req = Request.Builder()
                 .url(url)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0")
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "es-ES,es;q=0.9,en;q=0.8")
                 .build()
 
             val resp = client.newCall(req).execute()
-            val body = resp.body?.string() ?: return list
-            val json = JSONObject(body)
-            val videos = json.optJSONArray("videos") ?: return list
+            val html = resp.body?.string() ?: return list
 
-            for (i in 0 until videos.length()) {
-                val v = videos.getJSONObject(i)
-                val vid = v.optString("video_id")
-                if (vid.isEmpty()) continue
+            val liRegex = Pattern.compile("<li[^>]+class=\"[^"]*videoBox[^"]*\"[^>]*>(.*?)</li>", Pattern.DOTALL)
+            val matcher = liRegex.matcher(html)
 
-                val thumbsArr = JSONArray()
-                val rawThumbs = v.optJSONArray("thumbs")
-                if (rawThumbs != null) {
-                    for (j in 0 until rawThumbs.length()) {
-                        val tObj = rawThumbs.optJSONObject(j)
-                        val src = tObj?.optString("src") ?: rawThumbs.optString(j)
-                        if (!src.isNullOrEmpty()) thumbsArr.put(src)
-                    }
+            val vkeyPattern = Pattern.compile("(?:_vkey|data-video-vkey)=\"([a-zA-Z0-9]+)\"|viewkey=([a-zA-Z0-9]+)")
+            val titlePattern = Pattern.compile("<a[^>]+title=\"([^"]+)\"|class=\"title\"[^>]*>.*?<a[^>]*>([^<]+)</a>", Pattern.DOTALL)
+            val thumbPattern = Pattern.compile("<img[^>]+(?:data-image|data-thumb_url|data-src|src)=\"([^"]+)\"")
+            val durPattern = Pattern.compile("<var class=\"duration\">([^<]+)</var>|class=\"duration\">([^<]+)<")
+
+            while (matcher.find()) {
+                val cardContent = matcher.group(1) ?: continue
+                val fullTag = matcher.group(0) ?: ""
+
+                val vkM = vkeyPattern.matcher(fullTag)
+                val vkey = if (vkM.find()) {
+                    vkM.group(1) ?: vkM.group(2)
+                } else null ?: continue
+
+                val tM = titlePattern.matcher(cardContent)
+                val rawTitle = if (tM.find()) {
+                    tM.group(1) ?: tM.group(2) ?: "Video Pornhub"
+                } else "Video Pornhub"
+                val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
+
+                val thM = thumbPattern.matcher(cardContent)
+                val thumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+
+                val dM = durPattern.matcher(cardContent)
+                val duration = if (dM.find()) (dM.group(1) ?: dM.group(2))?.trim() ?: "10:00" else "10:00"
+
+                val item = JSONObject().apply {
+                    put("id", "ph_$vkey")
+                    put("raw_id", vkey)
+                    put("title", title)
+                    put("duration", duration)
+                    put("views", "190K vistas")
+                    put("rating", "96%")
+                    put("author", "@PornhubStar")
+                    put("thumb", thumb)
+                    put("thumbs", JSONArray().put(thumb))
+                    put("url", "https://www.pornhub.com/view_video.php?viewkey=$vkey")
+                    put("embed_url", "https://www.pornhub.com/embed/$vkey")
+                    put("media_url", "")
+                    put("source", "Pornhub")
+                    put("type", "video")
+                    put("quality", "1080p HD")
                 }
-                val defaultThumb = v.optString("default_thumb").ifEmpty { v.optString("thumb") }
-                if (thumbsArr.length() == 0 && defaultThumb.isNotEmpty()) {
-                    thumbsArr.put(defaultThumb)
-                }
-                val mainThumb = if (defaultThumb.isNotEmpty()) defaultThumb else (if (thumbsArr.length() > 0) thumbsArr.getString(0) else "")
-
-                val views = v.optInt("views", 25000)
-                val viewsStr = if (views > 1_000_000) "${views / 1_000_000}M" else "${views / 1000}K"
-
-                val item = JSONObject()
-                item.put("id", "ph_$vid")
-                item.put("raw_id", vid)
-                item.put("title", v.optString("title").ifEmpty { "Video All18" })
-                item.put("duration", v.optString("duration").ifEmpty { "10:00" })
-                item.put("views", "$viewsStr vistas")
-                item.put("rating", v.optString("rating") + "%")
-                item.put("author", "@PornhubStar")
-                item.put("thumb", mainThumb)
-                item.put("thumbs", thumbsArr)
-                item.put("url", v.optString("url"))
-                item.put("embed_url", "https://www.pornhub.com/embed/$vid")
-                item.put("media_url", "")
-                item.put("source", "Pornhub")
-                item.put("type", "video")
-                item.put("quality", "1080p HD")
                 list.put(item)
             }
         } catch (e: Exception) {
-            Log.e("All18Api", "Error fetching Pornhub: ${e.message}")
+            Log.e("All18Api", "Error scraping Pornhub: ${e.message}")
         }
         return list
     }
 
     private fun fetchRedTube(query: String, page: Int): JSONArray {
         val list = JSONArray()
-        val search = if (query.isBlank()) "hot" else query
-        val url = "https://api.redtube.com/?data=redtube.Videos.searchVideos&output=json&search=${Uri.encode(search)}&page=$page&thumbsize=big"
+        val cleanQuery = query.trim()
+        val url = if (cleanQuery.isBlank() || cleanQuery == "hot" || cleanQuery == "trending" || cleanQuery == "latina") {
+            "https://www.redtube.com/?page=$page"
+        } else {
+            "https://www.redtube.com/?search=${Uri.encode(cleanQuery)}&page=$page"
+        }
 
         try {
             val req = Request.Builder()
                 .url(url)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0")
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "es-ES,es;q=0.9,en;q=0.8")
                 .build()
 
             val resp = client.newCall(req).execute()
-            val body = resp.body?.string() ?: return list
-            val json = JSONObject(body)
-            val videos = json.optJSONArray("videos") ?: return list
+            val html = resp.body?.string() ?: return list
 
-            for (i in 0 until videos.length()) {
-                val wrap = videos.getJSONObject(i)
-                val v = wrap.optJSONObject("video") ?: wrap
-                val vid = v.optString("video_id")
-                if (vid.isEmpty()) continue
+            val liRegex = Pattern.compile("<li[^>]+data-video-id=\"(\\d+)\"[^>]*>(.*?)</li>", Pattern.DOTALL)
+            val matcher = liRegex.matcher(html)
 
-                val thumbsArr = JSONArray()
-                val rawThumbs = v.optJSONArray("thumbs")
-                if (rawThumbs != null) {
-                    for (j in 0 until rawThumbs.length()) {
-                        val tObj = rawThumbs.optJSONObject(j)
-                        val src = tObj?.optString("src") ?: rawThumbs.optString(j)
-                        if (!src.isNullOrEmpty()) thumbsArr.put(src)
-                    }
+            val titlePattern = Pattern.compile("class=\"video-title-text[^"]*\"[^>]*title=\"([^"]+)\"|<img[^>]+alt=\"([^"]+)\"")
+            val thumbPattern = Pattern.compile("<img[^>]+(?:data-src|data-o_thumb)=\"([^"]+)\"")
+            val durPattern = Pattern.compile("class=\"video-properties\\s+tm_video_duration\">([^<]+)</span>|class=\"duration\">.*?([0-9]+:[0-9]+)")
+
+            while (matcher.find()) {
+                val vid = matcher.group(1) ?: continue
+                val cardContent = matcher.group(2) ?: continue
+
+                val tM = titlePattern.matcher(cardContent)
+                val rawTitle = if (tM.find()) {
+                    tM.group(1) ?: tM.group(2) ?: "Video RedTube"
+                } else "Video RedTube"
+                val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
+
+                val thM = thumbPattern.matcher(cardContent)
+                val thumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+
+                val dM = durPattern.matcher(cardContent)
+                val duration = if (dM.find()) (dM.group(1) ?: dM.group(2))?.trim() ?: "08:45" else "08:45"
+
+                val item = JSONObject().apply {
+                    put("id", "rt_$vid")
+                    put("raw_id", vid)
+                    put("title", title)
+                    put("duration", duration)
+                    put("views", "175K vistas")
+                    put("rating", "95%")
+                    put("author", "@RedTubeStar")
+                    put("thumb", thumb)
+                    put("thumbs", JSONArray().put(thumb))
+                    put("url", "https://www.redtube.com/$vid")
+                    put("embed_url", "https://embed.redtube.com/?id=$vid")
+                    put("media_url", "")
+                    put("source", "RedTube")
+                    put("type", "video")
+                    put("quality", "720p HD")
                 }
-                val defaultThumb = v.optString("default_thumb").ifEmpty { v.optString("thumb") }
-                if (thumbsArr.length() == 0 && defaultThumb.isNotEmpty()) {
-                    thumbsArr.put(defaultThumb)
-                }
-                val mainThumb = if (defaultThumb.isNotEmpty()) defaultThumb else (if (thumbsArr.length() > 0) thumbsArr.getString(0) else "")
-
-                val views = v.optInt("views", 18000)
-                val viewsStr = if (views > 1_000_000) "${views / 1_000_000}M" else "${views / 1000}K"
-
-                val item = JSONObject()
-                item.put("id", "rt_$vid")
-                item.put("raw_id", vid)
-                item.put("title", v.optString("title").ifEmpty { "Video All18" })
-                item.put("duration", v.optString("duration").ifEmpty { "08:45" })
-                item.put("views", "$viewsStr vistas")
-                item.put("rating", v.optString("rating") + "%")
-                item.put("author", "@RedTubeStar")
-                item.put("thumb", mainThumb)
-                item.put("thumbs", thumbsArr)
-                item.put("url", v.optString("url"))
-                item.put("embed_url", "https://embed.redtube.com/?id=$vid")
-                item.put("media_url", "")
-                item.put("source", "RedTube")
-                item.put("type", "video")
-                item.put("quality", "720p HD")
                 list.put(item)
             }
         } catch (e: Exception) {
-            Log.e("All18Api", "Error fetching RedTube: ${e.message}")
+            Log.e("All18Api", "Error scraping RedTube: ${e.message}")
         }
         return list
     }
 
+    private fun fetchYouPorn(query: String, page: Int): JSONArray {
+        val list = JSONArray()
+        val cleanQuery = query.trim()
+        val url = if (cleanQuery.isBlank() || cleanQuery == "hot" || cleanQuery == "trending" || cleanQuery == "latina") {
+            "https://www.youporn.com/?page=$page"
+        } else {
+            "https://www.youporn.com/search/?query=${Uri.encode(cleanQuery)}&page=$page"
+        }
+
+        try {
+            val req = Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "es-ES,es;q=0.9,en;q=0.8")
+                .build()
+
+            val resp = client.newCall(req).execute()
+            val html = resp.body?.string() ?: return list
+
+            val articleRegex = Pattern.compile("<article[^>]+data-video-id=\"(\\d+)\"[^>]*>(.*?)</article>", Pattern.DOTALL)
+            val matcher = articleRegex.matcher(html)
+
+            val titlePattern = Pattern.compile("class=\"video-title-text[^"]*\"[^>]*>.*?<span>(.*?)</span>|aria-label=\"([^"]+)\"", Pattern.DOTALL)
+            val thumbPattern = Pattern.compile("<img[^>]+(?:data-poster|data-src)=\"([^"]+)\"")
+            val durPattern = Pattern.compile("class=\"video-duration[^"]*\"[^>]*>.*?<span>([^<]+)</span>", Pattern.DOTALL)
+
+            while (matcher.find()) {
+                val vid = matcher.group(1) ?: continue
+                val cardContent = matcher.group(2) ?: continue
+                val fullTag = matcher.group(0) ?: ""
+
+                val tM = titlePattern.matcher(cardContent)
+                val rawTitle = if (tM.find()) {
+                    tM.group(1) ?: tM.group(2) ?: "Video YouPorn"
+                } else {
+                    val labelM = Pattern.compile("aria-label=\"([^"]+)\"").matcher(fullTag)
+                    if (labelM.find()) labelM.group(1) ?: "Video YouPorn" else "Video YouPorn"
+                }
+                val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
+
+                val thM = thumbPattern.matcher(cardContent)
+                val thumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+
+                val dM = durPattern.matcher(cardContent)
+                val duration = if (dM.find()) dM.group(1)?.trim() ?: "11:30" else "11:30"
+
+                val item = JSONObject().apply {
+                    put("id", "yp_$vid")
+                    put("raw_id", vid)
+                    put("title", title)
+                    put("duration", duration)
+                    put("views", "220K vistas")
+                    put("rating", "96%")
+                    put("author", "@YouPornStar")
+                    put("thumb", thumb)
+                    put("thumbs", JSONArray().put(thumb))
+                    put("url", "https://www.youporn.com/watch/$vid/")
+                    put("embed_url", "https://www.youporn.com/embed/$vid")
+                    put("media_url", "")
+                    put("source", "YouPorn")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+                list.put(item)
+            }
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error scraping YouPorn: ${e.message}")
+        }
+        return list
+    }
 
     private fun fetchXVideos(query: String, page: Int): JSONArray {
         val list = JSONArray()

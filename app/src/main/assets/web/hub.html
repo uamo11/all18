@@ -168,6 +168,7 @@
         .hub-prov-chip[data-source="pornhub"].active { --accent-color: #ff9000; }
         .hub-prov-chip[data-source="xvideos"].active { --accent-color: #0084ff; }
         .hub-prov-chip[data-source="xnxx"].active { --accent-color: #e5a93c; }
+        .hub-prov-chip[data-source="youporn"].active { --accent-color: #ff3366; }
         .hub-prov-chip[data-source="redtube"].active { --accent-color: #e22626; }
         .hub-prov-chip[data-source="redgifs"].active { --accent-color: #fe2c55; }
 
@@ -290,6 +291,7 @@
         .hub-badge-source.Pornhub { background: #ff9000; color: #000; }
         .hub-badge-source.XVideos { background: #0084ff; color: #fff; }
         .hub-badge-source.XNXX { background: #e5a93c; color: #000; }
+        .hub-badge-source.YouPorn { background: #ff3366; color: #fff; }
         .hub-badge-source.RedTube { background: #e22626; color: #fff; }
         .hub-badge-source.RedGifs { background: #fe2c55; color: #fff; }
 
@@ -417,13 +419,13 @@
             </a>
             <div class="hub-provider-count">
                 <span class="hub-pulse-dot"></span>
-                <span>5 Webs Unificadas</span>
+                <span>6 Redes En Vivo</span>
             </div>
         </div>
 
         <!-- Search Form -->
         <form class="hub-search-box" onsubmit="onHubSearch(event)">
-            <input type="text" id="hubSearchInput" placeholder="Buscar en Pornhub, XVideos, XNXX, RedTube..." autocomplete="off">
+            <input type="text" id="hubSearchInput" placeholder="Buscar en Pornhub, XVideos, XNXX, YouPorn, RedTube..." autocomplete="off">
             <button type="submit">Buscar</button>
         </form>
 
@@ -440,6 +442,9 @@
             </button>
             <button class="hub-prov-chip" data-source="xnxx" onclick="filterBySource('xnxx')">
                 ❌ XNXX
+            </button>
+            <button class="hub-prov-chip" data-source="youporn" onclick="filterBySource('youporn')">
+                💜 YouPorn
             </button>
             <button class="hub-prov-chip" data-source="redtube" onclick="filterBySource('redtube')">
                 🔴 RedTube
@@ -503,7 +508,7 @@
         <a href="hub.html" class="all18-nav-item active">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 0h7v7h-7z"/></svg>
-                <span class="all18-nav-badge">5</span>
+                <span class="all18-nav-badge">6</span>
             </div>
             <span class="all18-nav-label">Multi-Hub</span>
         </a>
@@ -545,12 +550,13 @@
         };
 
         const SOURCE_NAMES = {
-            all: 'Todas las Webs (Mix 5 Proveedores)',
-            pornhub: 'Pornhub',
-            xvideos: 'XVideos',
-            xnxx: 'XNXX',
-            redtube: 'RedTube',
-            redgifs: 'RedGifs'
+            all: 'Todas las Webs (Mix 6 Proveedores En Vivo)',
+            pornhub: 'Pornhub.com (En Vivo)',
+            xvideos: 'XVideos.com (En Vivo)',
+            xnxx: 'XNXX.com (En Vivo)',
+            youporn: 'YouPorn.com (En Vivo)',
+            redtube: 'RedTube.com (En Vivo)',
+            redgifs: 'RedGifs (Shorts HD)'
         };
 
         function initHub() {
