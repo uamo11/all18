@@ -35,16 +35,25 @@ class All18ApiInterceptor(private val context: Context) {
         }
 
         // 2. Intercept api.php calls
-        if (!path.endsWith("api.php") && !path.contains("/api.php")) {
-            return null
+        if (path.endsWith("api.php") || path.contains("/api.php")) {
+            return try {
+                handleApiRequest(uri)
+            } catch (e: Exception) {
+                Log.e("All18Api", "Error handling API request: ${e.message}", e)
+                createJsonResponse("{\"status\":\"error\",\"message\":\"${e.message}\",\"data\":[]}")
+            }
         }
 
-        return try {
-            handleApiRequest(uri)
-        } catch (e: Exception) {
-            Log.e("All18Api", "Error handling API request: ${e.message}", e)
-            createJsonResponse("{\"status\":\"error\",\"message\":\"${e.message}\",\"data\":[]}")
+        // 3. Intercept adult provider HTML pages to strip X-Frame-Options and Content-Security-Policy
+        if (isProviderHost(host)) {
+            val accept = request.requestHeaders["Accept"] ?: ""
+            if (accept.contains("text/html") || request.isForMainFrame || path.isEmpty() || path == "/" || path.endsWith(".html") || !path.contains(".")) {
+                val response = proxyProviderHtml(request)
+                if (response != null) return response
+            }
         }
+
+        return null
     }
 
     private fun proxyRedGifsRequest(request: WebResourceRequest): WebResourceResponse? {
@@ -76,6 +85,101 @@ class All18ApiInterceptor(private val context: Context) {
             )
         } catch (e: Exception) {
             Log.e("All18Api", "Error proxying RedGifs: ${e.message}")
+            null
+        }
+    }
+
+
+    private fun isProviderHost(host: String): Boolean {
+        val h = host.lowercase()
+        return h.contains("pornhub.com") ||
+               h.contains("xvideos.com") ||
+               h.contains("xnxx.com") ||
+               h.contains("redtube.com") ||
+               h.contains("youporn.com") ||
+               h.contains("spankbang.com") ||
+               h.contains("tube8.com")
+    }
+
+    private fun proxyProviderHtml(request: WebResourceRequest): WebResourceResponse? {
+        return try {
+            val url = request.url.toString()
+            val reqBuilder = Request.Builder().url(url)
+
+            val cookieManager = android.webkit.CookieManager.getInstance()
+            val cookies = cookieManager.getCookie(url)
+            if (!cookies.isNullOrEmpty()) {
+                reqBuilder.header("Cookie", cookies)
+            }
+
+            for ((key, value) in request.requestHeaders) {
+                if (!key.equals("Origin", ignoreCase = true) &&
+                    !key.equals("Referer", ignoreCase = true) &&
+                    !key.equals("Cookie", ignoreCase = true)
+                ) {
+                    reqBuilder.header(key, value)
+                }
+            }
+            reqBuilder.header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
+
+            val resp = client.newCall(reqBuilder.build()).execute()
+            if (!resp.isSuccessful) {
+                return null
+            }
+
+            val bodyBytes = resp.body?.bytes() ?: ByteArray(0)
+            var html = String(bodyBytes, Charsets.UTF_8)
+
+            val origin = "${request.url.scheme}://${request.url.host}/"
+            val baseTag = "<base href=\"$origin\">"
+            val antiFrameBuster = """
+                <script>
+                try {
+                    window.top = window.self;
+                    window.parent = window.self;
+                } catch(e) {}
+                </script>
+            """.trimIndent()
+
+            if (html.contains("<head>", ignoreCase = true)) {
+                html = html.replaceFirst("(?i)<head>".toRegex(), "<head>\n$baseTag\n$antiFrameBuster")
+            } else if (html.contains("<html>", ignoreCase = true)) {
+                html = html.replaceFirst("(?i)<html>".toRegex(), "<html>\n<head>$baseTag\n$antiFrameBuster</head>")
+            }
+
+            val responseHeaders = mutableMapOf<String, String>()
+            for ((name, value) in resp.headers) {
+                val lower = name.lowercase()
+                if (lower != "x-frame-options" &&
+                    lower != "content-security-policy" &&
+                    lower != "content-security-policy-report-only" &&
+                    lower != "content-length"
+                ) {
+                    responseHeaders[name] = value
+                }
+            }
+            responseHeaders["Access-Control-Allow-Origin"] = "*"
+
+            val setCookies = resp.headers("Set-Cookie")
+            for (sc in setCookies) {
+                cookieManager.setCookie(url, sc)
+            }
+
+            val contentType = resp.header("Content-Type", "text/html; charset=utf-8") ?: "text/html; charset=utf-8"
+            val mimeType = if (contentType.contains(";")) contentType.substringBefore(";").trim() else contentType
+            val encoding = if (contentType.contains("charset=")) contentType.substringAfter("charset=").trim() else "UTF-8"
+
+            val modifiedBytes = html.toByteArray(Charsets.UTF_8)
+            WebResourceResponse(
+                mimeType,
+                encoding,
+                resp.code,
+                resp.message.ifEmpty { "OK" },
+                responseHeaders,
+                ByteArrayInputStream(modifiedBytes)
+            )
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error proxying provider HTML: ${e.message}")
             null
         }
     }
@@ -232,6 +336,66 @@ class All18ApiInterceptor(private val context: Context) {
                     put("embed_url", "https://www.pornhub.com/embed/$rawId")
                     put("media_url", "")
                     put("source", "Pornhub")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+            }
+            id.startsWith("xv_") -> {
+                val rawId = id.removePrefix("xv_")
+                JSONObject().apply {
+                    put("id", id)
+                    put("raw_id", rawId)
+                    put("title", "Video XVideos")
+                    put("duration", "12:30")
+                    put("views", "320K vistas")
+                    put("rating", "97%")
+                    put("author", "@XVideosStar")
+                    put("thumb", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600")
+                    put("thumbs", JSONArray().put("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"))
+                    put("url", "https://www.xvideos.com/video$rawId")
+                    put("embed_url", "https://www.xvideos.com/embedframe/$rawId")
+                    put("media_url", "")
+                    put("source", "XVideos")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+            }
+            id.startsWith("xn_") -> {
+                val rawId = id.removePrefix("xn_")
+                JSONObject().apply {
+                    put("id", id)
+                    put("raw_id", rawId)
+                    put("title", "Video XNXX")
+                    put("duration", "11:15")
+                    put("views", "290K vistas")
+                    put("rating", "96%")
+                    put("author", "@XNXXStar")
+                    put("thumb", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600")
+                    put("thumbs", JSONArray().put("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"))
+                    put("url", "https://www.xnxx.com/video-$rawId")
+                    put("embed_url", "https://www.xnxx.com/embedframe/$rawId")
+                    put("media_url", "")
+                    put("source", "XNXX")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+            }
+            id.startsWith("yp_") -> {
+                val rawId = id.removePrefix("yp_")
+                JSONObject().apply {
+                    put("id", id)
+                    put("raw_id", rawId)
+                    put("title", "Video YouPorn")
+                    put("duration", "14:20")
+                    put("views", "210K vistas")
+                    put("rating", "95%")
+                    put("author", "@YouPornStar")
+                    put("thumb", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600")
+                    put("thumbs", JSONArray().put("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"))
+                    put("url", "https://www.youporn.com/watch/$rawId")
+                    put("embed_url", "https://www.youporn.com/embed/$rawId")
+                    put("media_url", "")
+                    put("source", "YouPorn")
                     put("type", "video")
                     put("quality", "1080p HD")
                 }

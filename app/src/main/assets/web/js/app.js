@@ -151,11 +151,38 @@
                 } catch (e) {}
             }
 
+            const embedParam = urlParams.get('embed');
+            if (embedParam) {
+                const titleParam = urlParams.get('title') || 'Video All18';
+                const sourceParam = urlParams.get('source') || 'Multi-Hub';
+                const directItem = {
+                    id: videoId || ('ext_' + Date.now()),
+                    title: titleParam,
+                    source: sourceParam,
+                    embed_url: embedParam,
+                    author: '@All18Stream',
+                    views: 'HD Exclusivo',
+                    rating: '99%',
+                    category: 'Multi-Hub'
+                };
+                openWatchView(directItem, false);
+                return;
+            }
+
             if (videoId) {
                 let directItem = null;
                 if (videoId.startsWith('ph_')) {
                     const rawId = videoId.replace('ph_', '');
                     directItem = { id: videoId, raw_id: rawId, title: 'Video All18', source: 'Pornhub', embed_url: 'https://www.pornhub.com/embed/' + rawId, author: '@PornhubStar', views: '240K vistas', rating: '96%', category: 'Latina' };
+                } else if (videoId.startsWith('xv_')) {
+                    const rawId = videoId.replace('xv_', '');
+                    directItem = { id: videoId, raw_id: rawId, title: 'Video XVideos', source: 'XVideos', embed_url: 'https://www.xvideos.com/embedframe/' + rawId, author: '@XVideosStar', views: '320K vistas', rating: '97%', category: 'Destacado' };
+                } else if (videoId.startsWith('xn_')) {
+                    const rawId = videoId.replace('xn_', '');
+                    directItem = { id: videoId, raw_id: rawId, title: 'Video XNXX', source: 'XNXX', embed_url: 'https://www.xnxx.com/embedframe/' + rawId, author: '@XNXXStar', views: '290K vistas', rating: '96%', category: 'Destacado' };
+                } else if (videoId.startsWith('yp_')) {
+                    const rawId = videoId.replace('yp_', '');
+                    directItem = { id: videoId, raw_id: rawId, title: 'Video YouPorn', source: 'YouPorn', embed_url: 'https://www.youporn.com/embed/' + rawId, author: '@YouPornStar', views: '210K vistas', rating: '95%', category: 'Destacado' };
                 } else if (videoId.startsWith('rt_')) {
                     const rawId = videoId.replace('rt_', '');
                     directItem = { id: videoId, raw_id: rawId, title: 'Video All18', source: 'RedTube', embed_url: 'https://embed.redtube.com/?id=' + rawId, author: '@RedTubeStar', views: '180K vistas', rating: '94%', category: 'Latina' };

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <base href="https://appassets.androidplatform.net/assets/web/">
+    <meta name="referrer" content="no-referrer">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>All18 Multi-Hub - 5 Proveedores Simultáneos</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css?v=9.1">
+</head>
+<body class="all18-has-nav" style="margin: 0; padding: 0; background: #000; overflow: hidden;">
+
+    <div class="hub-root">
+        <!-- Hub Top Header -->
+        <header class="hub-header">
+            <div class="hub-header-top">
+                <a href="index.html" class="hub-brand">
+                    <span style="font-weight: 900; font-size: 18px; letter-spacing: -0.5px;">All<span style="color: #ff9000;">18</span></span>
+                    <span class="hub-brand-badge">Multi-Hub</span>
+                </a>
+
+                <div class="hub-live-indicator" title="5 fuentes activas simultáneamente en segundo plano">
+                    <span class="hub-live-dot"></span>
+                    <span>5 Proveedores Vivos</span>
+                </div>
+
+                <!-- View Mode Switcher -->
+                <div class="hub-view-toggles">
+                    <button id="btnViewTabs" class="hub-view-btn active" type="button" onclick="switchHubView('tabs')" title="Pestañas Rápidas">
+                        <span>📑 Pestañas</span>
+                    </button>
+                    <button id="btnViewGrid" class="hub-view-btn" type="button" onclick="switchHubView('grid')" title="Mosaico 2x2 (4 webs a la vez)">
+                        <span>🔲 2x2 Mosaico</span>
+                    </button>
+                    <button id="btnViewDual" class="hub-view-btn" type="button" onclick="switchHubView('dual')" title="Pantalla Dividida Dual">
+                        <span>◫ Dual</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Unified Multi-Search Broadcast Input -->
+            <form id="hubSearchForm" class="hub-search-bar" onsubmit="executeUniversalSearch(event)">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="#a1a1aa"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="hubSearchInput" class="hub-search-input" placeholder="Buscar en las 5 webs a la vez (ej: latina, casero, amateur)..." autocomplete="off">
+                <button type="submit" class="hub-search-submit">
+                    <span>⚡ Buscar en Todos</span>
+                </button>
+            </form>
+
+            <!-- Quick Filter Chips Row -->
+            <div class="hub-chips-row">
+                <button class="hub-chip" type="button" onclick="quickSearchTag('trending')">🔥 Tendencias</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('latina')">💃 Latinas</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('amateur')">🎥 Casero</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('big ass')">🍑 Culos Grandes</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('big tits')">🍒 Tetas Grandes</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('milf')">💄 MILF</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('pov')">📹 POV</button>
+                <button class="hub-chip" type="button" onclick="quickSearchTag('teen')">✨ Jovencitas (18+)</button>
+            </div>
+        </header>
+
+        <!-- Provider Tab Strip (Only in Tab Mode) -->
+        <nav id="hubTabsStrip" class="hub-tabs-strip">
+            <button class="hub-provider-tab active" data-provider="pornhub" style="--tab-color: #ff9000;" onclick="activateProviderTab('pornhub')">
+                <span class="hub-tab-icon" style="background: #ff9000; color: #000;">PH</span>
+                <span>Pornhub</span>
+            </button>
+            <button class="hub-provider-tab" data-provider="xvideos" style="--tab-color: #0084ff;" onclick="activateProviderTab('xvideos')">
+                <span class="hub-tab-icon" style="background: #0084ff; color: #fff;">XV</span>
+                <span>XVideos</span>
+            </button>
+            <button class="hub-provider-tab" data-provider="xnxx" style="--tab-color: #e5a93c;" onclick="activateProviderTab('xnxx')">
+                <span class="hub-tab-icon" style="background: #e5a93c; color: #000;">XN</span>
+                <span>XNXX</span>
+            </button>
+            <button class="hub-provider-tab" data-provider="redtube" style="--tab-color: #e22626;" onclick="activateProviderTab('redtube')">
+                <span class="hub-tab-icon" style="background: #e22626; color: #fff;">RT</span>
+                <span>RedTube</span>
+            </button>
+            <button class="hub-provider-tab" data-provider="youporn" style="--tab-color: #d92582;" onclick="activateProviderTab('youporn')">
+                <span class="hub-tab-icon" style="background: #d92582; color: #fff;">YP</span>
+                <span>YouPorn</span>
+            </button>
+        </nav>
+
+        <!-- Provider Action & Navigation Bar -->
+        <div class="hub-control-bar">
+            <button class="hub-ctrl-btn" type="button" onclick="navigateActiveFrame('back')" title="Atrás">◀</button>
+            <button class="hub-ctrl-btn" type="button" onclick="navigateActiveFrame('forward')" title="Adelante">▶</button>
+            <button class="hub-ctrl-btn" type="button" onclick="navigateActiveFrame('reload')" title="Recargar">🔄</button>
+            
+            <div id="hubUrlPill" class="hub-url-pill" onclick="promptCustomUrl()" title="Toca para ingresar URL personalizada">
+                https://www.pornhub.com
+            </div>
+
+            <!-- Extract to All18 Clean Player -->
+            <button class="hub-btn-extract" type="button" onclick="extractToAll18Player()" title="Ver video actual en el reproductor limpio sin publicidad">
+                <span>🎬 Modo Cine</span>
+            </button>
+
+            <!-- Shield Indicator -->
+            <div style="font-size: 11px; color: #00e676; font-weight: 700; display: flex; align-items: center; gap: 3px;" title="Escudo Anti-Anuncios y Anti-Popups activo">
+                <span>🛡️</span>
+            </div>
+        </div>
+
+        <!-- Web Frames Content Area -->
+        <main class="hub-content-area">
+            
+            <!-- 1. Tab Mode Container (5 iframes loaded simultaneously in memory) -->
+            <div id="hubTabModeContainer" class="hub-tab-mode">
+                
+                <!-- Pornhub Frame -->
+                <div id="frameWrap_pornhub" class="hub-tab-frame-wrapper active">
+                    <iframe id="iframe_pornhub" src="https://www.pornhub.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- XVideos Frame -->
+                <div id="frameWrap_xvideos" class="hub-tab-frame-wrapper">
+                    <iframe id="iframe_xvideos" src="https://www.xvideos.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- XNXX Frame -->
+                <div id="frameWrap_xnxx" class="hub-tab-frame-wrapper">
+                    <iframe id="iframe_xnxx" src="https://www.xnxx.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- RedTube Frame -->
+                <div id="frameWrap_redtube" class="hub-tab-frame-wrapper">
+                    <iframe id="iframe_redtube" src="https://www.redtube.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- YouPorn Frame -->
+                <div id="frameWrap_youporn" class="hub-tab-frame-wrapper">
+                    <iframe id="iframe_youporn" src="https://www.youporn.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- 2. Multi-Grid 2x2 Container (Quad View) -->
+            <div id="hubGridModeContainer" class="hub-grid-mode" style="display: none;">
+                <!-- Pane 1: Pornhub -->
+                <div class="hub-pane" id="gridPane_ph">
+                    <div class="hub-pane-header">
+                        <div class="hub-pane-title" style="color: #ff9000;">🔞 Pornhub</div>
+                        <div class="hub-pane-actions">
+                            <button class="hub-pane-action-btn" type="button" onclick="reloadPaneFrame('iframe_grid_ph')" title="Recargar">🔄</button>
+                            <button class="hub-pane-action-btn" type="button" onclick="toggleMaximizePane('gridPane_ph')" title="Maximizar / Minimizar">⛶</button>
+                        </div>
+                    </div>
+                    <iframe id="iframe_grid_ph" src="https://www.pornhub.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- Pane 2: XVideos -->
+                <div class="hub-pane" id="gridPane_xv">
+                    <div class="hub-pane-header">
+                        <div class="hub-pane-title" style="color: #0084ff;">🎬 XVideos</div>
+                        <div class="hub-pane-actions">
+                            <button class="hub-pane-action-btn" type="button" onclick="reloadPaneFrame('iframe_grid_xv')" title="Recargar">🔄</button>
+                            <button class="hub-pane-action-btn" type="button" onclick="toggleMaximizePane('gridPane_xv')" title="Maximizar / Minimizar">⛶</button>
+                        </div>
+                    </div>
+                    <iframe id="iframe_grid_xv" src="https://www.xvideos.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- Pane 3: XNXX -->
+                <div class="hub-pane" id="gridPane_xn">
+                    <div class="hub-pane-header">
+                        <div class="hub-pane-title" style="color: #e5a93c;">❌ XNXX</div>
+                        <div class="hub-pane-actions">
+                            <button class="hub-pane-action-btn" type="button" onclick="reloadPaneFrame('iframe_grid_xn')" title="Recargar">🔄</button>
+                            <button class="hub-pane-action-btn" type="button" onclick="toggleMaximizePane('gridPane_xn')" title="Maximizar / Minimizar">⛶</button>
+                        </div>
+                    </div>
+                    <iframe id="iframe_grid_xn" src="https://www.xnxx.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- Pane 4: RedTube -->
+                <div class="hub-pane" id="gridPane_rt">
+                    <div class="hub-pane-header">
+                        <div class="hub-pane-title" style="color: #e22626;">🔴 RedTube</div>
+                        <div class="hub-pane-actions">
+                            <button class="hub-pane-action-btn" type="button" onclick="reloadPaneFrame('iframe_grid_rt')" title="Recargar">🔄</button>
+                            <button class="hub-pane-action-btn" type="button" onclick="toggleMaximizePane('gridPane_rt')" title="Maximizar / Minimizar">⛶</button>
+                        </div>
+                    </div>
+                    <iframe id="iframe_grid_rt" src="https://www.redtube.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- 3. Dual Split Mode Container -->
+            <div id="hubDualModeContainer" class="hub-dual-mode" style="display: none;">
+                <!-- Dual Left: Pornhub -->
+                <div class="hub-pane" id="dualPane_left">
+                    <div class="hub-pane-header">
+                        <div class="hub-pane-title" style="color: #ff9000;">🔞 Pornhub</div>
+                        <div class="hub-pane-actions">
+                            <button class="hub-pane-action-btn" type="button" onclick="reloadPaneFrame('iframe_dual_left')">🔄</button>
+                            <button class="hub-pane-action-btn" type="button" onclick="toggleMaximizePane('dualPane_left')">⛶</button>
+                        </div>
+                    </div>
+                    <iframe id="iframe_dual_left" src="https://www.pornhub.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+
+                <!-- Dual Right: XVideos -->
+                <div class="hub-pane" id="dualPane_right">
+                    <div class="hub-pane-header">
+                        <div class="hub-pane-title" style="color: #0084ff;">🎬 XVideos</div>
+                        <div class="hub-pane-actions">
+                            <button class="hub-pane-action-btn" type="button" onclick="reloadPaneFrame('iframe_dual_right')">🔄</button>
+                            <button class="hub-pane-action-btn" type="button" onclick="toggleMaximizePane('dualPane_right')">⛶</button>
+                        </div>
+                    </div>
+                    <iframe id="iframe_dual_right" src="https://www.xvideos.com" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Universal Native Mobile Bottom Navigation Bar -->
+    <nav class="all18-bottom-nav">
+        <!-- 1. Tube (Home) -->
+        <a href="index.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z M10 9v6l5-3z"/></svg>
+            </div>
+            <span class="all18-nav-label">Tube</span>
+        </a>
+
+        <!-- 2. Multi-Hub (Active) -->
+        <a href="hub.html" class="all18-nav-item active">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 0h7v7h-7z"/></svg>
+                <span class="all18-nav-badge">5</span>
+            </div>
+            <span class="all18-nav-label">Multi-Hub</span>
+        </a>
+
+        <!-- 3. Shorts (TikTok Vertical) -->
+        <a href="tiktok.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M17.77 10.32c-.77-.32-1.2-.59-1.81-.82V4.5h-2.5v11.25a2.75 2.75 0 1 1-2.75-2.75c.44 0 .85.1 1.22.28V10.7a5.24 5.24 0 0 0-1.22-.15 5.25 5.25 0 1 0 5.25 5.25V9.92c1.07.72 2.37 1.15 3.75 1.15v-2.5c-.71 0-1.38-.21-1.94-.57z"/></svg>
+            </div>
+            <span class="all18-nav-label">Shorts</span>
+        </a>
+
+        <!-- 4. Timeline (Twitter / X) -->
+        <a href="twitter.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </div>
+            <span class="all18-nav-label">Timeline</span>
+        </a>
+
+        <!-- 5. Profile -->
+        <button class="all18-nav-item" type="button" onclick="openNativeProfile()">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <span class="all18-nav-label">Perfil</span>
+        </button>
+    </nav>
+
+    <!-- Modal Extractor & Video Player Prompt -->
+    <div id="extractModal" class="welcome-modal-overlay" style="display: none;">
+        <div class="welcome-box" style="max-width: 380px;">
+            <div class="welcome-icon">🎬</div>
+            <h2 class="welcome-title" style="font-size: 18px;">Reproductor Limpio All18</h2>
+            <p class="welcome-desc" style="font-size: 13px;">Pega el enlace de video de cualquier proveedor para reproducirlo a pantalla completa sin anuncios, popups ni redirecciones.</p>
+            <input type="text" id="extractInputUrl" style="width: 100%; box-sizing: border-box; padding: 10px; background: #16161b; border: 1px solid #333; border-radius: 8px; color: #fff; margin-bottom: 12px; font-size: 13px;" placeholder="https://www.xvideos.com/video... o Pornhub...">
+            <div class="welcome-buttons">
+                <button class="btn-welcome-enter" type="button" onclick="confirmExtractVideo()">▶ Reproducir Ahora</button>
+                <button class="btn-welcome-leave" type="button" onclick="closeExtractModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Hub Controller Logic -->
+    <script>
+        const PROVIDERS = {
+            pornhub: {
+                name: 'Pornhub',
+                home: 'https://www.pornhub.com',
+                search: (q) => `https://www.pornhub.com/video/search?search=${encodeURIComponent(q)}`,
+                color: '#ff9000'
+            },
+            xvideos: {
+                name: 'XVideos',
+                home: 'https://www.xvideos.com',
+                search: (q) => `https://www.xvideos.com/?k=${encodeURIComponent(q)}`,
+                color: '#0084ff'
+            },
+            xnxx: {
+                name: 'XNXX',
+                home: 'https://www.xnxx.com',
+                search: (q) => `https://www.xnxx.com/search/${encodeURIComponent(q)}`,
+                color: '#e5a93c'
+            },
+            redtube: {
+                name: 'RedTube',
+                home: 'https://www.redtube.com',
+                search: (q) => `https://www.redtube.com/?search=${encodeURIComponent(q)}`,
+                color: '#e22626'
+            },
+            youporn: {
+                name: 'YouPorn',
+                home: 'https://www.youporn.com',
+                search: (q) => `https://www.youporn.com/search/?query=${encodeURIComponent(q)}`,
+                color: '#d92582'
+            }
+        };
+
+        let currentActiveProvider = 'pornhub';
+        let currentViewMode = 'tabs';
+
+        function switchHubView(mode) {
+            currentViewMode = mode;
+            document.querySelectorAll('.hub-view-btn').forEach(b => b.classList.remove('active'));
+            if (mode === 'tabs') document.getElementById('btnViewTabs').classList.add('active');
+            if (mode === 'grid') document.getElementById('btnViewGrid').classList.add('active');
+            if (mode === 'dual') document.getElementById('btnViewDual').classList.add('active');
+
+            const tabContainer = document.getElementById('hubTabModeContainer');
+            const gridContainer = document.getElementById('hubGridModeContainer');
+            const dualContainer = document.getElementById('hubDualModeContainer');
+            const tabsStrip = document.getElementById('hubTabsStrip');
+
+            tabContainer.style.display = mode === 'tabs' ? 'block' : 'none';
+            gridContainer.style.display = mode === 'grid' ? 'grid' : 'none';
+            dualContainer.style.display = mode === 'dual' ? 'grid' : 'none';
+            tabsStrip.style.display = mode === 'tabs' ? 'flex' : 'none';
+
+            if (window.AndroidApp && window.AndroidApp.showToast) {
+                const modeName = mode === 'tabs' ? 'Pestañas Rápidas' : (mode === 'grid' ? 'Mosaico 2x2' : 'Dual Split');
+                window.AndroidApp.showToast(`Modo cambiado a: ${modeName}`);
+            }
+        }
+
+        function activateProviderTab(providerKey) {
+            currentActiveProvider = providerKey;
+            document.querySelectorAll('.hub-provider-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.provider === providerKey);
+            });
+            document.querySelectorAll('.hub-tab-frame-wrapper').forEach(w => {
+                w.classList.toggle('active', w.id === `frameWrap_${providerKey}`);
+            });
+
+            const pill = document.getElementById('hubUrlPill');
+            if (pill && PROVIDERS[providerKey]) {
+                const iframe = document.getElementById(`iframe_${providerKey}`);
+                pill.textContent = iframe && iframe.src ? iframe.src : PROVIDERS[providerKey].home;
+            }
+        }
+
+        function executeUniversalSearch(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('hubSearchInput');
+            const q = input.value.trim();
+            if (!q) return;
+
+            // Broadcast search query to all 5 providers at once!
+            Object.keys(PROVIDERS).forEach(key => {
+                const searchUrl = PROVIDERS[key].search(q);
+                // Update Tab mode iframe
+                const iframe = document.getElementById(`iframe_${key}`);
+                if (iframe) iframe.src = searchUrl;
+            });
+
+            // Also update Grid & Dual iframes if they exist
+            const gridPH = document.getElementById('iframe_grid_ph');
+            if (gridPH) gridPH.src = PROVIDERS.pornhub.search(q);
+            const gridXV = document.getElementById('iframe_grid_xv');
+            if (gridXV) gridXV.src = PROVIDERS.xvideos.search(q);
+            const gridXN = document.getElementById('iframe_grid_xn');
+            if (gridXN) gridXN.src = PROVIDERS.xnxx.search(q);
+            const gridRT = document.getElementById('iframe_grid_rt');
+            if (gridRT) gridRT.src = PROVIDERS.redtube.search(q);
+
+            const dualL = document.getElementById('iframe_dual_left');
+            if (dualL) dualL.src = PROVIDERS.pornhub.search(q);
+            const dualR = document.getElementById('iframe_dual_right');
+            if (dualR) dualR.src = PROVIDERS.xvideos.search(q);
+
+            const pill = document.getElementById('hubUrlPill');
+            if (pill && PROVIDERS[currentActiveProvider]) {
+                pill.textContent = PROVIDERS[currentActiveProvider].search(q);
+            }
+
+            if (window.AndroidApp && window.AndroidApp.showToast) {
+                window.AndroidApp.showToast(`🔍 Buscando "${q}" en las 5 webs simultáneamente...`);
+            }
+        }
+
+        function quickSearchTag(tag) {
+            const input = document.getElementById('hubSearchInput');
+            if (input) {
+                input.value = tag;
+                executeUniversalSearch();
+            }
+        }
+
+        function navigateActiveFrame(action) {
+            const iframe = document.getElementById(`iframe_${currentActiveProvider}`);
+            if (!iframe) return;
+            try {
+                if (action === 'back') iframe.contentWindow.history.back();
+                else if (action === 'forward') iframe.contentWindow.history.forward();
+                else if (action === 'reload') iframe.src = iframe.src;
+            } catch(e) {
+                if (action === 'reload') iframe.src = iframe.src;
+            }
+        }
+
+        function reloadPaneFrame(frameId) {
+            const iframe = document.getElementById(frameId);
+            if (iframe) iframe.src = iframe.src;
+        }
+
+        function toggleMaximizePane(paneId) {
+            const pane = document.getElementById(paneId);
+            if (pane) {
+                pane.classList.toggle('maximized');
+            }
+        }
+
+        function promptCustomUrl() {
+            const current = PROVIDERS[currentActiveProvider].home;
+            const newUrl = prompt(`Ingresa la URL para ${PROVIDERS[currentActiveProvider].name}:`, current);
+            if (newUrl && newUrl.startsWith('http')) {
+                const iframe = document.getElementById(`iframe_${currentActiveProvider}`);
+                if (iframe) iframe.src = newUrl;
+                document.getElementById('hubUrlPill').textContent = newUrl;
+            }
+        }
+
+        function extractToAll18Player() {
+            const modal = document.getElementById('extractModal');
+            const input = document.getElementById('extractInputUrl');
+            if (modal && input) {
+                const iframe = document.getElementById(`iframe_${currentActiveProvider}`);
+                input.value = iframe && iframe.src ? iframe.src : '';
+                modal.style.display = 'flex';
+                input.focus();
+            }
+        }
+
+        function closeExtractModal() {
+            const modal = document.getElementById('extractModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function confirmExtractVideo() {
+            const input = document.getElementById('extractInputUrl');
+            const url = input ? input.value.trim() : '';
+            if (!url) return;
+
+            let embedUrl = '';
+            let videoId = '';
+
+            if (url.includes('xvideos.com/video.')) {
+                const match = url.match(/video\.([a-zA-Z0-9_-]+)/);
+                if (match) {
+                    videoId = `xv_${match[1]}`;
+                    embedUrl = `https://www.xvideos.com/embedframe/${match[1]}`;
+                }
+            } else if (url.includes('xvideos.com/video')) {
+                const match = url.match(/video([a-zA-Z0-9_-]+)/);
+                if (match) {
+                    videoId = `xv_${match[1]}`;
+                    embedUrl = `https://www.xvideos.com/embedframe/${match[1]}`;
+                }
+            } else if (url.includes('xnxx.com/video-')) {
+                const match = url.match(/video-([a-zA-Z0-9_-]+)/);
+                if (match) {
+                    videoId = `xn_${match[1]}`;
+                    embedUrl = `https://www.xnxx.com/embedframe/${match[1]}`;
+                }
+            } else if (url.includes('pornhub.com/view_video.php?viewkey=')) {
+                const match = url.match(/viewkey=([a-zA-Z0-9_-]+)/);
+                if (match) {
+                    videoId = `ph_${match[1]}`;
+                    embedUrl = `https://www.pornhub.com/embed/${match[1]}`;
+                }
+            } else if (url.includes('redtube.com/')) {
+                const match = url.match(/redtube\.com\/([0-9]+)/);
+                if (match) {
+                    videoId = `rt_${match[1]}`;
+                    embedUrl = `https://embed.redtube.com/?id=${match[1]}`;
+                }
+            } else if (url.includes('youporn.com/watch/')) {
+                const match = url.match(/watch\/([0-9]+)/);
+                if (match) {
+                    videoId = `yp_${match[1]}`;
+                    embedUrl = `https://www.youporn.com/embed/${match[1]}`;
+                }
+            }
+
+            closeExtractModal();
+
+            if (embedUrl) {
+                window.location.href = `watch.html?embed=${encodeURIComponent(embedUrl)}&v=${encodeURIComponent(videoId || 'ext_1')}&title=Video+All18`;
+            } else {
+                window.location.href = `watch.html?url=${encodeURIComponent(url)}`;
+            }
+        }
+
+        function openNativeProfile() {
+            window.location.href = 'index.html?openProfile=1';
+        }
+
+        // Listen to URL changes from proxied frames if available
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'ALL18_URL_CHANGED') {
+                const pill = document.getElementById('hubUrlPill');
+                if (pill && event.data.url) pill.textContent = event.data.url;
+            }
+        });
+    </script>
+</body>
+</html>

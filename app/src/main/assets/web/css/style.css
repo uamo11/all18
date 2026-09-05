@@ -3780,7 +3780,7 @@ body[data-theme="twitter"] .x-compose-fab:hover {
 .tiktok-left-info,
 .tiktok-right-actions,
 .tiktok-video-progress,
-    .tiktok-bottom-nav,
+.tiktok-bottom-nav,
 .tiktok-center-play,
 .feed-video-player,
 .x-avatar-col,
@@ -3792,5 +3792,549 @@ body[data-theme="twitter"] .x-compose-fab:hover {
 .nav-text-x {
     display: none !important;
 }
+
+/* =========================================================
+   ALL18 NATIVE MOBILE APP SHELL & BOTTOM NAVIGATION BAR
+   ========================================================= */
+.all18-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: rgba(14, 14, 18, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 99999;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.7);
+}
+
+.all18-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: #8e8e93;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.all18-nav-item:active {
+    transform: scale(0.92);
+}
+
+.all18-nav-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.all18-nav-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+.all18-nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    transition: color 0.2s ease;
+}
+
+.all18-nav-badge {
+    position: absolute;
+    top: -3px;
+    right: -10px;
+    background: #fe2c55;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(254, 44, 85, 0.6);
+    line-height: 1.2;
+}
+
+.all18-nav-item.active {
+    color: #ff9000;
+}
+
+.all18-nav-item.active .all18-nav-icon {
+    transform: translateY(-2px);
+    color: #ff9000;
+}
+
+.all18-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    width: 18px;
+    height: 3px;
+    background: #ff9000;
+    border-radius: 999px;
+    box-shadow: 0 0 10px #ff9000;
+}
+
+/* Page padding to prevent bottom nav collision */
+body.all18-has-nav,
+.all18-has-nav {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Theme specific overrides for bottom nav */
+body[data-theme="tiktok"] .all18-nav-item.active {
+    color: #fe2c55;
+}
+body[data-theme="tiktok"] .all18-nav-item.active::after {
+    background: #fe2c55;
+    box-shadow: 0 0 10px #fe2c55;
+}
+
+body[data-theme="twitter"] .all18-nav-item.active {
+    color: #1d9bf0;
+}
+body[data-theme="twitter"] .all18-nav-item.active::after {
+    background: #1d9bf0;
+    box-shadow: 0 0 10px #1d9bf0;
+}
+
+/* =========================================================
+   MULTI-WEB HUB (5 PROVEEDORES SIMULTÁNEOS) STYLES
+   ========================================================= */
+.hub-root {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    background: #09090b;
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Hub Header */
+.hub-header {
+    background: rgba(14, 14, 18, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.hub-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hub-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #fff;
+}
+
+.hub-brand-badge {
+    background: linear-gradient(135deg, #ff9000, #fe2c55);
+    color: #000;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.hub-live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #00e676;
+    background: rgba(0, 230, 118, 0.12);
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 230, 118, 0.25);
+}
+
+.hub-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #00e676;
+    box-shadow: 0 0 8px #00e676;
+    animation: hubPulse 2s infinite;
+}
+
+@keyframes hubPulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.hub-view-toggles {
+    display: flex;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 3px;
+    border-radius: 8px;
+    gap: 3px;
+}
+
+.hub-view-btn {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.hub-view-btn.active {
+    background: #ff9000;
+    color: #000;
+    font-weight: 800;
+    box-shadow: 0 2px 8px rgba(255, 144, 0, 0.4);
+}
+
+/* Hub Unified Search Strip */
+.hub-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px 8px;
+    transition: border-color 0.2s ease;
+}
+
+.hub-search-bar:focus-within {
+    border-color: #ff9000;
+    box-shadow: 0 0 0 2px rgba(255, 144, 0, 0.2);
+}
+
+.hub-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.hub-search-submit {
+    background: linear-gradient(135deg, #ff9000, #ff6b00);
+    border: none;
+    color: #000;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Hub Quick Filter Chips */
+.hub-chips-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0;
+    scrollbar-width: none;
+}
+.hub-chips-row::-webkit-scrollbar { display: none; }
+
+.hub-chip {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #d4d4d8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.hub-chip:active {
+    background: rgba(255, 144, 0, 0.2);
+    border-color: #ff9000;
+    color: #ff9000;
+}
+
+/* Hub Provider Tabs Strip */
+.hub-tabs-strip {
+    display: flex;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #111115;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+}
+.hub-tabs-strip::-webkit-scrollbar { display: none; }
+
+.hub-provider-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.hub-provider-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: var(--tab-color, #ff9000);
+    box-shadow: 0 0 12px rgba(255, 144, 0, 0.25);
+}
+
+.hub-tab-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+/* Hub Active Bar (Back, Forward, Reload, Direct URL, Extract) */
+.hub-control-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #16161b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.hub-ctrl-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e4e4e7;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s;
+}
+
+.hub-ctrl-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.hub-url-pill {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #71717a;
+    font-size: 11px;
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hub-btn-extract {
+    background: linear-gradient(135deg, #fe2c55, #ff0055);
+    border: none;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(254, 44, 85, 0.4);
+}
+
+/* Hub Viewports / Containers */
+.hub-content-area {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Tab Mode Viewport */
+.hub-tab-mode {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.hub-tab-frame-wrapper {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.hub-tab-frame-wrapper.active {
+    display: block;
+}
+
+.hub-tab-frame-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #000;
+}
+
+/* Multi-Grid Mode Viewport (2x2 / Quad View) */
+.hub-grid-mode {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+    background: #18181c;
+    padding: 4px;
+}
+
+.hub-dual-mode {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    background: #18181c;
+    padding: 4px;
+}
+
+@media (max-width: 768px) {
+    .hub-dual-mode {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+}
+
+.hub-pane {
+    position: relative;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hub-pane-header {
+    height: 32px;
+    background: rgba(20, 20, 26, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.hub-pane-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.hub-pane-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hub-pane-action-btn {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.hub-pane-action-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.hub-pane iframe {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #000;
+}
+
+/* Maximized Pane in Grid */
+.hub-pane.maximized {
+    position: absolute !important;
+    inset: 4px !important;
+    z-index: 50 !important;
+    width: calc(100% - 8px) !important;
+    height: calc(100% - 8px) !important;
+}
+
 
 

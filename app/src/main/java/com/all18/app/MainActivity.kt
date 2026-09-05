@@ -98,7 +98,8 @@ class MainActivity : AppCompatActivity() {
 
         // Custom User Agent
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.0.0"
+        settings.userAgentString = "$defaultUa All18App/1.1.0"
+        settings.setSupportMultipleWindows(false)
 
         // Hardware acceleration
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
@@ -216,9 +217,14 @@ class MainActivity : AppCompatActivity() {
                 if (url.startsWith("https://appassets.androidplatform.net") ||
                     url.startsWith("file:///android_asset") ||
                     url.contains("/embed/") ||
+                    url.contains("/embedframe/") ||
                     url.contains("/ifr/") ||
                     url.contains("pornhub.com") ||
+                    url.contains("xvideos.com") ||
+                    url.contains("xnxx.com") ||
                     url.contains("redtube.com") ||
+                    url.contains("youporn.com") ||
+                    url.contains("spankbang.com") ||
                     url.contains("redgifs.com") ||
                     url.endsWith(".html") ||
                     url.contains(".html?")
