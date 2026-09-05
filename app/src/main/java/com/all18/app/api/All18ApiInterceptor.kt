@@ -571,13 +571,13 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val liRegex = Pattern.compile("<li[^>]+class=\"[^"]*videoBox[^"]*\"[^>]*>(.*?)</li>", Pattern.DOTALL)
+            val liRegex = Pattern.compile("""<li[^>]+class="[^"]*videoBox[^"]*"[^>]*>(.*?)</li>""", Pattern.DOTALL)
             val matcher = liRegex.matcher(html)
 
-            val vkeyPattern = Pattern.compile("(?:_vkey|data-video-vkey)=\"([a-zA-Z0-9]+)\"|viewkey=([a-zA-Z0-9]+)")
-            val titlePattern = Pattern.compile("<a[^>]+title=\"([^"]+)\"|class=\"title\"[^>]*>.*?<a[^>]*>([^<]+)</a>", Pattern.DOTALL)
-            val thumbPattern = Pattern.compile("<img[^>]+(?:data-image|data-thumb_url|data-src|src)=\"([^"]+)\"")
-            val durPattern = Pattern.compile("<var class=\"duration\">([^<]+)</var>|class=\"duration\">([^<]+)<")
+            val vkeyPattern = Pattern.compile("""(?:_vkey|data-video-vkey)="([a-zA-Z0-9]+)"|viewkey=([a-zA-Z0-9]+)""")
+            val titlePattern = Pattern.compile("""<a[^>]+title="([^"]+)"|class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL)
+            val thumbPattern = Pattern.compile("""<img[^>]+(?:data-image|data-thumb_url|data-src|src)="([^"]+)"""")
+            val durPattern = Pattern.compile("""<var class="duration">([^<]+)</var>|class="duration">([^<]+)<""")
 
             while (matcher.find()) {
                 val cardContent = matcher.group(1) ?: continue
@@ -644,12 +644,12 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val liRegex = Pattern.compile("<li[^>]+data-video-id=\"(\\d+)\"[^>]*>(.*?)</li>", Pattern.DOTALL)
+            val liRegex = Pattern.compile("""<li[^>]+data-video-id="(\d+)"[^>]*>(.*?)</li>""", Pattern.DOTALL)
             val matcher = liRegex.matcher(html)
 
-            val titlePattern = Pattern.compile("class=\"video-title-text[^"]*\"[^>]*title=\"([^"]+)\"|<img[^>]+alt=\"([^"]+)\"")
-            val thumbPattern = Pattern.compile("<img[^>]+(?:data-src|data-o_thumb)=\"([^"]+)\"")
-            val durPattern = Pattern.compile("class=\"video-properties\\s+tm_video_duration\">([^<]+)</span>|class=\"duration\">.*?([0-9]+:[0-9]+)")
+            val titlePattern = Pattern.compile("""class="video-title-text[^"]*"[^>]*title="([^"]+)"|<img[^>]+alt="([^"]+)"""")
+            val thumbPattern = Pattern.compile("""<img[^>]+(?:data-src|data-o_thumb)="([^"]+)"""")
+            val durPattern = Pattern.compile("""class="video-properties\s+tm_video_duration">([^<]+)</span>|class="duration">.*?([0-9]+:[0-9]+)""")
 
             while (matcher.find()) {
                 val vid = matcher.group(1) ?: continue
@@ -712,12 +712,12 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val articleRegex = Pattern.compile("<article[^>]+data-video-id=\"(\\d+)\"[^>]*>(.*?)</article>", Pattern.DOTALL)
+            val articleRegex = Pattern.compile("""<article[^>]+data-video-id="(\d+)"[^>]*>(.*?)</article>""", Pattern.DOTALL)
             val matcher = articleRegex.matcher(html)
 
-            val titlePattern = Pattern.compile("class=\"video-title-text[^"]*\"[^>]*>.*?<span>(.*?)</span>|aria-label=\"([^"]+)\"", Pattern.DOTALL)
-            val thumbPattern = Pattern.compile("<img[^>]+(?:data-poster|data-src)=\"([^"]+)\"")
-            val durPattern = Pattern.compile("class=\"video-duration[^"]*\"[^>]*>.*?<span>([^<]+)</span>", Pattern.DOTALL)
+            val titlePattern = Pattern.compile("""class="video-title-text[^"]*"[^>]*>.*?<span>(.*?)</span>|aria-label="([^"]+)"""", Pattern.DOTALL)
+            val thumbPattern = Pattern.compile("""<img[^>]+(?:data-poster|data-src)="([^"]+)"""")
+            val durPattern = Pattern.compile("""class="video-duration[^"]*"[^>]*>.*?<span>([^<]+)</span>""", Pattern.DOTALL)
 
             while (matcher.find()) {
                 val vid = matcher.group(1) ?: continue
@@ -728,7 +728,7 @@ class All18ApiInterceptor(private val context: Context) {
                 val rawTitle = if (tM.find()) {
                     tM.group(1) ?: tM.group(2) ?: "Video YouPorn"
                 } else {
-                    val labelM = Pattern.compile("aria-label=\"([^\"]+)\"").matcher(fullTag)
+                    val labelM = Pattern.compile("""aria-label="([^"]+)"""").matcher(fullTag)
                     if (labelM.find()) {
                         labelM.group(1) ?: "Video YouPorn"
                     } else {
