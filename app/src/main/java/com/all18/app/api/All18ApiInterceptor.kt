@@ -23,6 +23,13 @@ class All18ApiInterceptor(private val context: Context) {
         .followRedirects(true)
         .build()
 
+    private val mediaClient = OkHttpClient.Builder()
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .connectionPool(okhttp3.ConnectionPool(10, 2, TimeUnit.MINUTES))
+        .build()
+
     private var redGifsToken: String? = null
     private var redGifsExpires: Long = 0L
 
@@ -31,9 +38,17 @@ class All18ApiInterceptor(private val context: Context) {
         val host = uri.host ?: ""
         val path = uri.path ?: ""
 
-        // 1. Intercept direct RedGifs API to completely eliminate CORS blocks in WebView
-        if (host.contains("redgifs.com") && path.contains("/v2/")) {
-            return proxyRedGifsRequest(request)
+        // 1. Intercept RedGifs: Preflight OPTIONS, API calls, and Media to bypass CORS & 403 Hotlink Protection
+        if (host.contains("redgifs.com")) {
+            if (request.method.equals("OPTIONS", ignoreCase = true)) {
+                return createCorsOptionsResponse()
+            }
+            if (path.contains("/v2/")) {
+                return proxyRedGifsRequest(request)
+            }
+            if (host.contains("media.") || path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".png") || path.endsWith(".webp")) {
+                return proxyRedGifsMedia(request)
+            }
         }
 
         // 2. Intercept api.php calls
@@ -79,6 +94,73 @@ class All18ApiInterceptor(private val context: Context) {
             )
         } catch (e: Exception) {
             Log.e("All18Api", "Error proxying RedGifs: ${e.message}")
+            null
+        }
+    }
+
+    private fun createCorsOptionsResponse(): WebResourceResponse {
+        val headers = mapOf(
+            "Access-Control-Allow-Origin" to "*",
+            "Access-Control-Allow-Methods" to "GET, HEAD, POST, OPTIONS",
+            "Access-Control-Allow-Headers" to "Authorization, Content-Type, Accept, Origin, User-Agent, Range",
+            "Access-Control-Max-Age" to "86400"
+        )
+        return WebResourceResponse(
+            "text/plain",
+            "UTF-8",
+            204,
+            "No Content",
+            headers,
+            ByteArrayInputStream(ByteArray(0))
+        )
+    }
+
+    private fun proxyRedGifsMedia(request: WebResourceRequest): WebResourceResponse? {
+        val url = request.url.toString()
+        return try {
+            val reqBuilder = Request.Builder().url(url)
+
+            for ((key, value) in request.requestHeaders) {
+                val kLower = key.lowercase()
+                if (kLower != "referer" && kLower != "origin") {
+                    reqBuilder.header(key, value)
+                }
+            }
+
+            // Impersonate legitimate RedGifs web client to eliminate 403 Forbidden
+            reqBuilder.header("Referer", "https://www.redgifs.com/")
+            reqBuilder.header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
+
+            val resp = mediaClient.newCall(reqBuilder.build()).execute()
+
+            val contentType = resp.header("Content-Type") ?: if (url.contains(".mp4")) "video/mp4" else "image/jpeg"
+            val mimeType = contentType.substringBefore(";").trim()
+            val encoding = if (contentType.contains("charset=")) contentType.substringAfter("charset=").trim() else "UTF-8"
+
+            val responseHeaders = mutableMapOf<String, String>()
+            responseHeaders["Access-Control-Allow-Origin"] = "*"
+            responseHeaders["Access-Control-Allow-Methods"] = "GET, HEAD, OPTIONS"
+            responseHeaders["Access-Control-Allow-Headers"] = "*"
+            responseHeaders["Accept-Ranges"] = "bytes"
+            responseHeaders["Content-Type"] = contentType
+
+            resp.header("Content-Range")?.let { responseHeaders["Content-Range"] = it }
+            resp.header("Content-Length")?.let { responseHeaders["Content-Length"] = it }
+            resp.header("ETag")?.let { responseHeaders["ETag"] = it }
+            resp.header("Last-Modified")?.let { responseHeaders["Last-Modified"] = it }
+
+            val stream = resp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+
+            WebResourceResponse(
+                mimeType,
+                encoding,
+                resp.code,
+                resp.message.ifEmpty { "OK" },
+                responseHeaders,
+                stream
+            )
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error proxying RedGifs media ($url): ${e.message}")
             null
         }
     }
@@ -409,9 +491,10 @@ class All18ApiInterceptor(private val context: Context) {
                 val poster = urls.optString("poster").ifEmpty {
                     urls.optString("thumbnail").ifEmpty { "https://media.redgifs.com/$gid-poster.jpg" }
                 }
-                val mp4 = urls.optString("hd").ifEmpty {
-                    urls.optString("sd").ifEmpty { urls.optString("silent") }
-                }
+                val hdUrl = urls.optString("hd").ifEmpty { "" }
+                val sdUrl = urls.optString("sd").ifEmpty { "" }
+                val silentUrl = urls.optString("silent").ifEmpty { "" }
+                val mp4 = sdUrl.ifEmpty { hdUrl.ifEmpty { silentUrl } }
 
                 val tags = g.optJSONArray("tags")
                 val title = if (tags != null && tags.length() > 0) {
@@ -437,6 +520,8 @@ class All18ApiInterceptor(private val context: Context) {
                 val thumbsArr = JSONArray().apply { put(poster) }
                 item.put("thumbs", thumbsArr)
                 item.put("media_url", mp4)
+                item.put("hd_url", hdUrl)
+                item.put("sd_url", sdUrl)
                 item.put("embed_url", "https://www.redgifs.com/ifr/$gid?autoplay=1")
                 item.put("source", "RedGifs")
                 item.put("type", "short")

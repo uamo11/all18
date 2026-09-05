@@ -286,11 +286,6 @@
             if (typeof window.applyTheme === 'function') {
                 window.applyTheme('tiktok', false);
             }
-            if (typeof window.loadVideos === 'function') {
-                window.state.source = 'redgifs';
-                window.state.view = 'shorts';
-                window.loadVideos(1, true);
-            }
         });
 
         window.switchTikTokTab = function(tabName, btnEl) {

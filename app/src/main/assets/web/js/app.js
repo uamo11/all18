@@ -105,6 +105,14 @@
     ];
 
     function init() {
+        const isTikTok = window.location.pathname.includes('tiktok.html') || document.body.classList.contains('tiktok-standalone-body');
+        if (isTikTok) {
+            state.source = 'redgifs';
+            state.view = 'shorts';
+            state.page = 1;
+            document.body.dataset.theme = 'tiktok';
+        }
+
         try { initTheme(); } catch (e) { console.error('initTheme error:', e); }
         try { setupEventListeners(); } catch (e) { console.error('setupEventListeners error:', e); }
         try { setupPublishEngine(); } catch (e) { console.error('setupPublishEngine error:', e); }
@@ -136,7 +144,8 @@
 
         const isTikTok = window.location.pathname.includes('tiktok.html') || document.body.dataset.theme === 'tiktok';
         if (isTikTok) {
-            state.page = Math.floor(Math.random() * 20) + 1;
+            state.source = 'redgifs';
+            state.view = 'shorts';
         }
 
         if (videoId || isWatchPage) {
@@ -311,10 +320,10 @@
                 return data.gifs
                     .map(g => {
                         const poster = g.urls?.poster || g.urls?.thumbnail || g.urls?.sd || '';
-                        let mp4 = '';
-                        if (g.urls?.hd && g.urls.hd.includes('.mp4')) mp4 = g.urls.hd;
-                        else if (g.urls?.sd && g.urls.sd.includes('.mp4')) mp4 = g.urls.sd;
-                        else if (g.urls?.silent && g.urls.silent.includes('.mp4')) mp4 = g.urls.silent;
+                        const hdUrl = (g.urls?.hd && g.urls.hd.includes('.mp4')) ? g.urls.hd : '';
+                        const sdUrl = (g.urls?.sd && g.urls.sd.includes('.mp4')) ? g.urls.sd : '';
+                        const silentUrl = (g.urls?.silent && g.urls.silent.includes('.mp4')) ? g.urls.silent : '';
+                        const mp4 = sdUrl || hdUrl || silentUrl;
 
                         if (!mp4) return null;
 
@@ -329,11 +338,13 @@
                             thumb: poster,
                             thumbs: [poster],
                             media_url: mp4,
+                            hd_url: hdUrl,
+                            sd_url: sdUrl,
                             embed_url: `https://www.redgifs.com/ifr/${g.id}?autoplay=1`,
                             source: 'RedGifs',
                             tags: g.tags || ['shorts', 'hot'],
                             type: 'short',
-                            quality: '4K Ultra'
+                            quality: '1080p 60fps'
                         };
                     })
                     .filter(Boolean);
@@ -636,20 +647,26 @@
                     }
                 }
 
-                // Standard fallback / manual search in TikTok mode
+                // Query Native Kotlin OkHttp Engine first (0 CORS, 0 403 hotlink blocks)
+                try {
+                    const res = await fetch(`api.php?action=search&source=redgifs&q=${encodeURIComponent(q || 'trending')}&category=${encodeURIComponent(cat)}&page=${page}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.data && data.data.length > 0) {
+                            const ranked = isTikTokMode ? AlgorithmEngine.scoreAndDiversifyFeed(data.data) : data.data;
+                            appendProgressiveItems(ranked);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Native RedGifs search error, trying direct:', e);
+                }
+
+                // Fallback to direct RedGifs fetch
                 const direct = await fetchDirectRedGifs(q || cat || 'trending', page);
                 if (direct && direct.length > 0) {
                     const ranked = isTikTokMode ? AlgorithmEngine.scoreAndDiversifyFeed(direct) : direct;
                     appendProgressiveItems(ranked);
-                } else {
-                    const res = await fetch(`api.php?action=search&source=redgifs&q=${encodeURIComponent(q || 'trending')}&category=${encodeURIComponent(cat)}&page=${page}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.data) {
-                            const ranked = isTikTokMode ? AlgorithmEngine.scoreAndDiversifyFeed(data.data) : data.data;
-                            appendProgressiveItems(ranked);
-                        }
-                    }
                 }
             })().catch(() => {});
             providerTasks.push(rgTask);
@@ -968,6 +985,10 @@
                             <svg viewBox="0 0 24 24" width="34" height="34" fill="${isFav ? '#fe2c55' : '#ffffff'}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             <span class="tiktok-action-count">${formattedLikes}</span>
                         </button>
+                        <button class="tiktok-action-item tiktok-btn-sound" type="button" title="Sonido" onclick="window.toggleTikTokSound(event, this)" style="background: transparent !important; border: none !important; -webkit-appearance: none !important;">
+                            <span class="tiktok-sound-icon" style="font-size: 26px; line-height: 1;">${window.isTikTokMuted === false ? '🔊' : '🔇'}</span>
+                            <span class="tiktok-action-count">${window.isTikTokMuted === false ? 'Sonido' : 'Silencio'}</span>
+                        </button>
                         <button class="tiktok-action-item card-fav-btn ${isFav ? 'active' : ''}" type="button" title="Favoritos" data-id="${item.id}" style="background: transparent !important; border: none !important; -webkit-appearance: none !important;">
                             <svg viewBox="0 0 24 24" width="34" height="34" fill="${isFav ? '#face15' : '#ffffff'}"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
                             <span class="tiktok-action-count">${repostsCount}</span>
@@ -1020,6 +1041,25 @@
         }
 
         const videoEl = card.querySelector('.feed-video-player');
+
+        // Video Error Recovery (Fallback to HD or isolated Embed Iframe)
+        if (videoEl) {
+            videoEl.addEventListener('error', () => {
+                console.warn('Video failed to play, switching to fallback:', item.id);
+                if (item.hd_url && videoEl.src !== item.hd_url) {
+                    videoEl.src = item.hd_url;
+                    videoEl.play().catch(() => {});
+                } else if (item.embed_url) {
+                    const thumbContainer = card.querySelector('.thumb-container');
+                    if (thumbContainer) {
+                        thumbContainer.innerHTML = `
+                            <iframe src="${item.embed_url}" frameborder="0" width="100%" height="100%" scrolling="no" allow="autoplay; fullscreen" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000;z-index:2;"></iframe>
+                        `;
+                        card.classList.add('video-playing');
+                    }
+                }
+            });
+        }
 
         // Telemetry & Engagement tracking for Recommendation Algorithm
         let cardPlayStartTime = 0;
@@ -1238,11 +1278,21 @@
                             if (!v.src && v.dataset.src) {
                                 v.src = v.dataset.src;
                             }
-                            v.muted = true;
-                            v.defaultMuted = true;
+                            v.muted = window.isTikTokMuted !== false;
+                            v.defaultMuted = window.isTikTokMuted !== false;
                             v.play().then(() => {
                                 targetCard.classList.add('video-playing');
                             }).catch(() => {});
+
+                            // Preload next card video
+                            const nextCard = targetCard.nextElementSibling;
+                            if (nextCard) {
+                                const nextV = nextCard.querySelector('.feed-video-player');
+                                if (nextV && !nextV.src && nextV.dataset.src) {
+                                    nextV.src = nextV.dataset.src;
+                                    nextV.preload = 'metadata';
+                                }
+                            }
                         } else {
                             v.pause();
                             targetCard.classList.remove('video-playing');
@@ -1314,6 +1364,32 @@
                 grid.appendChild(card);
             }
         });
+
+        // Instant autoplay on TikTok initial load
+        if (isTT) {
+            setTimeout(() => {
+                const firstCard = grid.querySelector('.video-card');
+                if (firstCard && !grid.querySelector('.video-card.video-playing')) {
+                    const firstVid = firstCard.querySelector('.feed-video-player');
+                    if (firstVid) {
+                        if (!firstVid.src && firstVid.dataset.src) firstVid.src = firstVid.dataset.src;
+                        firstVid.muted = window.isTikTokMuted !== false;
+                        firstVid.defaultMuted = window.isTikTokMuted !== false;
+                        firstVid.play().then(() => {
+                            firstCard.classList.add('video-playing');
+                        }).catch(() => {});
+                    }
+                    const secCard = firstCard.nextElementSibling;
+                    if (secCard) {
+                        const secVid = secCard.querySelector('.feed-video-player');
+                        if (secVid && !secVid.src && secVid.dataset.src) {
+                            secVid.src = secVid.dataset.src;
+                            secVid.preload = 'metadata';
+                        }
+                    }
+                }
+            }, 80);
+        }
     }
 
     function openWatchView(item, pushHistory = true) {
@@ -3380,6 +3456,28 @@
     };
 
 
+
+    // Global TikTok Sound Controller
+    window.isTikTokMuted = true;
+    window.toggleTikTokSound = function(e, btn) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        window.isTikTokMuted = !window.isTikTokMuted;
+        document.querySelectorAll('.feed-video-player').forEach(v => {
+            v.muted = window.isTikTokMuted;
+        });
+        document.querySelectorAll('.tiktok-sound-icon').forEach(icon => {
+            icon.textContent = window.isTikTokMuted ? '🔇' : '🔊';
+        });
+        document.querySelectorAll('.tiktok-btn-sound .tiktok-action-count').forEach(label => {
+            label.textContent = window.isTikTokMuted ? 'Silencio' : 'Sonido';
+        });
+        if (typeof showToast === 'function') {
+            showToast(window.isTikTokMuted ? '🔇 Audio silenciado' : '🔊 Audio activado');
+        }
+    };
 
     // Expose Global Theme Helpers on window
     window.state = state;
