@@ -682,6 +682,32 @@
                     .catch(() => {});
                 providerTasks.push(rtTask);
             }
+
+            // 5. XVideos Provider Stream
+            if (src === 'all' || src === 'xvideos') {
+                const xvTask = fetch(`api.php?action=search&source=xvideos&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=${page}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (data && data.data && data.data.length > 0) {
+                            appendProgressiveItems(data.data);
+                        }
+                    })
+                    .catch(() => {});
+                providerTasks.push(xvTask);
+            }
+
+            // 6. XNXX Provider Stream
+            if (src === 'all' || src === 'xnxx') {
+                const xnTask = fetch(`api.php?action=search&source=xnxx&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=${page}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (data && data.data && data.data.length > 0) {
+                            appendProgressiveItems(data.data);
+                        }
+                    })
+                    .catch(() => {});
+                providerTasks.push(xnTask);
+            }
         }
 
         await Promise.allSettled(providerTasks);
@@ -969,6 +995,7 @@
                     <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
                     ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     <span class="duration-badge">${item.duration || '18:50'}</span>
+                    <span class="source-badge-pill ${item.source || 'Pornhub'}">${item.source || 'Pornhub'}</span>
                     <button class="card-fav-btn ${isFav ? 'active' : ''}" title="Guardar en favoritos" data-id="${item.id}">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </button>

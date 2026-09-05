@@ -15,7 +15,7 @@ class All18JsBridge(private val activity: MainActivity) {
     fun isNativeApp(): Boolean = true
 
     @JavascriptInterface
-    fun getAppVersion(): String = "1.1.0"
+    fun getAppVersion(): String = "1.1.1"
 
     @JavascriptInterface
     fun vibrate(durationMs: Long) {

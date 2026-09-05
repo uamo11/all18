@@ -12,6 +12,8 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
+import android.text.Html
 
 class All18ApiInterceptor(private val context: Context) {
 
@@ -44,14 +46,6 @@ class All18ApiInterceptor(private val context: Context) {
             }
         }
 
-        // 3. Intercept adult provider HTML pages to strip X-Frame-Options and Content-Security-Policy
-        if (isProviderHost(host)) {
-            val accept = request.requestHeaders["Accept"] ?: ""
-            if (accept.contains("text/html") || request.isForMainFrame || path.isEmpty() || path == "/" || path.endsWith(".html") || !path.contains(".")) {
-                val response = proxyProviderHtml(request)
-                if (response != null) return response
-            }
-        }
 
         return null
     }
@@ -89,100 +83,6 @@ class All18ApiInterceptor(private val context: Context) {
         }
     }
 
-
-    private fun isProviderHost(host: String): Boolean {
-        val h = host.lowercase()
-        return h.contains("pornhub.com") ||
-               h.contains("xvideos.com") ||
-               h.contains("xnxx.com") ||
-               h.contains("redtube.com") ||
-               h.contains("youporn.com") ||
-               h.contains("spankbang.com") ||
-               h.contains("tube8.com")
-    }
-
-    private fun proxyProviderHtml(request: WebResourceRequest): WebResourceResponse? {
-        return try {
-            val url = request.url.toString()
-            val reqBuilder = Request.Builder().url(url)
-
-            val cookieManager = android.webkit.CookieManager.getInstance()
-            val cookies = cookieManager.getCookie(url)
-            if (!cookies.isNullOrEmpty()) {
-                reqBuilder.header("Cookie", cookies)
-            }
-
-            for ((key, value) in request.requestHeaders) {
-                if (!key.equals("Origin", ignoreCase = true) &&
-                    !key.equals("Referer", ignoreCase = true) &&
-                    !key.equals("Cookie", ignoreCase = true)
-                ) {
-                    reqBuilder.header(key, value)
-                }
-            }
-            reqBuilder.header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
-
-            val resp = client.newCall(reqBuilder.build()).execute()
-            if (!resp.isSuccessful) {
-                return null
-            }
-
-            val bodyBytes = resp.body?.bytes() ?: ByteArray(0)
-            var html = String(bodyBytes, Charsets.UTF_8)
-
-            val origin = "${request.url.scheme}://${request.url.host}/"
-            val baseTag = "<base href=\"$origin\">"
-            val antiFrameBuster = """
-                <script>
-                try {
-                    window.top = window.self;
-                    window.parent = window.self;
-                } catch(e) {}
-                </script>
-            """.trimIndent()
-
-            if (html.contains("<head>", ignoreCase = true)) {
-                html = html.replaceFirst("(?i)<head>".toRegex(), "<head>\n$baseTag\n$antiFrameBuster")
-            } else if (html.contains("<html>", ignoreCase = true)) {
-                html = html.replaceFirst("(?i)<html>".toRegex(), "<html>\n<head>$baseTag\n$antiFrameBuster</head>")
-            }
-
-            val responseHeaders = mutableMapOf<String, String>()
-            for ((name, value) in resp.headers) {
-                val lower = name.lowercase()
-                if (lower != "x-frame-options" &&
-                    lower != "content-security-policy" &&
-                    lower != "content-security-policy-report-only" &&
-                    lower != "content-length"
-                ) {
-                    responseHeaders[name] = value
-                }
-            }
-            responseHeaders["Access-Control-Allow-Origin"] = "*"
-
-            val setCookies = resp.headers("Set-Cookie")
-            for (sc in setCookies) {
-                cookieManager.setCookie(url, sc)
-            }
-
-            val contentType = resp.header("Content-Type", "text/html; charset=utf-8") ?: "text/html; charset=utf-8"
-            val mimeType = if (contentType.contains(";")) contentType.substringBefore(";").trim() else contentType
-            val encoding = if (contentType.contains("charset=")) contentType.substringAfter("charset=").trim() else "UTF-8"
-
-            val modifiedBytes = html.toByteArray(Charsets.UTF_8)
-            WebResourceResponse(
-                mimeType,
-                encoding,
-                resp.code,
-                resp.message.ifEmpty { "OK" },
-                responseHeaders,
-                ByteArrayInputStream(modifiedBytes)
-            )
-        } catch (e: Exception) {
-            Log.e("All18Api", "Error proxying provider HTML: ${e.message}")
-            null
-        }
-    }
 
     private fun handleApiRequest(uri: Uri): WebResourceResponse {
         val action = uri.getQueryParameter("action") ?: "search"
@@ -249,7 +149,7 @@ class All18ApiInterceptor(private val context: Context) {
 
     private fun getSearchResponse(q: String, category: String, source: String, page: Int, filter: String): WebResourceResponse {
         // Direct ID lookup support (e.g. from watch.html)
-        if (q.startsWith("ph_") || q.startsWith("rt_") || q.startsWith("rg_")) {
+        if (q.startsWith("ph_") || q.startsWith("rt_") || q.startsWith("rg_") || q.startsWith("xv_") || q.startsWith("xn_") || q.startsWith("yp_")) {
             val directItem = createDirectItemFromId(q)
             if (directItem != null) {
                 val singleArr = JSONArray().apply { put(directItem) }
@@ -279,7 +179,7 @@ class All18ApiInterceptor(private val context: Context) {
 
         val allItems = JSONArray()
 
-        when (source) {
+        when (source.lowercase()) {
             "redgifs" -> {
                 val rgItems = fetchRedGifs(queryTerm, page)
                 for (i in 0 until rgItems.length()) allItems.put(rgItems.getJSONObject(i))
@@ -292,16 +192,28 @@ class All18ApiInterceptor(private val context: Context) {
                 val rtItems = fetchRedTube(queryTerm, page)
                 for (i in 0 until rtItems.length()) allItems.put(rtItems.getJSONObject(i))
             }
+            "xvideos" -> {
+                val xvItems = fetchXVideos(queryTerm, page)
+                for (i in 0 until xvItems.length()) allItems.put(xvItems.getJSONObject(i))
+            }
+            "xnxx" -> {
+                val xnItems = fetchXNXX(queryTerm, page)
+                for (i in 0 until xnItems.length()) allItems.put(xnItems.getJSONObject(i))
+            }
             else -> { // "all"
-                val rgItems = fetchRedGifs(queryTerm, page)
                 val phItems = fetchPornhub(queryTerm, page, filter)
+                val xvItems = fetchXVideos(queryTerm, page)
+                val xnItems = fetchXNXX(queryTerm, page)
                 val rtItems = fetchRedTube(queryTerm, page)
+                val rgItems = fetchRedGifs(queryTerm, page)
 
-                val maxLen = maxOf(rgItems.length(), phItems.length(), rtItems.length())
+                val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), rtItems.length(), rgItems.length())
                 for (i in 0 until maxLen) {
                     if (i < phItems.length()) allItems.put(phItems.getJSONObject(i))
-                    if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
+                    if (i < xvItems.length()) allItems.put(xvItems.getJSONObject(i))
+                    if (i < xnItems.length()) allItems.put(xnItems.getJSONObject(i))
                     if (i < rtItems.length()) allItems.put(rtItems.getJSONObject(i))
+                    if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
                 }
             }
         }
@@ -661,6 +573,114 @@ class All18ApiInterceptor(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e("All18Api", "Error fetching RedTube: ${e.message}")
+        }
+        return list
+    }
+
+
+    private fun fetchXVideos(query: String, page: Int): JSONArray {
+        val list = JSONArray()
+        val cleanQuery = if (query.isBlank()) "trending" else query
+        val url = if (cleanQuery == "trending") {
+            "https://www.xvideos.com/new/$page"
+        } else {
+            "https://www.xvideos.com/?k=${Uri.encode(cleanQuery)}&p=$page"
+        }
+
+        try {
+            val req = Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .build()
+
+            val resp = client.newCall(req).execute()
+            val html = resp.body?.string() ?: return list
+
+            val regex = Pattern.compile("class=\"thumb-inside\">.*?<a href=\"/video\\.([a-zA-Z0-9_-]+)/[^\"]*\".*?data-src=\"([^\"]+)\"(?:.*?title=\"([^\"]+)\")?(?:.*?<span class=\"duration\">([^<]+)</span>)?", Pattern.DOTALL)
+            val matcher = regex.matcher(html)
+
+            while (matcher.find()) {
+                val vid = matcher.group(1) ?: continue
+                val thumb = matcher.group(2) ?: ""
+                val rawTitle = matcher.group(3) ?: "Video XVideos"
+                val duration = matcher.group(4)?.trim() ?: "10 min"
+                val title = Html.fromHtml(rawTitle, Html.FROM_HTML_MODE_LEGACY).toString()
+
+                val item = JSONObject().apply {
+                    put("id", "xv_$vid")
+                    put("raw_id", vid)
+                    put("title", title)
+                    put("duration", duration)
+                    put("views", "260K vistas")
+                    put("rating", "97%")
+                    put("author", "@XVideosStar")
+                    put("thumb", thumb)
+                    put("thumbs", JSONArray().put(thumb))
+                    put("url", "https://www.xvideos.com/video$vid")
+                    put("embed_url", "https://www.xvideos.com/embedframe/$vid")
+                    put("media_url", "")
+                    put("source", "XVideos")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+                list.put(item)
+            }
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error fetching XVideos: ${e.message}")
+        }
+        return list
+    }
+
+    private fun fetchXNXX(query: String, page: Int): JSONArray {
+        val list = JSONArray()
+        val cleanQuery = if (query.isBlank()) "hot" else query
+        val url = if (cleanQuery == "hot" || cleanQuery == "trending") {
+            "https://www.xnxx.com/todays-selection/$page"
+        } else {
+            "https://www.xnxx.com/search/${Uri.encode(cleanQuery)}/$page"
+        }
+
+        try {
+            val req = Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .build()
+
+            val resp = client.newCall(req).execute()
+            val html = resp.body?.string() ?: return list
+
+            val regex = Pattern.compile("class=\"thumb-inside\">.*?<a href=\"/video-([a-zA-Z0-9_-]+)/[^\"]*\".*?data-src=\"([^\"]+)\"(?:.*?title=\"([^\"]+)\")?", Pattern.DOTALL)
+            val matcher = regex.matcher(html)
+
+            while (matcher.find()) {
+                val vid = matcher.group(1) ?: continue
+                val thumb = matcher.group(2) ?: ""
+                val rawTitle = matcher.group(3) ?: "Video XNXX"
+                val title = Html.fromHtml(rawTitle, Html.FROM_HTML_MODE_LEGACY).toString()
+
+                val item = JSONObject().apply {
+                    put("id", "xn_$vid")
+                    put("raw_id", vid)
+                    put("title", title)
+                    put("duration", "12 min")
+                    put("views", "210K vistas")
+                    put("rating", "96%")
+                    put("author", "@XNXXStar")
+                    put("thumb", thumb)
+                    put("thumbs", JSONArray().put(thumb))
+                    put("url", "https://www.xnxx.com/video-$vid")
+                    put("embed_url", "https://www.xnxx.com/embedframe/$vid")
+                    put("media_url", "")
+                    put("source", "XNXX")
+                    put("type", "video")
+                    put("quality", "1080p HD")
+                }
+                list.put(item)
+            }
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error fetching XNXX: ${e.message}")
         }
         return list
     }

@@ -4338,3 +4338,23 @@ body[data-theme="twitter"] .all18-nav-item.active::after {
 
 
 
+
+/* Video Card Provider Badges */
+.source-badge-pill {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    z-index: 5;
+    pointer-events: none;
+}
+.source-badge-pill.Pornhub { background: #ff9000; color: #000; }
+.source-badge-pill.XVideos { background: #0084ff; color: #fff; }
+.source-badge-pill.XNXX { background: #e5a93c; color: #000; }
+.source-badge-pill.RedTube { background: #e22626; color: #fff; }
+.source-badge-pill.RedGifs { background: #fe2c55; color: #fff; }

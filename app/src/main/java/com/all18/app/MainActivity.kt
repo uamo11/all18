@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
 
         // Custom User Agent
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.1.0"
+        settings.userAgentString = "$defaultUa All18App/1.1.1"
         settings.setSupportMultipleWindows(false)
 
         // Hardware acceleration
