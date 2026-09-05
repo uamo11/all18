@@ -584,9 +584,8 @@ class All18ApiInterceptor(private val context: Context) {
                 val fullTag = matcher.group(0) ?: ""
 
                 val vkM = vkeyPattern.matcher(fullTag)
-                val vkey = if (vkM.find()) {
-                    vkM.group(1) ?: vkM.group(2)
-                } else null ?: continue
+                if (!vkM.find()) continue
+                val vkey = vkM.group(1) ?: vkM.group(2) ?: continue
 
                 val tM = titlePattern.matcher(cardContent)
                 val rawTitle = if (tM.find()) {
@@ -729,8 +728,12 @@ class All18ApiInterceptor(private val context: Context) {
                 val rawTitle = if (tM.find()) {
                     tM.group(1) ?: tM.group(2) ?: "Video YouPorn"
                 } else {
-                    val labelM = Pattern.compile("aria-label=\"([^"]+)\"").matcher(fullTag)
-                    if (labelM.find()) labelM.group(1) ?: "Video YouPorn" else "Video YouPorn"
+                    val labelM = Pattern.compile("aria-label=\"([^\"]+)\"").matcher(fullTag)
+                    if (labelM.find()) {
+                        labelM.group(1) ?: "Video YouPorn"
+                    } else {
+                        "Video YouPorn"
+                    }
                 }
                 val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
 
