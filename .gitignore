@@ -14,3 +14,6 @@ local.properties
 *.zip
 patch_app_js.py
 deploy_all18.py
+generate_icons.py
+monitor_and_deploy_v2.py
+monitor_and_deploy_v3.py
