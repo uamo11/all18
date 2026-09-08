@@ -1020,12 +1020,14 @@
                 const thumb = item.thumb || AMOLED_FALLBACK_SVG;
                 const author = item.author || '@CreadorAll18';
 
+                const previewVid = item.preview_url || item.preview_video || '';
                 const watchUrl = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(sourceName)}&from=hub`;
 
                 return `
                     <a href="${watchUrl}" class="hub-card">
                         <div class="hub-thumb-box">
                             <img class="hub-thumb-img" src="${thumb}" alt="${item.title}" loading="lazy" onerror="this.src='${AMOLED_FALLBACK_SVG}'">
+                            ${previewVid ? `<video class="hub-preview-video" src="${previewVid}" loop playsinline muted preload="none" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;"></video>` : ''}
                             <span class="hub-badge-source ${sourceClass}">${sourceName}</span>
                             <span class="hub-badge-hd">${item.quality || '1080p'}</span>
                             <span class="hub-badge-dur">${duration}</span>
@@ -1046,6 +1048,23 @@
             } else {
                 grid.insertAdjacentHTML('beforeend', html);
             }
+
+            // Setup hover preview listeners
+            grid.querySelectorAll('.hub-card').forEach(card => {
+                const video = card.querySelector('.hub-preview-video');
+                if (video && !card._hasHoverPreview) {
+                    card._hasHoverPreview = true;
+                    card.addEventListener('mouseenter', () => {
+                        video.style.display = 'block';
+                        video.play().catch(() => {});
+                    });
+                    card.addEventListener('mouseleave', () => {
+                        video.pause();
+                        video.currentTime = 0;
+                        video.style.display = 'none';
+                    });
+                }
+            });
         }
 
         function loadMoreHubVideos() {

@@ -1013,7 +1013,7 @@
         const isPhoto = item.type === 'photo';
         const savedProgress = getWatchHistoryProgress(item.id);
         const initialThumb = item.thumb || FALLBACK_THUMB;
-        const mediaVideoUrl = item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '');
+        const mediaVideoUrl = item.preview_url || item.preview_video || item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '');
 
         // Dynamic realistic stats
         const seed = Math.abs(String(item.id || '123').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0));
@@ -1511,8 +1511,30 @@
                 window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title || '')}&source=${encodeURIComponent(item.source || '')}&from=${pageFrom}`;
             } else {
                 openWatchView(item);
-            }
         });
+
+        // Desktop Hover Preview for Video Thumbnails
+        if (videoEl) {
+            const thumbContainer = card.querySelector('.thumb-container');
+            if (thumbContainer) {
+                thumbContainer.addEventListener('mouseenter', () => {
+                    if (videoEl.dataset.src) {
+                        if (!videoEl.src) videoEl.src = videoEl.dataset.src;
+                        videoEl.muted = true;
+                        videoEl.play().then(() => {
+                            card.classList.add('video-playing');
+                        }).catch(() => {});
+                    }
+                });
+                thumbContainer.addEventListener('mouseleave', () => {
+                    if (!document.body.classList.contains('tiktok-standalone-body') && document.body.dataset.theme !== 'tiktok') {
+                        videoEl.pause();
+                        videoEl.currentTime = 0;
+                        card.classList.remove('video-playing');
+                    }
+                });
+            }
+        }
 
         // Setup IntersectionObserver for auto-playing in viewport without decoder exhaustion
         if (videoEl && window.IntersectionObserver) {

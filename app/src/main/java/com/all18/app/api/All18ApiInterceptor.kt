@@ -367,11 +367,16 @@ class All18ApiInterceptor(private val context: Context) {
                 val epItems = fetchEporner(queryTerm, page)
                 for (i in 0 until epItems.length()) allItems.put(epItems.getJSONObject(i))
             }
-            else -> { // "all" - Concurrent parallel queries across all 6 networks
-                val executor = Executors.newFixedThreadPool(6)
+            "spankbang", "beeg" -> {
+                val fallbackItems = getCuratedFallbackVideos(source)
+                for (i in 0 until fallbackItems.length()) allItems.put(fallbackItems.getJSONObject(i))
+            }
+            else -> { // "all" - Concurrent parallel queries across all 7 networks
+                val executor = Executors.newFixedThreadPool(7)
                 val fPH = executor.submit(Callable { fetchPornhub(queryTerm, page, filter) })
                 val fXV = executor.submit(Callable { fetchXVideos(queryTerm, page) })
                 val fXN = executor.submit(Callable { fetchXNXX(queryTerm, page) })
+                val fEP = executor.submit(Callable { fetchEporner(queryTerm, page) })
                 val fYP = executor.submit(Callable { fetchYouPorn(queryTerm, page) })
                 val fRT = executor.submit(Callable { fetchRedTube(queryTerm, page) })
                 val fRG = executor.submit(Callable { fetchRedGifs(queryTerm, page) })
@@ -379,16 +384,18 @@ class All18ApiInterceptor(private val context: Context) {
                 val phItems = try { fPH.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
                 val xvItems = try { fXV.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
                 val xnItems = try { fXN.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
+                val epItems = try { fEP.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
                 val ypItems = try { fYP.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
                 val rtItems = try { fRT.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
                 val rgItems = try { fRG.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
                 executor.shutdown()
 
-                val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), ypItems.length(), rtItems.length(), rgItems.length())
+                val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), epItems.length(), ypItems.length(), rtItems.length(), rgItems.length())
                 for (i in 0 until maxLen) {
                     if (i < phItems.length()) allItems.put(phItems.getJSONObject(i))
                     if (i < xvItems.length()) allItems.put(xvItems.getJSONObject(i))
                     if (i < xnItems.length()) allItems.put(xnItems.getJSONObject(i))
+                    if (i < epItems.length()) allItems.put(epItems.getJSONObject(i))
                     if (i < ypItems.length()) allItems.put(ypItems.getJSONObject(i))
                     if (i < rtItems.length()) allItems.put(rtItems.getJSONObject(i))
                     if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
@@ -894,19 +901,38 @@ class All18ApiInterceptor(private val context: Context) {
                 val dM = durPattern.matcher(cardContent)
                 val duration = if (dM.find()) (dM.group(1) ?: dM.group(2))?.trim() ?: "10:00" else "10:00"
 
+                val viewsM = Pattern.compile("""<span class="views">\s*<var>([^<]+)</var>\s*([^<]*)</span>""").matcher(cardContent)
+                val views = if (viewsM.find()) {
+                    "${viewsM.group(1)?.trim()} ${viewsM.group(2)?.trim()}".trim()
+                } else "190K vistas"
+
+                val authorM = Pattern.compile("""class="usernameWrap"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardContent)
+                val author = if (authorM.find()) "@" + authorM.group(1)?.trim() else "@PornhubStar"
+
+                val rateM = Pattern.compile("""<div class="value">([^<]+)</div>""").matcher(cardContent)
+                val rating = if (rateM.find()) rateM.group(1)?.trim() ?: "96%" else "96%"
+
+                val pvvM = Pattern.compile("""data-mediabook="([^"]+)"""").matcher(cardContent)
+                val rawPvv = if (pvvM.find()) pvvM.group(1)?.trim() ?: "" else ""
+                val previewUrl = if (rawPvv.startsWith("//")) "https:$rawPvv" else rawPvv
+
                 val item = JSONObject().apply {
                     put("id", "ph_$vkey")
                     put("raw_id", vkey)
                     put("title", title)
                     put("duration", duration)
-                    put("views", "190K vistas")
-                    put("rating", "96%")
-                    put("author", "@PornhubStar")
+                    put("views", views)
+                    put("rating", rating)
+                    put("author", author)
                     put("thumb", thumb)
                     put("thumbs", JSONArray().apply { put(thumb); put(AMOLED_DEFAULT_POSTER) })
                     put("url", "https://www.pornhub.com/view_video.php?viewkey=$vkey")
                     put("embed_url", "https://www.pornhub.com/embed/$vkey")
                     put("media_url", "")
+                    if (previewUrl.isNotBlank()) {
+                        put("preview_url", previewUrl)
+                        put("preview_video", previewUrl)
+                    }
                     put("source", "Pornhub")
                     put("type", "video")
                     put("quality", "1080p HD")
@@ -1093,33 +1119,15 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            // Multi-pattern support: thumb-block modern layout and thumb-inside classic layout
-            val blockRegex = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"[^>]*class="[^"]*thumb-block[^"]*"[^>]*>([\s\S]*?)</div>\s*</div>\s*</div>""", Pattern.DOTALL)
-            val blockMatcher = blockRegex.matcher(html)
+            val cardPattern = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"([\s\S]*?)(?=<div[^>]+id="video_|<div id="content"|class="pagination"|</div>\s*<script>xv\.thumbs|$)""", Pattern.DOTALL)
+            val matcher = cardPattern.matcher(html)
 
-            val cards = mutableListOf<Pair<String, String>>()
-            while (blockMatcher.find()) {
-                val vid = blockMatcher.group(1) ?: continue
-                val content = blockMatcher.group(2) ?: continue
-                cards.add(Pair(vid, content))
-            }
+            while (matcher.find()) {
+                val vid = matcher.group(1) ?: continue
+                val cardHtml = matcher.group(2) ?: continue
 
-            if (cards.isEmpty()) {
-                val fallbackRegex = Pattern.compile("""class="thumb-inside">([\s\S]*?)</div>""", Pattern.DOTALL)
-                val fm = fallbackRegex.matcher(html)
-                while (fm.find()) {
-                    val content = fm.group(1) ?: continue
-                    val vidM = Pattern.compile("""/video[._-]?([a-zA-Z0-9_-]+)/""").matcher(content)
-                    if (vidM.find()) {
-                        val vid = vidM.group(1) ?: continue
-                        cards.add(Pair(vid, content))
-                    }
-                }
-            }
-
-            for ((vid, cardHtml) in cards) {
-                // Official cover extraction: check data-sfwthumb > data-src > data-mzl > src (skip lightbox-blank.gif)
-                val thumbM = Pattern.compile("""(?:data-sfwthumb|data-src|data-mzl|src)="([^"]+)"""").matcher(cardHtml)
+                // Official cover extraction: check data-src > data-sfwthumb > data-mzl > src (skip lightbox-blank.gif)
+                val thumbM = Pattern.compile("""(?:data-src|data-sfwthumb|data-mzl|src)="([^"]+)"""").matcher(cardHtml)
                 var rawThumb = ""
                 while (thumbM.find()) {
                     val c = thumbM.group(1)?.trim() ?: ""
@@ -1130,33 +1138,40 @@ class All18ApiInterceptor(private val context: Context) {
                 }
 
                 if (rawThumb.startsWith("//")) rawThumb = "https:$rawThumb"
-                rawThumb = rawThumb.replace("THUMBNUM", "15")
-
-                val thumb = when {
-                    rawThumb.isNotBlank() -> rawThumb
-                    else -> "https://thumbs-gcore.xvideos-cdn.com/videos/thumbs169poster/sample.jpg"
-                }
+                val thumb = if (rawThumb.isNotBlank()) rawThumb.replace("THUMBNUM", "19") else "https://thumbs-gcore.xvideos-cdn.com/videos/thumbs169poster/sample.jpg"
 
                 // Official title
-                val titleM = Pattern.compile("""<p class="title"[^>]*>.*?<a[^>]+title="([^"]+)"|<a[^>]+title="([^"]+)"|title="([^"]+)"|<p class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardHtml)
-                val rawTitle = if (titleM.find()) {
-                    titleM.group(1) ?: titleM.group(2) ?: titleM.group(3) ?: titleM.group(4) ?: "Video XVideos"
-                } else "Video XVideos"
-                val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
+                val titleM = Pattern.compile("""title="([^"]+)"|class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardHtml)
+                val rawTitle = if (titleM.find()) (titleM.group(1) ?: titleM.group(2))?.trim() ?: "Video XVideos" else "Video XVideos"
+                val title = Html.fromHtml(rawTitle, Html.FROM_HTML_MODE_LEGACY).toString()
 
-                val durM = Pattern.compile("""<span class="duration">([^<]+)</span>""").matcher(cardHtml)
-                val duration = if (durM.find()) durM.group(1)?.trim() ?: "10 min" else "10 min"
+                val durM = Pattern.compile("""<span class="duration">([^<]+)</span>|class="metadata">[\s\S]*?(\d+\s*min)""").matcher(cardHtml)
+                val duration = if (durM.find()) (durM.group(1) ?: durM.group(2))?.trim() ?: "10 min" else "10 min"
+
+                val viewsM = Pattern.compile("""([\d.]+[kKmM]?)\s*<span class="icon-f icf-eye">""").matcher(cardHtml)
+                val views = if (viewsM.find()) "${viewsM.group(1)?.trim()?.uppercase()} vistas" else "260K vistas"
+
+                val rateM = Pattern.compile("""(\d{1,3}%)\s*</span>""").matcher(cardHtml)
+                val rating = if (rateM.find()) rateM.group(1)?.trim() ?: "97%" else "97%"
+
+                val authorM = Pattern.compile("""class="uploader"[^>]*>.*?<span class="name">([^<]+)</span>""").matcher(cardHtml)
+                val author = if (authorM.find()) "@" + authorM.group(1)?.trim() else "@XVideosStar"
+
+                val pvvM = Pattern.compile("""data-pvv="([^"]+)"""").matcher(cardHtml)
+                var pvv = if (pvvM.find()) pvvM.group(1)?.trim() ?: "" else ""
+                if (pvv.startsWith("//")) pvv = "https:$pvv"
 
                 // CDN rotation fallbacks
                 val thumbsArr = JSONArray().apply {
                     put(thumb)
+                    if (rawThumb.contains("THUMBNUM")) {
+                        put(rawThumb.replace("THUMBNUM", "15"))
+                        put(rawThumb.replace("THUMBNUM", "1"))
+                    }
                     if (thumb.contains("thumbs-gcore.xvideos-cdn.com")) {
                         put(thumb.replace("thumbs-gcore.xvideos-cdn.com", "thumb-cdn77.xvideos-cdn.com"))
                     } else if (thumb.contains("thumb-cdn77.xvideos-cdn.com")) {
                         put(thumb.replace("thumb-cdn77.xvideos-cdn.com", "thumbs-gcore.xvideos-cdn.com"))
-                    }
-                    if (thumb.contains("_24_t.jpg")) {
-                        put(thumb.replace("_24_t.jpg", "_1_t.jpg"))
                     }
                     put(AMOLED_DEFAULT_POSTER)
                 }
@@ -1166,14 +1181,18 @@ class All18ApiInterceptor(private val context: Context) {
                     put("raw_id", vid)
                     put("title", title)
                     put("duration", duration)
-                    put("views", "260K vistas")
-                    put("rating", "97%")
-                    put("author", "@XVideosStar")
+                    put("views", views)
+                    put("rating", rating)
+                    put("author", author)
                     put("thumb", thumb)
                     put("thumbs", thumbsArr)
                     put("url", "https://www.xvideos.com/video$vid")
                     put("embed_url", "https://www.xvideos.com/embedframe/$vid")
                     put("media_url", "")
+                    if (pvv.isNotBlank()) {
+                        put("preview_url", pvv)
+                        put("preview_video", pvv)
+                    }
                     put("source", "XVideos")
                     put("type", "video")
                     put("quality", "1080p HD")
@@ -1206,32 +1225,15 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val blockRegex = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"[^>]*class="[^"]*thumb-block[^"]*"[^>]*>([\s\S]*?)</div>\s*</div>\s*</div>""", Pattern.DOTALL)
-            val blockMatcher = blockRegex.matcher(html)
+            val cardPattern = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"([\s\S]*?)(?=<div[^>]+id="video_|<div id="content"|class="pagination"|</div>\s*<script>xv\.thumbs|$)""", Pattern.DOTALL)
+            val matcher = cardPattern.matcher(html)
 
-            val cards = mutableListOf<Pair<String, String>>()
-            while (blockMatcher.find()) {
-                val vid = blockMatcher.group(1) ?: continue
-                val content = blockMatcher.group(2) ?: continue
-                cards.add(Pair(vid, content))
-            }
+            while (matcher.find()) {
+                val vid = matcher.group(1) ?: continue
+                val cardHtml = matcher.group(2) ?: continue
 
-            if (cards.isEmpty()) {
-                val fallbackRegex = Pattern.compile("""class="thumb-inside">([\s\S]*?)</div>""", Pattern.DOTALL)
-                val fm = fallbackRegex.matcher(html)
-                while (fm.find()) {
-                    val content = fm.group(1) ?: continue
-                    val vidM = Pattern.compile("""/video-([a-zA-Z0-9_-]+)/""").matcher(content)
-                    if (vidM.find()) {
-                        val vid = vidM.group(1) ?: continue
-                        cards.add(Pair(vid, content))
-                    }
-                }
-            }
-
-            for ((vid, cardHtml) in cards) {
-                // Official cover extraction: prioritize data-sfwthumb and data-src, skip lightbox-blank.gif, resolve THUMBNUM
-                val thumbM = Pattern.compile("""(?:data-sfwthumb|data-src|data-mzl|src)="([^"]+)"""").matcher(cardHtml)
+                // Official cover extraction: check data-src > data-sfwthumb > data-mzl > src (skip lightbox-blank.gif)
+                val thumbM = Pattern.compile("""(?:data-src|data-sfwthumb|data-mzl|src)="([^"]+)"""").matcher(cardHtml)
                 var rawThumb = ""
                 while (thumbM.find()) {
                     val c = thumbM.group(1)?.trim() ?: ""
@@ -1242,34 +1244,39 @@ class All18ApiInterceptor(private val context: Context) {
                 }
 
                 if (rawThumb.startsWith("//")) rawThumb = "https:$rawThumb"
-                // Replace placeholder THUMBNUM with web default cover frame (15)
-                rawThumb = rawThumb.replace("THUMBNUM", "15")
+                val thumb = if (rawThumb.isNotBlank()) rawThumb.replace("THUMBNUM", "19") else "https://thumb-cdn77.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg"
 
-                val thumb = when {
-                    rawThumb.isNotBlank() -> rawThumb
-                    else -> "https://thumb-cdn77.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg"
-                }
+                val titleM = Pattern.compile("""title="([^"]+)"|class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardHtml)
+                val rawTitle = if (titleM.find()) (titleM.group(1) ?: titleM.group(2))?.trim() ?: "Video XNXX" else "Video XNXX"
+                val title = Html.fromHtml(rawTitle, Html.FROM_HTML_MODE_LEGACY).toString()
 
-                val titleM = Pattern.compile("""<p class="title"[^>]*>.*?<a[^>]+title="([^"]+)"|<a[^>]+title="([^"]+)"|title="([^"]+)"|<p class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardHtml)
-                val rawTitle = if (titleM.find()) {
-                    titleM.group(1) ?: titleM.group(2) ?: titleM.group(3) ?: titleM.group(4) ?: "Video XNXX"
-                } else "Video XNXX"
-                val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
+                val durM = Pattern.compile("""<span class="duration">([^<]+)</span>|class="metadata">[\s\S]*?(\d+\s*min)""").matcher(cardHtml)
+                val duration = if (durM.find()) (durM.group(1) ?: durM.group(2))?.trim() ?: "12 min" else "12 min"
 
-                val durM = Pattern.compile("""<span class="duration">([^<]+)</span>""").matcher(cardHtml)
-                val duration = if (durM.find()) durM.group(1)?.trim() ?: "12 min" else "12 min"
+                val viewsM = Pattern.compile("""([\d.]+[kKmM]?)\s*<span class="icon-f icf-eye">""").matcher(cardHtml)
+                val views = if (viewsM.find()) "${viewsM.group(1)?.trim()?.uppercase()} vistas" else "210K vistas"
+
+                val rateM = Pattern.compile("""(\d{1,3}%)\s*</span>""").matcher(cardHtml)
+                val rating = if (rateM.find()) rateM.group(1)?.trim() ?: "96%" else "96%"
+
+                val authorM = Pattern.compile("""class="uploader"[^>]*>.*?<span class="name">([^<]+)</span>""").matcher(cardHtml)
+                val author = if (authorM.find()) "@" + authorM.group(1)?.trim() else "@XNXXStar"
+
+                val pvvM = Pattern.compile("""data-pvv="([^"]+)"""").matcher(cardHtml)
+                var pvv = if (pvvM.find()) pvvM.group(1)?.trim() ?: "" else ""
+                if (pvv.startsWith("//")) pvv = "https:$pvv"
 
                 // CDN rotation and alternative cover frame fallbacks
                 val thumbsArr = JSONArray().apply {
                     put(thumb)
+                    if (rawThumb.contains("THUMBNUM")) {
+                        put(rawThumb.replace("THUMBNUM", "15"))
+                        put(rawThumb.replace("THUMBNUM", "1"))
+                    }
                     if (thumb.contains("thumb-cdn77.xnxx-cdn.com")) {
                         put(thumb.replace("thumb-cdn77.xnxx-cdn.com", "thumbs-gcore.xnxx-cdn.com"))
                     } else if (thumb.contains("thumbs-gcore.xnxx-cdn.com")) {
                         put(thumb.replace("thumbs-gcore.xnxx-cdn.com", "thumb-cdn77.xnxx-cdn.com"))
-                    }
-                    if (thumb.contains("xn_15_t.jpg")) {
-                        put(thumb.replace("xn_15_t.jpg", "xv_15_t.jpg"))
-                        put(thumb.replace("xn_15_t.jpg", "xn_1_t.jpg"))
                     }
                     put(AMOLED_DEFAULT_POSTER)
                 }
@@ -1279,14 +1286,18 @@ class All18ApiInterceptor(private val context: Context) {
                     put("raw_id", vid)
                     put("title", title)
                     put("duration", duration)
-                    put("views", "210K vistas")
-                    put("rating", "96%")
-                    put("author", "@XNXXStar")
+                    put("views", views)
+                    put("rating", rating)
+                    put("author", author)
                     put("thumb", thumb)
                     put("thumbs", thumbsArr)
                     put("url", "https://www.xnxx.com/video-$vid")
                     put("embed_url", "https://www.xnxx.com/embedframe/$vid")
                     put("media_url", "")
+                    if (pvv.isNotBlank()) {
+                        put("preview_url", pvv)
+                        put("preview_video", pvv)
+                    }
                     put("source", "XNXX")
                     put("type", "video")
                     put("quality", "1080p HD")

@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-        // Custom User Agent (v1.3.2 AMOLED & Safe AdBlock)
+        // Custom User Agent (v1.4.0 Ultra Portable & HD Live Previews)
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.3.2"
+        settings.userAgentString = "$defaultUa All18App/1.4.0"
         settings.setSupportMultipleWindows(true)
 
         // Hardware acceleration

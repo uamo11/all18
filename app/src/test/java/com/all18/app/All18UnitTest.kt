@@ -61,39 +61,85 @@ class All18UnitTest {
     @Test
     fun testXVideosScraperPattern() {
         val sampleHtml = """
-            <div class="thumb-inside">
-                <a href="/video.ubmkpe1b0ad/super_hot_latina">
-                    <img data-src="https://img-hw.xvideos-cdn.com/videos/thumbs169poster/sample.jpg" title="Super Hot Latina" />
-                    <span class="duration">15 min</span>
-                </a>
+            <div id="video_oopmtpb1551" data-id="89550955" data-eid="oopmtpb1551" class="frame-block thumb-block">
+                <div class="thumb-inside">
+                    <div class="thumb">
+                        <a href="/video.oopmtpb1551/huge_booty_slut">
+                            <img src="https://assets-cdn77.xvideos-cdn.com/img/lightbox/lightbox-blank.gif"
+                                 data-src="https://thumb-cdn77.xvideos-cdn.com/ababa116/3/xv_THUMBNUM_t.jpg"
+                                 data-pvv="https://thumb-cdn77.xvideos-cdn.com/ababa116/3/preview.mp4" />
+                        </a>
+                    </div>
+                </div>
+                <div class="uploader"><span class="name">Steve Rickz</span></div>
+                <div class="thumb-under">
+                    <p><a href="/video.oopmtpb1551/huge_booty_slut" title="Super Hot Latina 1080p">Super Hot Latina 1080p</a></p>
+                    <p class="metadata"><span class="right">45.2k <span class="icon-f icf-eye"></span><span class="superfluous">97%</span></span>15 min</p>
+                </div>
             </div>
         """.trimIndent()
 
-        val regex = Pattern.compile("""class="thumb-inside">.*?<a href="/video[._-]?([a-zA-Z0-9_-]+)/[^"]*".*?(?:data-src|src)="([^"]+)"(?:.*?title="([^"]+)")?(?:.*?<span class="duration">([^<]+)</span>)?""", Pattern.DOTALL)
-        val matcher = regex.matcher(sampleHtml)
+        val cardPattern = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"([\s\S]*?)(?=<div[^>]+id="video_|<div id="content"|class="pagination"|</div>\s*<script>xv\.thumbs|$)""", Pattern.DOTALL)
+        val matcher = cardPattern.matcher(sampleHtml)
         assertTrue("Should match XVideos card", matcher.find())
-        assertEquals("ubmkpe1b0ad", matcher.group(1))
-        assertEquals("https://img-hw.xvideos-cdn.com/videos/thumbs169poster/sample.jpg", matcher.group(2))
-        assertEquals("Super Hot Latina", matcher.group(3))
-        assertEquals("15 min", matcher.group(4))
+        assertEquals("oopmtpb1551", matcher.group(1))
+
+        val cardHtml = matcher.group(2) ?: ""
+        val titleM = Pattern.compile("""title="([^"]+)"|class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardHtml)
+        assertTrue("Should extract title", titleM.find())
+        assertEquals("Super Hot Latina 1080p", titleM.group(1))
+
+        val thumbM = Pattern.compile("""(?:data-src|data-sfwthumb|data-mzl|src)="([^"]+)"""").matcher(cardHtml)
+        var rawThumb = ""
+        while (thumbM.find()) {
+            val c = thumbM.group(1)?.trim() ?: ""
+            if (c.isNotEmpty() && !c.contains("blank.gif")) {
+                rawThumb = c
+                break
+            }
+        }
+        val thumb = rawThumb.replace("THUMBNUM", "19")
+        assertEquals("https://thumb-cdn77.xvideos-cdn.com/ababa116/3/xv_19_t.jpg", thumb)
+
+        val pvvM = Pattern.compile("""data-pvv="([^"]+)"""").matcher(cardHtml)
+        assertTrue("Should match preview video", pvvM.find())
+        assertEquals("https://thumb-cdn77.xvideos-cdn.com/ababa116/3/preview.mp4", pvvM.group(1))
     }
 
     @Test
     fun testXNXXScraperPattern() {
         val sampleHtml = """
-            <div class="thumb-inside">
-                <a href="/video-63829104/amateur_couple_fun">
-                    <img data-src="https://img-hw.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg" title="Amateur Couple Fun" />
-                </a>
+            <div id="video_1ilqome3" data-id="91713622" data-eid="1ilqome3" class="thumb-block with-uploader">
+                <div class="thumb-inside">
+                    <div class="thumb">
+                        <a href="/video-1ilqome3/54775408/THUMBNUM/cute_latina">
+                            <img src="https://assets-cdn77.xnxx-cdn.com/img/lightbox/lightbox-blank.gif"
+                                 data-src="https://thumb-cdn77.xnxx-cdn.com/ca384f1f/6/xn_THUMBNUM_t.jpg"
+                                 data-pvv="https://thumb-cdn77.xnxx-cdn.com/ca384f1f/6/preview.mp4" />
+                        </a>
+                    </div>
+                </div>
+                <div class="uploader"><span class="name">Broken Sluts</span></div>
+                <div class="thumb-under">
+                    <p><a href="/video-1ilqome3/cute_latina" title="Cute Latina Takes It All">Cute Latina Takes It All</a></p>
+                    <p class="metadata"><span class="right">2.3k <span class="icon-f icf-eye"></span><span class="superfluous">82%</span></span>11min</p>
+                </div>
             </div>
         """.trimIndent()
 
-        val regex = Pattern.compile("""class="thumb-inside">.*?<a href="/video-([a-zA-Z0-9_-]+)/[^"]*".*?(?:data-src|src)="([^"]+)"(?:.*?title="([^"]+)")?""", Pattern.DOTALL)
-        val matcher = regex.matcher(sampleHtml)
+        val cardPattern = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"([\s\S]*?)(?=<div[^>]+id="video_|<div id="content"|class="pagination"|</div>\s*<script>xv\.thumbs|$)""", Pattern.DOTALL)
+        val matcher = cardPattern.matcher(sampleHtml)
         assertTrue("Should match XNXX card", matcher.find())
-        assertEquals("63829104", matcher.group(1))
-        assertEquals("https://img-hw.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg", matcher.group(2))
-        assertEquals("Amateur Couple Fun", matcher.group(3))
+        assertEquals("1ilqome3", matcher.group(1))
+
+        val cardHtml = matcher.group(2) ?: ""
+        val titleM = Pattern.compile("""title="([^"]+)"|class="title"[^>]*>.*?<a[^>]*>([^<]+)</a>""", Pattern.DOTALL).matcher(cardHtml)
+        assertTrue("Should match XNXX title", titleM.find())
+        assertEquals("Cute Latina Takes It All", titleM.group(1))
+
+        val pvvM = Pattern.compile("""data-pvv="([^"]+)"""").matcher(cardHtml)
+        assertTrue("Should match preview video", pvvM.find())
+        assertEquals("https://thumb-cdn77.xnxx-cdn.com/ca384f1f/6/preview.mp4", pvvM.group(1))
     }
 
     @Test
