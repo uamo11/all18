@@ -16,7 +16,7 @@ class All18JsBridge(private val activity: MainActivity) {
     fun isNativeApp(): Boolean = true
 
     @JavascriptInterface
-    fun getAppVersion(): String = "1.2.1"
+    fun getAppVersion(): String = "1.3.1"
 
     @JavascriptInterface
     fun isMultiInstanceSupported(): Boolean = true
@@ -127,6 +127,25 @@ class All18JsBridge(private val activity: MainActivity) {
                 Toast.makeText(activity, "Descarga iniciada: guardando en Descargas", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 Toast.makeText(activity, "Error al iniciar descarga: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun toggleOrientation(landscape: Boolean) {
+        activity.setOrientation(landscape)
+    }
+
+    @JavascriptInterface
+    fun copyToClipboard(text: String) {
+        activity.runOnUiThread {
+            try {
+                val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("All18", text)
+                clipboard.setPrimaryClip(clip)
+                showToast("Copiado al portapapeles")
+            } catch (e: Exception) {
+                showToast("Error al copiar")
             }
         }
     }

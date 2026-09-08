@@ -925,6 +925,84 @@
     const FALLBACK_THUMB = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%230e0e12'/%3E%3Ccircle cx='320' cy='170' r='42' fill='%231a1a22' stroke='%232a2a36' stroke-width='2'/%3E%3Cpolygon points='314,154 334,170 314,186' fill='%23ff9000'/%3E%3Ctext x='320' y='245' font-family='-apple-system,BlinkMacSystemFont,sans-serif' font-size='22' font-weight='900' fill='%23ff9000' text-anchor='middle'%3EALL18%3C/text%3E%3Ctext x='320' y='270' font-family='-apple-system,BlinkMacSystemFont,sans-serif' font-size='13' font-weight='600' fill='%23666677' text-anchor='middle'%3EVideo Exclusivo%3C/text%3E%3C/svg%3E";
     window.FALLBACK_THUMB = FALLBACK_THUMB;
 
+    // =========================================================
+    // CONTINUAR VIENDO / WATCH HISTORY & RESUME ENGINE (v1.3.1)
+    // =========================================================
+    function getWatchHistory() {
+        try {
+            const raw = localStorage.getItem('all18_watch_history');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    window.getWatchHistory = getWatchHistory;
+
+    function getWatchHistoryProgress(id) {
+        if (!id) return 0;
+        try {
+            const history = getWatchHistory();
+            const found = history.find(h => h.id === id);
+            return found ? (found.progressPercent || 0) : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+    window.getWatchHistoryProgress = getWatchHistoryProgress;
+
+    function parseDurationToSeconds(durStr) {
+        if (!durStr || typeof durStr !== 'string') return 600;
+        const parts = durStr.split(':').map(p => parseInt(p, 10));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            return (parts[0] * 60) + parts[1];
+        }
+        if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+            return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+        }
+        return 600;
+    }
+
+    function formatSecondsToTime(sec) {
+        const s = Math.floor(sec || 0);
+        const mins = Math.floor(s / 60);
+        const remainingSecs = s % 60;
+        return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+    }
+
+    function saveWatchHistory(item, currentTime, duration) {
+        if (!item || !item.id) return;
+        try {
+            const history = getWatchHistory();
+            const durationSec = (duration && !isNaN(duration) && duration > 0) ? duration : (item.duration ? parseDurationToSeconds(item.duration) : 600);
+            const percent = durationSec > 0 ? Math.min(100, Math.round((currentTime / durationSec) * 100)) : 0;
+            
+            const existingIdx = history.findIndex(h => h.id === item.id);
+            const entry = {
+                id: item.id,
+                raw_id: item.raw_id || '',
+                title: item.title || 'Video All18',
+                thumb: item.thumb || '',
+                author: item.author || '',
+                duration: item.duration || '',
+                source: item.source || '',
+                media_url: item.media_url || '',
+                embed_url: item.embed_url || '',
+                currentTime: Math.floor(currentTime || 0),
+                durationSec: Math.floor(durationSec),
+                progressPercent: percent,
+                updatedAt: Date.now()
+            };
+
+            if (existingIdx >= 0) {
+                history.splice(existingIdx, 1);
+            }
+            history.unshift(entry);
+            if (history.length > 60) history.pop();
+            localStorage.setItem('all18_watch_history', JSON.stringify(history));
+        } catch (e) {}
+    }
+    window.saveWatchHistory = saveWatchHistory;
+
     function createVideoCard(item, index = 10) {
         const card = document.createElement('div');
         card.className = 'video-card';
@@ -933,6 +1011,7 @@
         const isFav = state.favorites.some(f => f.id === item.id);
         const isUserPost = !!item.is_user_post;
         const isPhoto = item.type === 'photo';
+        const savedProgress = getWatchHistoryProgress(item.id);
         const initialThumb = item.thumb || FALLBACK_THUMB;
         const mediaVideoUrl = item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '');
 
@@ -985,6 +1064,7 @@
                         <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
                         ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                         <span class="duration-badge" style="${isPhoto ? 'background: linear-gradient(135deg, #ec4899, #8b5cf6); font-weight:800;' : ''}">${isPhoto ? '📸 FOTO HD' : (item.duration || '0:34')}</span>
+                        ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                         ${!isPhoto ? `
                         <div class="x-center-play">
                             <svg viewBox="0 0 24 24" width="32" height="32" fill="#ffffff"><path d="M8 5v14l11-7z"/></svg>
@@ -995,6 +1075,9 @@
                     </div>
                     <div class="x-action-bar">
                         <div class="x-action-item x-action-reply" title="Comentarios">
+                            <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-1.602.89 1.002 3.43c.18.61-.41 1.15-.99.91l-4.75-2.02-1.96.18c-.66.06-1.32.09-1.98.09-4.421 0-8.004-3.58-8.004-8.02zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.744 6.02 6.085 6.02.69 0 1.38-.03 2.08-.1l.6-.05 3.39 1.44-.69-2.36.27-.15c2.15-1.19 3.49-3.46 3.49-5.93 0-3.38-2.75-6.13-6.13H9.756z"/></svg>
+                            <span>${commentsCount}</span>
+                        </div>
                             <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-1.602.89 1.002 3.43c.18.61-.41 1.15-.99.91l-4.75-2.02-1.96.18c-.66.06-1.32.09-1.98.09-4.421 0-8.004-3.58-8.004-8.02zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.744 6.02 6.085 6.02.69 0 1.38-.03 2.08-.1l.6-.05 3.39 1.44-.69-2.36.27-.15c2.15-1.19 3.49-3.46 3.49-5.93 0-3.38-2.75-6.13-6.13H9.756z"/></svg>
                             <span>${commentsCount}</span>
                         </div>
@@ -1046,6 +1129,7 @@
                 <div class="thumb-container">
                     <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
                     ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
+                    ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                     <button class="ig-media-tagged-btn" type="button" title="Etiquetados" onclick="event.stopPropagation()">👤</button>
                     <button class="ig-media-mute-btn" type="button" title="Silenciar / Activar sonido" onclick="event.stopPropagation()">🔇</button>
                 </div>
@@ -1158,6 +1242,7 @@
                     ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     <span class="duration-badge" style="${isPhoto ? 'background: linear-gradient(135deg, #ec4899, #8b5cf6); font-weight:800;' : ''}">${isPhoto ? '📸 FOTO HD' : (item.duration || '18:50')}</span>
                     <span class="source-badge-pill ${item.source || 'Pornhub'}">${isPhoto ? 'Booru / Foto' : (item.source || 'Pornhub')}</span>
+                    ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                     <button class="card-fav-btn ${isFav ? 'active' : ''}" title="Guardar en favoritos" data-id="${item.id}">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </button>
@@ -1581,7 +1666,7 @@
         if (authorEl) authorEl.textContent = item.author;
         if (sourceEl) sourceEl.textContent = `${item.source} • Creador Oficial`;
         if (avatarEl) {
-            avatarEl.src = item.author_avatar || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80`;
+            avatarEl.src = item.author_avatar || getCreatorAvatar(item.author, item.id);
         }
         if (viewsEl) viewsEl.textContent = `👁️ ${item.views}`;
         if (ratingEl) ratingEl.textContent = `👍 ${item.rating}`;
@@ -1594,32 +1679,34 @@
             const isShort = item.source === 'RedGifs' || item.type === 'short';
             playerWrapper.classList.toggle('vertical-short', isShort);
 
+            let mediaTagHtml = '';
             if (item.source === 'RedGifs' || item.type === 'short') {
                 const ifrUrl = item.embed_url || `https://www.redgifs.com/ifr/${item.raw_id}?autoplay=1`;
                 if (item.media_url) {
-                    playerWrapper.innerHTML = `
-                        <video src="${item.media_url}" controls autoplay loop playsinline referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;background:#000;"></video>
-                    `;
+                    mediaTagHtml = `<video id="activeCinemaVideo" src="${item.media_url}" controls autoplay loop playsinline referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
                 } else {
-                    playerWrapper.innerHTML = `
-                        <iframe src="${ifrUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" referrerpolicy="no-referrer"></iframe>
-                    `;
+                    mediaTagHtml = `<iframe src="${ifrUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer"></iframe>`;
                 }
             } else if (item.embed_url) {
-                playerWrapper.innerHTML = `
-                    <iframe src="${item.embed_url}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" referrerpolicy="no-referrer"></iframe>
-                `;
+                mediaTagHtml = `<iframe src="${item.embed_url}" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer"></iframe>`;
             } else if (item.media_url) {
-                playerWrapper.innerHTML = `
-                    <video src="${item.media_url}" controls autoplay playsinline referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;background:#000;"></video>
-                `;
+                mediaTagHtml = `<video id="activeCinemaVideo" src="${item.media_url}" controls autoplay playsinline referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
             } else {
-                playerWrapper.innerHTML = `
-                    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;min-height:300px;">
-                        <p>Reproductor no disponible para este enlace.</p>
-                    </div>
-                `;
+                mediaTagHtml = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;min-height:300px;"><p>Reproductor no disponible para este enlace.</p></div>`;
             }
+
+            playerWrapper.innerHTML = `
+                ${mediaTagHtml}
+                <div id="seekRippleLeft" class="seek-ripple-overlay left"><span>⏪ -10s</span></div>
+                <div id="seekRippleRight" class="seek-ripple-overlay right"><span>+10s ⏩</span></div>
+                <div id="resumePlayPrompt" class="resume-play-prompt" style="display: none;">
+                    <span id="resumePlayText">▶ Continuar desde 00:00</span>
+                    <div class="resume-prompt-btns">
+                        <button type="button" class="btn-resume-action" onclick="window.confirmResumePlay && window.confirmResumePlay()">Reanudar</button>
+                        <button type="button" class="btn-resume-dismiss" onclick="window.dismissResumePlay && window.dismissResumePlay()">✕</button>
+                    </div>
+                </div>
+            `;
 
             const activeVideo = playerWrapper.querySelector('video');
             if (activeVideo) {
@@ -1631,6 +1718,9 @@
                         activeVideo.play().catch(() => {});
                     });
                 }
+                setupCinemaPlayerControls(activeVideo, item);
+            } else {
+                saveWatchHistory(item, 0, parseDurationToSeconds(item.duration));
             }
         }
 
@@ -1682,7 +1772,7 @@
         // Update Comment form avatar
         const myAvatarEl = document.getElementById('commentMyAvatar');
         if (myAvatarEl) {
-            myAvatarEl.src = userProfile.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80';
+            myAvatarEl.src = userProfile.photoURL || CREATOR_AVATARS[0];
         }
 
         // Load Comments & Reactions
@@ -1723,9 +1813,9 @@
     // LIVE COMMENTS & HOT REACTIONS ENGINE
     // ==========================================
     const DEFAULT_SAMPLE_COMMENTS = [
-        { id: 'c1', user_name: 'CarlosM', user_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=80', text: '¡Increíble video! La calidad es una locura 🔥🔥🔥', created_at: 'Hace 2 horas' },
-        { id: 'c2', user_name: '@DiablaHot', user_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80', text: 'Me encantó la escena del minuto 03:20 💦💦', created_at: 'Hace 5 horas' },
-        { id: 'c3', user_name: 'LatinLover', user_avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=80&auto=format&fit=crop&q=80', text: 'Excelente contenido, suban más de esta modelo por favor ⭐👑', created_at: 'Ayer' }
+        { id: 'c1', user_name: 'CarlosM', user_avatar: CREATOR_AVATARS[0], text: '¡Increíble video! La calidad es una locura 🔥🔥🔥', created_at: 'Hace 2 horas' },
+        { id: 'c2', user_name: '@DiablaHot', user_avatar: CREATOR_AVATARS[1], text: 'Me encantó la escena del minuto 03:20 💦💦', created_at: 'Hace 5 horas' },
+        { id: 'c3', user_name: 'LatinLover', user_avatar: CREATOR_AVATARS[2], text: 'Excelente contenido, suban más de esta modelo por favor ⭐👑', created_at: 'Ayer' }
     ];
 
     async function loadCommentsForVideo(videoId) {
@@ -1772,7 +1862,7 @@
             const itemEl = document.createElement('div');
             itemEl.className = 'comment-card-item';
             itemEl.innerHTML = `
-                <img src="${c.user_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80'}" alt="Avatar" class="comment-item-avatar">
+                <img src="${c.user_avatar || CREATOR_AVATARS[0]}" alt="Avatar" class="comment-item-avatar">
                 <div class="comment-item-content">
                     <div class="comment-item-author-row">
                         <span class="comment-item-name">${escapeHTML(c.user_name || 'Anónimo')}</span>
@@ -1800,7 +1890,7 @@
             video_id: videoId,
             user_uid: userProfile.uid,
             user_name: userProfile.handle || userProfile.displayName || 'Anónimo',
-            user_avatar: userProfile.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80',
+            user_avatar: userProfile.photoURL || CREATOR_AVATARS[0],
             text: text,
             created_at: 'Hace un momento'
         };
@@ -1905,7 +1995,7 @@
         if (!modal) return;
 
         const authorName = targetAuthor || (state.activeModalItem ? state.activeModalItem.author : 'Creador');
-        const authorAvatar = state.activeModalItem ? state.activeModalItem.author_avatar : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80';
+        const authorAvatar = state.activeModalItem ? (state.activeModalItem.author_avatar || getCreatorAvatar(authorName, state.activeModalItem.id)) : getCreatorAvatar(authorName);
 
         const nameEl = document.getElementById('creatorHeadName');
         const handleEl = document.getElementById('creatorHeadHandle');
@@ -1915,7 +2005,7 @@
 
         if (nameEl) nameEl.textContent = authorName;
         if (handleEl) handleEl.textContent = authorName.startsWith('@') ? authorName : '@' + authorName.replace(/\s+/g, '');
-        if (avatarEl) avatarEl.src = authorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80';
+        if (avatarEl) avatarEl.src = authorAvatar || getCreatorAvatar(authorName);
         if (bioEl) bioEl.textContent = `Bienvenido al perfil oficial de ${authorName} en All18. Descubre sus mejores videos, clips HD y novedades exclusivas.`;
 
         if (gridEl) {
@@ -2185,6 +2275,212 @@
         }
     };
 
+    // =========================================================
+    // CINEMA PLAYER PRO & GESTURES ENGINE (v1.3.1)
+    // =========================================================
+    function setupCinemaPlayerControls(video, item) {
+        if (!video) return;
+
+        const speedLabel = document.getElementById('speedValueLabel');
+        if (speedLabel) speedLabel.textContent = `${video.playbackRate}x`;
+
+        // Check for saved progress in watch history
+        const history = getWatchHistory();
+        const saved = history.find(h => h.id === item.id);
+        if (saved && saved.currentTime > 5 && saved.currentTime < (saved.durationSec - 10)) {
+            const resumePrompt = document.getElementById('resumePlayPrompt');
+            const resumeText = document.getElementById('resumePlayText');
+            if (resumePrompt && resumeText) {
+                resumeText.textContent = `▶ Continuar desde ${formatSecondsToTime(saved.currentTime)}`;
+                resumePrompt.style.display = 'flex';
+                window._pendingResumeTime = saved.currentTime;
+                setTimeout(() => {
+                    if (resumePrompt) resumePrompt.style.display = 'none';
+                }, 10000);
+            }
+        }
+
+        // Throttle progress save to every 3 seconds
+        let lastSaveTime = 0;
+        video.addEventListener('timeupdate', () => {
+            const now = Date.now();
+            if (now - lastSaveTime > 3000) {
+                lastSaveTime = now;
+                saveWatchHistory(item, video.currentTime, video.duration);
+            }
+        });
+
+        // Double-tap gesture seeking
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        const wrapper = document.getElementById('watchPlayerWrapper');
+        if (wrapper && !wrapper._hasTapListener) {
+            wrapper._hasTapListener = true;
+            wrapper.addEventListener('click', (e) => {
+                if (e.target.closest('.resume-play-prompt') || e.target.closest('.pip-controls-bar') || e.target.closest('.player-pro-toolbar')) return;
+
+                const currentTime = Date.now();
+                const tapLength = currentTime - lastTapTime;
+                const rect = wrapper.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
+
+                if (tapLength < 350 && tapLength > 60) {
+                    // Double tap detected!
+                    if (clickX < width * 0.4) {
+                        window.seekVideo(-10);
+                    } else if (clickX > width * 0.6) {
+                        window.seekVideo(10);
+                    }
+                    e.preventDefault();
+                }
+                lastTapTime = currentTime;
+                lastTapX = clickX;
+            });
+        }
+    }
+
+    window.confirmResumePlay = function() {
+        const video = document.getElementById('activeCinemaVideo') || document.querySelector('#watchPlayerWrapper video');
+        const resumePrompt = document.getElementById('resumePlayPrompt');
+        if (video && window._pendingResumeTime) {
+            video.currentTime = window._pendingResumeTime;
+            video.play().catch(() => {});
+            showToast(`▶ Reanudado desde ${formatSecondsToTime(window._pendingResumeTime)}`);
+        }
+        if (resumePrompt) resumePrompt.style.display = 'none';
+    };
+
+    window.dismissResumePlay = function() {
+        const resumePrompt = document.getElementById('resumePlayPrompt');
+        if (resumePrompt) resumePrompt.style.display = 'none';
+    };
+
+    window.seekVideo = function(seconds) {
+        const video = document.getElementById('activeCinemaVideo') || document.querySelector('#watchPlayerWrapper video');
+        const rippleId = seconds < 0 ? 'seekRippleLeft' : 'seekRippleRight';
+        const ripple = document.getElementById(rippleId);
+
+        if (ripple) {
+            ripple.classList.remove('active');
+            void ripple.offsetWidth;
+            ripple.classList.add('active');
+            setTimeout(() => ripple.classList.remove('active'), 600);
+        }
+
+        if (video) {
+            const newTime = Math.max(0, Math.min(video.duration || 99999, video.currentTime + seconds));
+            video.currentTime = newTime;
+            showToast(`${seconds > 0 ? '⏩ +' : '⏪ '}${seconds}s (${formatSecondsToTime(newTime)})`);
+        } else {
+            showToast(`${seconds > 0 ? '⏩ +10s' : '⏪ -10s'} (Usa los controles del portal)`);
+        }
+    };
+
+    const SPEED_OPTIONS = [0.5, 1.0, 1.25, 1.5, 2.0];
+    window.cyclePlaybackSpeed = function() {
+        const video = document.getElementById('activeCinemaVideo') || document.querySelector('#watchPlayerWrapper video');
+        const currentSpeed = video ? video.playbackRate : (parseFloat(document.getElementById('speedValueLabel')?.textContent) || 1.0);
+        const currentIdx = SPEED_OPTIONS.indexOf(currentSpeed);
+        const nextSpeed = SPEED_OPTIONS[(currentIdx + 1) % SPEED_OPTIONS.length];
+
+        if (video) {
+            video.playbackRate = nextSpeed;
+        }
+        const speedLabel = document.getElementById('speedValueLabel');
+        if (speedLabel) speedLabel.textContent = `${nextSpeed}x`;
+        showToast(`⚡ Velocidad de reproducción: ${nextSpeed}x`);
+    };
+
+    let isScreenLandscape = false;
+    window.togglePlayerOrientation = function() {
+        isScreenLandscape = !isScreenLandscape;
+        if (window.AndroidApp && typeof window.AndroidApp.toggleOrientation === 'function') {
+            window.AndroidApp.toggleOrientation(isScreenLandscape);
+        } else if (screen.orientation && screen.orientation.lock) {
+            if (isScreenLandscape) {
+                screen.orientation.lock('landscape').catch(() => {});
+            } else {
+                screen.orientation.unlock();
+            }
+        }
+        showToast(`🔄 Pantalla: ${isScreenLandscape ? 'Horizontal (Sensor Landscape)' : 'Vertical'}`);
+    };
+
+    let sleepTimerTimeout = null;
+    let sleepTimerMinutes = 0;
+    window.openSleepTimerModal = function() {
+        const modal = document.getElementById('sleepTimerModal');
+        if (modal) modal.style.display = 'flex';
+    };
+
+    window.closeSleepTimerModal = function() {
+        const modal = document.getElementById('sleepTimerModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.setSleepTimer = function(minutes) {
+        if (sleepTimerTimeout) {
+            clearTimeout(sleepTimerTimeout);
+            sleepTimerTimeout = null;
+        }
+        sleepTimerMinutes = minutes;
+        const badge = document.getElementById('sleepTimerBadge');
+
+        if (minutes > 0) {
+            if (badge) badge.textContent = `${minutes}m 💤`;
+            showToast(`💤 Temporizador: se pausará en ${minutes} min`);
+            sleepTimerTimeout = setTimeout(() => {
+                const video = document.getElementById('activeCinemaVideo') || document.querySelector('#watchPlayerWrapper video');
+                if (video) video.pause();
+                if (badge) badge.textContent = 'Dormir';
+                sleepTimerMinutes = 0;
+                showToast('💤 Temporizador finalizado. Reproducción pausada para descansar.');
+            }, minutes * 60 * 1000);
+        } else {
+            if (badge) badge.textContent = 'Dormir';
+            showToast('Temporizador desactivado');
+        }
+        window.closeSleepTimerModal();
+    };
+
+    window.downloadCurrentVideo = function() {
+        const item = state.activeModalItem;
+        if (!item) {
+            showToast('No hay video activo para descargar');
+            return;
+        }
+
+        const video = document.getElementById('activeCinemaVideo') || document.querySelector('#watchPlayerWrapper video');
+        const downloadUrl = (video && video.src && !video.src.startsWith('blob:')) ? video.src : (item.media_url || item.hd_url || item.sd_url || '');
+
+        if (downloadUrl && downloadUrl.startsWith('http')) {
+            const cleanTitle = (item.title || 'Video_All18').replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 40);
+            const filename = `All18_${cleanTitle}.mp4`;
+            if (window.AndroidApp && typeof window.AndroidApp.downloadMedia === 'function') {
+                window.AndroidApp.downloadMedia(downloadUrl, filename);
+            } else {
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast('📥 Descarga iniciada');
+            }
+        } else {
+            const shareUrl = item.embed_url || item.url || window.location.href;
+            if (window.AndroidApp && typeof window.AndroidApp.copyToClipboard === 'function') {
+                window.AndroidApp.copyToClipboard(shareUrl);
+                showToast('📋 Enlace de stream copiado para gestor de descargas');
+            } else {
+                navigator.clipboard?.writeText(shareUrl);
+                showToast('📋 Enlace de stream copiado al portapapeles');
+            }
+        }
+    };
+
     function toggleFavorite(item) {
         const index = state.favorites.findIndex(f => f.id === item.id);
         if (index > -1) {
@@ -2303,24 +2599,13 @@
         displayName: 'Usuario All18',
         handle: '@usuario',
         email: '',
-        photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+        photoURL: CREATOR_AVATARS[0],
         bio: 'Creador y miembro de la comunidad All18.',
         is_anonymous: false,
         is_onboarded: false
     };
 
-    const ANONYMOUS_AVATARS = [ "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='28' font-weight='bold' fill='%23ff9000' text-anchor='middle' alignment-baseline='middle'%3EALL18%3C/text%3E%3C/svg%3E", 
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80'
-    ];
+    const ANONYMOUS_AVATARS = CREATOR_AVATARS;
 
     const RANDOM_NICKNAMES = [
         'DiablaHot', 'LatinLover', 'GatitaVIP', 'MisterBlack', 'FenixHot',
@@ -2397,7 +2682,7 @@
         if (isLoggedIn) {
             if (btnLogin) btnLogin.style.display = 'none';
             if (userMenu) userMenu.style.display = 'block';
-            if (userAvatar) userAvatar.src = profile.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
+            if (userAvatar) userAvatar.src = profile.photoURL || CREATOR_AVATARS[0];
             if (userName) userName.textContent = profile.displayName || 'Usuario';
             if (dropName) dropName.textContent = profile.displayName || 'Usuario';
             if (dropEmail) dropEmail.textContent = profile.email || profile.handle || '';
@@ -2917,7 +3202,7 @@
 
             let embedUrl = '';
             let mediaUrl = '';
-            let thumb = state.generatedThumbnail || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80';
+            let thumb = state.generatedThumbnail || FALLBACK_THUMB;
             let duration = 'HD Video';
 
             if (state.publishMode === 'link') {
@@ -3396,7 +3681,7 @@
 
         const dispName = userProfile.displayName || 'Usuario';
         const dispHandle = userProfile.handle || ('@' + dispName.toLowerCase().replace(/[^a-z0-9_]/g, ''));
-        const dispAvatar = userProfile.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80';
+        const dispAvatar = userProfile.photoURL || CREATOR_AVATARS[0];
 
         if (nameEl) nameEl.textContent = dispName;
         if (headerTitleEl) headerTitleEl.textContent = dispName;

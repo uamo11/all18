@@ -4358,3 +4358,300 @@ body[data-theme="twitter"] .all18-nav-item.active::after {
 .source-badge-pill.XNXX { background: #e5a93c; color: #000; }
 .source-badge-pill.RedTube { background: #e22626; color: #fff; }
 .source-badge-pill.RedGifs { background: #fe2c55; color: #fff; }
+
+/* =========================================================
+   Cinema Player Pro, Resume Progress & Gestures (v1.3.1)
+   ========================================================= */
+.watch-player-card {
+    position: relative;
+    background: #000000;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.watch-player-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 */
+    background: #000;
+    overflow: hidden;
+}
+
+.watch-player-wrapper.vertical-short {
+    padding-top: 177.77%; /* 9:16 */
+    max-height: 80vh;
+}
+
+.watch-player-wrapper video,
+.watch-player-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #000;
+}
+
+/* Gestures Ripple Overlays */
+.seek-ripple-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 35%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 25;
+}
+
+.seek-ripple-overlay.left {
+    left: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
+}
+
+.seek-ripple-overlay.right {
+    right: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
+}
+
+.seek-ripple-overlay.active {
+    opacity: 1;
+    animation: seekRipplePulse 0.6s ease-out forwards;
+}
+
+@keyframes seekRipplePulse {
+    0% { transform: scale(0.85); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+.seek-ripple-overlay span {
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Floating Resume Play Prompt */
+.resume-play-prompt {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    background: rgba(14, 14, 18, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 144, 0, 0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    z-index: 30;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+    animation: slideUpPrompt 0.3s ease-out;
+}
+
+@keyframes slideUpPrompt {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.resume-play-prompt span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #efeff1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.resume-prompt-btns {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.btn-resume-action {
+    background: linear-gradient(135deg, #ff9000, #ff5500);
+    border: none;
+    color: #000;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.btn-resume-action:active {
+    transform: scale(0.95);
+}
+
+.btn-resume-dismiss {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #a1a1aa;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Cinema Player Pro Toolbar */
+.player-pro-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #0d0d10;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pro-tools-left, .pro-tools-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-pro-tool {
+    background: #18181e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #efeff1;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.btn-pro-tool:hover, .btn-pro-tool:active {
+    background: #24242d;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-pro-tool.active {
+    background: rgba(255, 144, 0, 0.15);
+    color: #ff9000;
+    border-color: #ff9000;
+}
+
+.btn-tool-download {
+    background: rgba(0, 230, 118, 0.1);
+    border-color: rgba(0, 230, 118, 0.3);
+    color: #00e676;
+}
+
+.btn-tool-download:hover, .btn-tool-download:active {
+    background: rgba(0, 230, 118, 0.2);
+    border-color: #00e676;
+}
+
+/* Video Card Watch Progress Bar */
+.card-watch-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 6;
+    overflow: hidden;
+}
+
+.card-watch-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff9000, #fe2c55);
+    border-radius: 0 2px 2px 0;
+    transition: width 0.3s;
+}
+
+/* Sleep Timer Modal */
+.sleep-timer-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.sleep-timer-box {
+    background: #14141a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 20px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sleep-timer-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sleep-timer-desc {
+    font-size: 12px;
+    color: #a1a1aa;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.sleep-timer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sleep-timer-btn {
+    background: #1c1c24;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #efeff1;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s;
+}
+
+.sleep-timer-btn:active, .sleep-timer-btn.active {
+    background: #ff9000;
+    color: #000;
+    border-color: #ff9000;
+}

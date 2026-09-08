@@ -181,7 +181,7 @@
                 <span id="watchCategoryPill" class="watch-category-badge">🔥 VIDEO EXCLUSIVO</span>
             </div>
 
-            <!-- Cinema Mode Video Player with Sticky PiP Support -->
+            <!-- Cinema Mode Video Player with Sticky PiP Support & Cinema Pro Controls -->
             <div id="watchPlayerCard" class="watch-player-card">
                 <div class="pip-controls-bar">
                     <button type="button" class="btn-pip-control" title="Volver al reproductor grande" onclick="window.expandStickyPiP && window.expandStickyPiP()">▲</button>
@@ -189,6 +189,41 @@
                 </div>
                 <div id="watchPlayerWrapper" class="watch-player-wrapper">
                     <!-- Embedded iframe or video tag injected here -->
+                    <div id="seekRippleLeft" class="seek-ripple-overlay left"><span>⏪ -10s</span></div>
+                    <div id="seekRippleRight" class="seek-ripple-overlay right"><span>+10s ⏩</span></div>
+                    <div id="resumePlayPrompt" class="resume-play-prompt" style="display: none;">
+                        <span id="resumePlayText">▶ Continuar desde 00:00</span>
+                        <div class="resume-prompt-btns">
+                            <button type="button" class="btn-resume-action" onclick="window.confirmResumePlay && window.confirmResumePlay()">Reanudar</button>
+                            <button type="button" class="btn-resume-dismiss" onclick="window.dismissResumePlay && window.dismissResumePlay()">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cinema Player Pro Quick Toolbar (v1.3.1) -->
+                <div class="player-pro-toolbar">
+                    <div class="pro-tools-left">
+                        <button type="button" class="btn-pro-tool" title="Retroceder 10 segundos" onclick="window.seekVideo && window.seekVideo(-10)">
+                            <span>⏪</span> -10s
+                        </button>
+                        <button type="button" class="btn-pro-tool" title="Adelantar 10 segundos" onclick="window.seekVideo && window.seekVideo(10)">
+                            <span>⏩</span> +10s
+                        </button>
+                        <button type="button" id="btnSpeedSelector" class="btn-pro-tool" title="Velocidad de reproducción" onclick="window.cyclePlaybackSpeed && window.cyclePlaybackSpeed()">
+                            <span>⚡</span> <span id="speedValueLabel">1.0x</span>
+                        </button>
+                    </div>
+                    <div class="pro-tools-right">
+                        <button type="button" class="btn-pro-tool" title="Girar Pantalla (Sensor Landscape / Portrait)" onclick="window.togglePlayerOrientation && window.togglePlayerOrientation()">
+                            <span>🔄</span> Girar
+                        </button>
+                        <button type="button" id="btnSleepTimer" class="btn-pro-tool" title="Temporizador de Sueño" onclick="window.openSleepTimerModal && window.openSleepTimerModal()">
+                            <span>💤</span> <span id="sleepTimerBadge">Dormir</span>
+                        </button>
+                        <button type="button" class="btn-pro-tool btn-tool-download" title="Descargar Video MP4" onclick="window.downloadCurrentVideo && window.downloadCurrentVideo()">
+                            <span>📥</span> Descargar
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -199,7 +234,7 @@
                 <div class="watch-meta-row">
                     <!-- Creator Profile Box -->
                     <div class="watch-creator-box">
-                        <img id="watchCreatorAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Creador" class="watch-creator-avatar" style="cursor: pointer;" onclick="window.openCreatorProfile && window.openCreatorProfile()">
+                        <img id="watchCreatorAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%231b1528'/%3E%3Ccircle cx='50' cy='38' r='20' fill='%23fe2c55'/%3E%3Cpath d='M18,85 C18,63 32,58 50,58 C68,58 82,63 82,85 Z' fill='%23fe2c55' opacity='0.9'/%3E%3Cpolygon points='50,14 54,22 63,23 56,30 58,38 50,34 42,38 44,30 37,23 46,22' fill='%23ffd700'/%3E%3C/svg%3E" alt="Creador" class="watch-creator-avatar" style="cursor: pointer;" onclick="window.openCreatorProfile && window.openCreatorProfile()">
                         <div class="watch-creator-info">
                             <span id="watchCreatorName" class="watch-creator-name" style="cursor: pointer;" onclick="window.openCreatorProfile && window.openCreatorProfile()">Modelo / Canal</span>
                             <span id="watchCreatorSource" class="watch-creator-source">🌟 Creador Oficial</span>
@@ -254,7 +289,7 @@
 
                 <!-- Post Comment Form -->
                 <div class="comment-input-box">
-                    <img id="commentMyAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="Mi Avatar" class="comment-user-avatar">
+                    <img id="commentMyAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23121624'/%3E%3Ccircle cx='50' cy='38' r='20' fill='%23ff9000'/%3E%3Cpath d='M18,85 C18,63 32,58 50,58 C68,58 82,63 82,85 Z' fill='%23ff9000' opacity='0.9'/%3E%3C/svg%3E" alt="Mi Avatar" class="comment-user-avatar">
                     <div class="comment-form-wrap">
                         <textarea id="commentTextInput" class="comment-textarea" placeholder="Escribe un comentario caliente o tu opinión sobre este video..." rows="2"></textarea>
                         <div class="comment-actions-row">
@@ -407,7 +442,7 @@
             <!-- Banner & Avatar Header -->
             <div class="profile-card-header">
                 <div class="profile-avatar-container">
-                    <img id="pModalAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" alt="Avatar" class="profile-avatar-large">
+                    <img id="pModalAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23121624'/%3E%3Ccircle cx='50' cy='38' r='20' fill='%23ff9000'/%3E%3Cpath d='M18,85 C18,63 32,58 50,58 C68,58 82,63 82,85 Z' fill='%23ff9000' opacity='0.9'/%3E%3C/svg%3E" alt="Avatar" class="profile-avatar-large">
                     <span class="profile-status-online" title="Conectado"></span>
                 </div>
                 <div class="profile-meta-info">
@@ -780,7 +815,7 @@
                 </div>
                 <div class="tt-header-right">
                     <div class="tt-story-bubble">
-                        <img id="ttStoryAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&auto=format&fit=crop&q=80" alt="story" />
+                        <img id="ttStoryAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23121624'/%3E%3Ccircle cx='50' cy='38' r='20' fill='%23ff9000'/%3E%3Cpath d='M18,85 C18,63 32,58 50,58 C68,58 82,63 82,85 Z' fill='%23ff9000' opacity='0.9'/%3E%3C/svg%3E" alt="story" />
                         <span class="tt-story-badge">4</span>
                     </div>
                     <button class="tt-icon-btn" type="button" title="Compartir">
@@ -798,7 +833,7 @@
                 <div class="tt-avatar-wrapper">
                     <div class="tt-thought-bubble">¿Qué piensas?</div>
                     <div class="tt-avatar-main">
-                        <img id="ttProfileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" alt="Avatar" />
+                        <img id="ttProfileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23121624'/%3E%3Ccircle cx='50' cy='38' r='20' fill='%23ff9000'/%3E%3Cpath d='M18,85 C18,63 32,58 50,58 C68,58 82,63 82,85 Z' fill='%23ff9000' opacity='0.9'/%3E%3C/svg%3E" alt="Avatar" />
                         <button class="tt-avatar-plus" type="button" onclick="window.openPublishModal && window.openPublishModal()">+</button>
                     </div>
                 </div>
@@ -885,8 +920,31 @@
         </div>
     </div>
 
-
-    
+    <!-- Sleep Timer Modal (v1.3.1) -->
+    <div id="sleepTimerModal" class="sleep-timer-modal" style="display: none;" onclick="window.closeSleepTimerModal(event)">
+        <div class="sleep-timer-box" onclick="event.stopPropagation()">
+            <h3 class="sleep-timer-title"><span>💤</span> Temporizador de Apagado</h3>
+            <p class="sleep-timer-desc">Pausa la reproducción automáticamente cuando se cumpla el tiempo para que puedas descansar tranquilo.</p>
+            <div class="sleep-timer-options">
+                <button type="button" class="sleep-timer-btn" onclick="window.setSleepTimer(0)">
+                    <span>❌ Desactivar temporizador</span>
+                </button>
+                <button type="button" class="sleep-timer-btn" onclick="window.setSleepTimer(15)">
+                    <span>⏱️ 15 minutos</span>
+                </button>
+                <button type="button" class="sleep-timer-btn" onclick="window.setSleepTimer(30)">
+                    <span>⏱️ 30 minutos</span>
+                </button>
+                <button type="button" class="sleep-timer-btn" onclick="window.setSleepTimer(45)">
+                    <span>⏱️ 45 minutos</span>
+                </button>
+                <button type="button" class="sleep-timer-btn" onclick="window.setSleepTimer(60)">
+                    <span>⏱️ 60 minutos (1 hora)</span>
+                </button>
+            </div>
+            <button type="button" class="btn-resume-dismiss" style="width:100%; text-align:center; padding: 10px;" onclick="window.closeSleepTimerModal()">Cerrar</button>
+        </div>
+    </div>
 
 </body>
 </html>

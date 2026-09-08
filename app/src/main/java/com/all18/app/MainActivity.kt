@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-        // Custom User Agent (v1.2.1 Ultra Boost Multi-Instance)
+        // Custom User Agent (v1.3.1 AdBlock Shield & Cinema Pro)
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.2.1"
+        settings.userAgentString = "$defaultUa All18App/1.3.1"
         settings.setSupportMultipleWindows(true)
 
         // Hardware acceleration
@@ -200,7 +200,14 @@ class MainActivity : AppCompatActivity() {
                 tempWebView.settings.domStorageEnabled = true
                 tempWebView.webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                        val target = request?.url?.toString() ?: return false
+                        val reqUri = request?.url ?: return false
+                        val target = reqUri.toString()
+                        // AdBlock Shield: Block popunders and ads from opening windows
+                        if (All18ApiInterceptor.isAdRequest(reqUri)) {
+                            Log.d("All18AdShield", "Blocked ad popup window: $target")
+                            tempWebView.destroy()
+                            return true
+                        }
                         try {
                             if (target.startsWith("https://appassets.androidplatform.net") ||
                                 target.startsWith("file:///android_asset") ||
@@ -261,6 +268,12 @@ class MainActivity : AppCompatActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 if (request == null) return false
+
+                // AdBlock Shield: Drop ad network redirects
+                if (All18ApiInterceptor.isAdRequest(request.url)) {
+                    Log.d("All18AdShield", "Dropped ad redirect: ${request.url}")
+                    return true
+                }
 
                 // NEVER hijack iframe navigations! Allow all video embeds to load inside WebView!
                 if (!request.isForMainFrame) {
@@ -429,6 +442,16 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         binding.webView.onPause()
         super.onPause()
+    }
+
+    fun setOrientation(landscape: Boolean) {
+        runOnUiThread {
+            requestedOrientation = if (landscape) {
+                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+        }
     }
 
     override fun onDestroy() {

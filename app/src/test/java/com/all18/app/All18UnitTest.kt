@@ -1,9 +1,11 @@
 package com.all18.app
 
+import com.all18.app.api.All18ApiInterceptor
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
+import java.net.URI
 import java.util.regex.Pattern
 
 class All18UnitTest {
@@ -104,7 +106,7 @@ class All18UnitTest {
             put("views", "180K vistas")
             put("rating", "96%")
             put("author", "@PornhubStar")
-            put("thumb", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600")
+            put("thumb", All18ApiInterceptor.AMOLED_DEFAULT_POSTER)
             put("url", "https://www.pornhub.com/embed/65a83a21b8f01")
             put("embed_url", "https://www.pornhub.com/embed/65a83a21b8f01")
             put("source", "Pornhub")
@@ -114,7 +116,42 @@ class All18UnitTest {
         assertEquals("ph_65a83a21b8f01", item.getString("id"))
         assertEquals("Pornhub", item.getString("source"))
         assertTrue(item.getString("embed_url").contains("/embed/"))
-        assertTrue(item.getString("thumb").startsWith("http"))
+        assertTrue(item.getString("thumb").startsWith("data:image/svg+xml"))
+    }
+
+    @Test
+    fun testAdBlockShieldDomainInterception() {
+        val blockedUrls = listOf(
+            "https://syndication.exoclick.com/splash.php?cat=1",
+            "https://delivery.trafficjunky.com/banner?size=300x250",
+            "https://as.juicyads.com/show.php",
+            "https://cdn.popcash.net/pop.js",
+            "https://serve.popads.net/serve.js",
+            "https://creative.stripcdn.com/banner.mp4",
+            "https://chaturbate.com/affiliates/in/?track=default",
+            "https://engine.phncdn.com/as.js"
+        )
+
+        for (urlStr in blockedUrls) {
+            val host = URI(urlStr).host ?: ""
+            val isBlocked = All18ApiInterceptor.AD_DOMAINS.any { host.contains(it) }
+            assertTrue("Should block ad network: $urlStr", isBlocked)
+        }
+
+        val allowedUrls = listOf(
+            "https://www.pornhub.com/embed/ph65a83a21b8f01",
+            "https://www.xvideos.com/embedframe/74829103",
+            "https://www.xnxx.com/embedframe/63829104",
+            "https://www.eporner.com/embed/cIG0retUIzC/",
+            "https://spankbang.com/7849102/embed/",
+            "https://media.redgifs.com/sample.mp4"
+        )
+
+        for (urlStr in allowedUrls) {
+            val host = URI(urlStr).host ?: ""
+            val isBlocked = All18ApiInterceptor.AD_DOMAINS.any { host.contains(it) }
+            assertFalse("Should allow video provider: $urlStr", isBlocked)
+        }
     }
 
     @Test

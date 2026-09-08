@@ -41,6 +41,18 @@ class All18ApiInterceptor(private val context: Context) {
         val host = uri.host ?: ""
         val path = uri.path ?: ""
 
+        // 0. AdBlock Shield: Intercept and neutralize ad networks, trackers and popunder scripts
+        if (isAdRequest(uri)) {
+            return WebResourceResponse(
+                "text/plain",
+                "UTF-8",
+                200,
+                "OK",
+                mapOf("Access-Control-Allow-Origin" to "*"),
+                ByteArrayInputStream(ByteArray(0))
+            )
+        }
+
         // 1. Intercept RedGifs: Preflight OPTIONS, API calls, and Media to bypass CORS & 403 Hotlink Protection
         if (host.contains("redgifs.com")) {
             if (request.method.equals("OPTIONS", ignoreCase = true)) {
@@ -634,6 +646,46 @@ class All18ApiInterceptor(private val context: Context) {
     companion object {
         private const val REDGIFS_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         const val AMOLED_DEFAULT_POSTER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23000000'/%3E%3Ccircle cx='320' cy='180' r='36' fill='%23111115' stroke='%2322222a' stroke-width='2'/%3E%3Cpolygon points='314,166 334,180 314,194' fill='%23ffffff'/%3E%3Ctext x='320' y='245' font-family='sans-serif' font-size='15' font-weight='800' fill='%23666677' text-anchor='middle'%3EALL18 HD%3C/text%3E%3C/svg%3E"
+
+        val AD_DOMAINS = setOf(
+            "exoclick.com",
+            "trafficjunky.net",
+            "trafficjunky.com",
+            "trafficfactory.biz",
+            "juicyads.com",
+            "popcash.net",
+            "popads.net",
+            "propellerads.com",
+            "ero-advertising.com",
+            "eroadvertising.com",
+            "realsrv.com",
+            "clckr.com",
+            "adx1.com",
+            "etahub.com",
+            "adxpansion.com",
+            "tsyndicate.com",
+            "adtng.com",
+            "chaturbate.com",
+            "bongacams.com",
+            "livejasmin.com",
+            "stripchat.com",
+            "stripcdn.com",
+            "doubleclick.net",
+            "googlesyndication.com",
+            "google-analytics.com",
+            "yandex.ru",
+            "scorecardresearch.com",
+            "clickadu.com",
+            "adsterra.com",
+            "hilltopads.net",
+            "monetag.com",
+            "engine.phncdn.com"
+        )
+
+        fun isAdRequest(uri: Uri): Boolean {
+            val host = uri.host?.lowercase() ?: return false
+            return AD_DOMAINS.any { host.contains(it) }
+        }
     }
 
     private fun getRedGifsToken(): String? {
