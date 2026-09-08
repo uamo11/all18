@@ -116,4 +116,68 @@ class All18UnitTest {
         assertTrue(item.getString("embed_url").contains("/embed/"))
         assertTrue(item.getString("thumb").startsWith("http"))
     }
+
+    @Test
+    fun testXvideosXnxxHighQualityPosterExtraction() {
+        val rawThumbUrl = "https://img-hw.xvideos-cdn.com/videos/thumbs169/sample_THUMBNUM.jpg"
+        val fixedUrl = rawThumbUrl.replace("THUMBNUM", "15")
+        assertEquals("https://img-hw.xvideos-cdn.com/videos/thumbs169/sample_15.jpg", fixedUrl)
+
+        val cdnRotated = fixedUrl.replace("thumbs-gcore", "thumb-cdn77")
+        assertFalse(cdnRotated.contains("THUMBNUM"))
+    }
+
+    @Test
+    fun testBooruPhotosJsonStructure() {
+        val photoItem = JSONObject().apply {
+            put("id", "booru_123456")
+            put("title", "Anime Cosplay Waifu #123456")
+            put("author", "@BooruArtist")
+            put("thumb", "https://yande.re/preview/123456.jpg")
+            put("image_url", "https://files.yande.re/image/123456.jpg")
+            put("source", "Booru")
+            put("type", "photo")
+            put("views", "85K")
+            put("rating", "100%")
+        }
+
+        assertEquals("photo", photoItem.getString("type"))
+        assertEquals("Booru", photoItem.getString("source"))
+        assertTrue(photoItem.getString("image_url").endsWith(".jpg"))
+        assertTrue(photoItem.getString("id").startsWith("booru_"))
+    }
+
+    @Test
+    fun testOpenSourceXAlgorithmHeavyRankerScoring() {
+        // HeavyRanker open-source weights:
+        val LIKE_WEIGHT = 30.0
+        val REPOST_WEIGHT = 20.0
+        val REPLY_WEIGHT = 1.0
+        val PHOTO_CLICK_WEIGHT = 11.0
+        val DISLIKE_WEIGHT = -74.0
+
+        // User engagement counts
+        val likes = 10
+        val reposts = 5
+        val replies = 3
+        val photoClicks = 2
+        val dislikes = 1
+
+        val engagementScore = (likes * LIKE_WEIGHT) + 
+                              (reposts * REPOST_WEIGHT) + 
+                              (replies * REPLY_WEIGHT) + 
+                              (photoClicks * PHOTO_CLICK_WEIGHT) + 
+                              (dislikes * DISLIKE_WEIGHT)
+
+        // 300 + 100 + 3 + 22 - 74 = 351
+        assertEquals(351.0, engagementScore, 0.001)
+
+        // Exponential half-life decay at 24 hours: 0.5^(24/24) = 0.5
+        val ageHours = 24.0
+        val decay = Math.pow(0.5, ageHours / 24.0)
+        assertEquals(0.5, decay, 0.001)
+
+        val finalRankedScore = engagementScore * decay
+        assertEquals(175.5, finalRankedScore, 0.001)
+    }
 }

@@ -281,6 +281,8 @@ class MainActivity : AppCompatActivity() {
                     url.contains("redtube.com") ||
                     url.contains("youporn.com") ||
                     url.contains("spankbang.com") ||
+                    url.contains("beeg.com") ||
+                    url.contains("eporner.com") ||
                     url.contains("redgifs.com") ||
                     url.endsWith(".html") ||
                     url.contains(".html?")

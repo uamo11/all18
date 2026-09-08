@@ -358,17 +358,78 @@
     // Progressive Multi-Stream Content Loader
     
     // =========================================================================
-    // ALL18 TIKTOK INTELLIGENT RECOMMENDATION & FYP ALGORITHM ENGINE (v1.0)
+    // ALL18 OPEN-SOURCE ALGORITHM ENGINE (Inspired by X / Twitter HeavyRanker & Multi-App Recommendations)
     // =========================================================================
     const AlgorithmEngine = {
-        STORAGE_KEY: 'all18_algorithm_profile_v1',
-        SEEN_STORAGE_KEY: 'all18_seen_history_v1',
+        STORAGE_KEY: 'all18_algorithm_profile_v2',
+        SEEN_STORAGE_KEY: 'all18_seen_history_v2',
         
         CATEGORY_POOL: [
             'latina', 'amateur', 'casero', 'modelos', 'milf', 'culos',
             'tetas', 'cosplay', 'jovencitas', 'mamadas', 'creampie',
-            'anal', 'lesbiana', 'pov', 'trios', 'hardcore', 'hot', 'viral', 'dance'
+            'anal', 'lesbiana', 'pov', 'trios', 'hardcore', 'hot', 'viral',
+            'hentai', 'booru', 'ecchi', 'anime', 'dance', 'reels'
         ],
+
+        // Exact HeavyRanker & Multi-App Scoring Weights
+        WEIGHTS: {
+            // X (Twitter) Open-Source HeavyRanker Weights:
+            // Like: +30, Retweet: +20, Reply: +1, Dwell: +0.005/ms up to +15,
+            // Photo/Media Click: +11, Play 50%: +11, Not Interested / Dislike: -74
+            x: {
+                like: 30,
+                repost: 20,
+                reply: 1,
+                dwell_ms: 0.005,
+                dwell_max: 15,
+                photo_click: 11,
+                video_play50: 11,
+                dislike: -74,
+                not_interested: -74,
+                follow: 25
+            },
+            // Instagram: Visual affinity, Saves/Favs, Shares, Photo Clicks
+            instagram: {
+                like: 10,
+                repost: 18,
+                reply: 12,
+                photo_click: 15,
+                favorite: 25,
+                follow: 30,
+                dislike: -50,
+                not_interested: -50
+            },
+            // TikTok: Completion rate, Fast Skip penalty, Loop boost
+            tiktok: {
+                like: 12,
+                loop: 25,
+                watch_complete: 35,
+                watch_good: 15,
+                skip_fast: -20,
+                dislike: -60,
+                not_interested: -60,
+                follow: 20
+            },
+            // Multi-Hub & Tube: Click-Through & Quality
+            default: {
+                like: 15,
+                favorite: 20,
+                photo_click: 10,
+                dwell_ms: 0.003,
+                dwell_max: 10,
+                dislike: -40,
+                not_interested: -40,
+                follow: 15
+            }
+        },
+
+        getActiveContext() {
+            const theme = document.body.dataset.theme;
+            if (theme === 'twitter' || document.body.classList.contains('twitter-standalone-body')) return 'x';
+            if (theme === 'instagram' || document.body.classList.contains('instagram-standalone-body')) return 'instagram';
+            if (theme === 'tiktok' || document.body.classList.contains('tiktok-standalone-body')) return 'tiktok';
+            return 'default';
+        },
 
         getProfile() {
             try {
@@ -376,7 +437,7 @@
                 if (raw) return JSON.parse(raw);
             } catch (e) {}
             return {
-                tagScores: { 'latina': 10, 'amateur': 8, 'hot': 6, 'viral': 4 },
+                tagScores: { 'latina': 12, 'amateur': 10, 'hot': 8, 'hentai': 6 },
                 creatorScores: {},
                 totalInteractions: 0,
                 lastUpdated: Date.now()
@@ -402,7 +463,7 @@
             const seen = this.getSeenIds();
             seen.add(id);
             const arr = Array.from(seen);
-            if (arr.length > 250) arr.splice(0, arr.length - 250);
+            if (arr.length > 300) arr.splice(0, arr.length - 300);
             try {
                 sessionStorage.setItem(this.SEEN_STORAGE_KEY, JSON.stringify(arr));
             } catch (e) {}
@@ -419,6 +480,10 @@
                     if (titleLower.includes(cat)) tags.add(cat);
                 });
             }
+            if (item.type === 'photo' || item.source === 'Booru' || item.source === 'Yande.re') {
+                tags.add('hot');
+                tags.add('booru');
+            }
             if (tags.size === 0) tags.add('trending');
             return Array.from(tags);
         },
@@ -428,30 +493,31 @@
             const profile = this.getProfile();
             const tags = this.extractTags(item);
             const author = item.author ? item.author.toLowerCase().replace('@', '') : null;
+            const context = metadata.context || this.getActiveContext();
+            const weightMap = this.WEIGHTS[context] || this.WEIGHTS.default;
 
             let weight = 0;
-            switch (action) {
-                case 'like': weight = 6; break;
-                case 'favorite': weight = 9; break;
-                case 'share': weight = 7; break;
-                case 'follow': weight = 12; break;
-                case 'loop': weight = 5; break;
-                case 'watch_complete': weight = 4; break;
-                case 'watch_good': weight = 3; break;
-                case 'skip_fast': weight = -2; break;
-                case 'not_interested': weight = -10; break;
+            if (action === 'dwell') {
+                const ms = metadata.ms || 1000;
+                weight = Math.min(ms * (weightMap.dwell_ms || 0.005), weightMap.dwell_max || 15);
+            } else if (weightMap[action] !== undefined) {
+                weight = weightMap[action];
+            } else {
+                weight = 5;
             }
 
-            // Update tag scores with decay bounding
+            // Update tag affinities with dynamic decay bounding (-74 to +150)
             tags.forEach(t => {
                 profile.tagScores[t] = (profile.tagScores[t] || 0) + weight;
-                if (profile.tagScores[t] < -12) profile.tagScores[t] = -12;
-                if (profile.tagScores[t] > 100) profile.tagScores[t] = 100;
+                if (profile.tagScores[t] < -74) profile.tagScores[t] = -74;
+                if (profile.tagScores[t] > 150) profile.tagScores[t] = 150;
             });
 
-            // Update creator score
-            if (author && weight > 0) {
-                profile.creatorScores[author] = (profile.creatorScores[author] || 0) + (weight * 0.8);
+            // Update creator affinity
+            if (author) {
+                profile.creatorScores[author] = (profile.creatorScores[author] || 0) + (weight * 0.75);
+                if (profile.creatorScores[author] < -74) profile.creatorScores[author] = -74;
+                if (profile.creatorScores[author] > 200) profile.creatorScores[author] = 200;
             }
 
             profile.totalInteractions = (profile.totalInteractions || 0) + 1;
@@ -476,15 +542,18 @@
             return shuffled.slice(0, count);
         },
 
-        scoreAndDiversifyFeed(items) {
+        scoreAndDiversifyFeed(items, overrideContext = null) {
+            if (!items || items.length === 0) return items;
             const profile = this.getProfile();
             const seen = this.getSeenIds();
+            const context = overrideContext || this.getActiveContext();
+            const isXMode = context === 'x';
 
-            // 1. Filter out already seen videos in current session
+            // 1. Filter unseen items if sufficient pool exists
             let candidates = items.filter(item => !seen.has(item.id));
             if (candidates.length < 3) candidates = items;
 
-            // 2. Score candidates with multi-factor weighting
+            // 2. Score candidates with multi-factor scoring
             const scored = candidates.map(item => {
                 const tags = this.extractTags(item);
                 const author = item.author ? item.author.toLowerCase().replace('@', '') : null;
@@ -496,15 +565,32 @@
 
                 const creatorAffinity = author && profile.creatorScores[author] ? profile.creatorScores[author] : 0;
                 const rawViews = parseInt(item.views) || 5000;
-                const viewsBonus = Math.min(rawViews / 20000, 4);
-                const explorationJitter = (Math.random() * 6) - 1.5;
+                const viewsBonus = Math.min(rawViews / 15000, 5);
+                const explorationJitter = (Math.random() * 5) - 1.0;
 
-                const totalScore = (tagAffinity * 0.45) + (creatorAffinity * 0.35) + viewsBonus + explorationJitter;
-
+                let totalScore = 0;
                 let badge = '#ParaTi';
-                if (tagAffinity > 18) badge = `#ParaTi 🔥 (${tags[0] || 'Top'})`;
-                else if (creatorAffinity > 10) badge = `#CreadorFavorito ⭐`;
-                else if (viewsBonus > 2.5) badge = `#Tendencia ⚡`;
+
+                if (isXMode) {
+                    // Open-Source X (HeavyRanker): Exponential 24h half-life time decay
+                    const seed = Math.abs(String(item.id || '123').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0));
+                    const ageHours = item.timestamp ? Math.max((Date.now() - item.timestamp) / 3600000, 0.5) : ((seed % 48) + 1);
+                    const timeDecay = Math.pow(0.5, ageHours / 24); // 24-hr half-life
+                    const inNetworkMultiplier = creatorAffinity > 15 ? 1.4 : 1.0;
+
+                    const baseRanker = (tagAffinity * 0.45) + (creatorAffinity * 0.55) + viewsBonus + explorationJitter;
+                    totalScore = baseRanker * timeDecay * inNetworkMultiplier;
+
+                    if (tagAffinity > 25) badge = `𝕏 Para Ti 🔥 (${tags[0] || 'Top'})`;
+                    else if (creatorAffinity > 20) badge = `𝕏 Creador Top ⭐`;
+                    else if (timeDecay > 0.8) badge = `𝕏 Reciente ⚡`;
+                    else badge = `𝕏 HeavyRanker`;
+                } else {
+                    totalScore = (tagAffinity * 0.5) + (creatorAffinity * 0.35) + viewsBonus + explorationJitter;
+                    if (tagAffinity > 20) badge = `#ParaTi 🔥 (${tags[0] || 'Top'})`;
+                    else if (creatorAffinity > 15) badge = `#CreadorFavorito ⭐`;
+                    else if (viewsBonus > 3) badge = `#Tendencia ⚡`;
+                }
 
                 return {
                     ...item,
@@ -514,20 +600,25 @@
                 };
             });
 
-            // 3. Sort by algorithmic ranking
+            // 3. Sort by algorithmic ranking descending
             scored.sort((a, b) => b._score - a._score);
 
-            // 4. Interleaving shuffle for category and creator diversity
+            // 4. Interleaving shuffle for topic and creator diversity
             const diversified = [];
             let lastTag = '';
+            let lastAuthor = '';
             const remaining = [...scored];
 
             while (remaining.length > 0) {
-                let nextIdx = remaining.findIndex(i => i._primaryTag !== lastTag);
+                let nextIdx = remaining.findIndex(i => i._primaryTag !== lastTag && i.author !== lastAuthor);
+                if (nextIdx === -1) {
+                    nextIdx = remaining.findIndex(i => i._primaryTag !== lastTag);
+                }
                 if (nextIdx === -1) nextIdx = 0;
                 const chosen = remaining.splice(nextIdx, 1)[0];
                 diversified.push(chosen);
                 lastTag = chosen._primaryTag;
+                lastAuthor = chosen.author || '';
                 this.markSeen(chosen.id);
             }
 
@@ -537,7 +628,7 @@
         resetAlgorithm() {
             localStorage.removeItem(this.STORAGE_KEY);
             sessionStorage.removeItem(this.SEEN_STORAGE_KEY);
-            showToast('✨ Algoritmo Para Ti reiniciado');
+            showToast('✨ Algoritmo de recomendaciones reiniciado');
         }
     };
     window.AlgorithmEngine = AlgorithmEngine;
@@ -725,6 +816,46 @@
                     .catch(() => {});
                 providerTasks.push(xnTask);
             }
+
+            // 7. Eporner Provider Stream
+            if (src === 'all' || src === 'eporner') {
+                const epTask = fetch(`api.php?action=search&source=eporner&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=${page}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (data && data.data && data.data.length > 0) {
+                            appendProgressiveItems(data.data);
+                        }
+                    })
+                    .catch(() => {});
+                providerTasks.push(epTask);
+            }
+
+            // 8. Dynamic X Feed: Mix in Booru Hot Photos on Initial Page
+            if (document.body.dataset.theme === 'twitter' && src === 'all' && page === 1) {
+                const xPhotoTask = fetch(`api.php?action=photos&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=1`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (data && data.data && data.data.length > 0) {
+                            appendProgressiveItems(data.data.slice(0, 6));
+                        }
+                    })
+                    .catch(() => {});
+                providerTasks.push(xPhotoTask);
+            }
+        }
+
+        // 9. Dedicated Hot / Hentai Booru Photos Stream
+        if (src === 'photos') {
+            const photosTask = fetch(`api.php?action=photos&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=${page}`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (data && data.data && data.data.length > 0) {
+                        const ranked = AlgorithmEngine.scoreAndDiversifyFeed(data.data, 'photos');
+                        appendProgressiveItems(ranked);
+                    }
+                })
+                .catch(() => {});
+            providerTasks.push(photosTask);
         }
 
         await Promise.allSettled(providerTasks);
@@ -773,16 +904,16 @@
     }
 
     const CREATOR_AVATARS = [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=120&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80'
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2338bdf8'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2338bdf8'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23f43f5e'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23f43f5e'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23a855f7'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23a855f7'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2310b981'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2310b981'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23eab308'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23eab308'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23ec4899'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23ec4899'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%236366f1'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%236366f1'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2314b8a6'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2314b8a6'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23f97316'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23f97316'/%3E%3C/svg%3E",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2306b6d4'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2306b6d4'/%3E%3C/svg%3E"
     ];
 
     function getCreatorAvatar(author, rawId) {
@@ -801,6 +932,7 @@
 
         const isFav = state.favorites.some(f => f.id === item.id);
         const isUserPost = !!item.is_user_post;
+        const isPhoto = item.type === 'photo';
         const initialThumb = item.thumb || FALLBACK_THUMB;
         const mediaVideoUrl = item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '');
 
@@ -849,13 +981,17 @@
                     <p class="x-post-text">
                         ${escapeHTML(item.title || '').replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>').replace(/(@[a-zA-Z0-9_]+)/g, '<span class="x-mention">$1</span>')}
                     </p>
-                    <div class="thumb-container">
+                    <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
                         <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
-                        ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
-                        <span class="duration-badge">${item.duration || '0:34'}</span>
+                        ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
+                        <span class="duration-badge" style="${isPhoto ? 'background: linear-gradient(135deg, #ec4899, #8b5cf6); font-weight:800;' : ''}">${isPhoto ? '📸 FOTO HD' : (item.duration || '0:34')}</span>
+                        ${!isPhoto ? `
                         <div class="x-center-play">
                             <svg viewBox="0 0 24 24" width="32" height="32" fill="#ffffff"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
+                        </div>` : `
+                        <div class="x-center-play" style="opacity: 0.88;">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                        </div>`}
                     </div>
                     <div class="x-action-bar">
                         <div class="x-action-item x-action-reply" title="Comentarios">
@@ -1017,11 +1153,11 @@
         // -------------------------------------------------------------
         else {
             card.innerHTML = `
-                <div class="thumb-container">
+                <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
                     <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
-                    ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
-                    <span class="duration-badge">${item.duration || '18:50'}</span>
-                    <span class="source-badge-pill ${item.source || 'Pornhub'}">${item.source || 'Pornhub'}</span>
+                    ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
+                    <span class="duration-badge" style="${isPhoto ? 'background: linear-gradient(135deg, #ec4899, #8b5cf6); font-weight:800;' : ''}">${isPhoto ? '📸 FOTO HD' : (item.duration || '18:50')}</span>
+                    <span class="source-badge-pill ${item.source || 'Pornhub'}">${isPhoto ? 'Booru / Foto' : (item.source || 'Pornhub')}</span>
                     <button class="card-fav-btn ${isFav ? 'active' : ''}" title="Guardar en favoritos" data-id="${item.id}">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </button>
@@ -1239,6 +1375,24 @@
                 } else {
                     videoEl.pause();
                     card.classList.remove('video-playing');
+                }
+                return;
+            }
+
+            // In Photo Card: Open High-Res Lightbox (Never send to video player)
+            if (isPhoto) {
+                if (typeof window.openXMediaModal === 'function') {
+                    window.openXMediaModal(item);
+                    return;
+                }
+                if (typeof window.openIgMediaModal === 'function') {
+                    window.openIgMediaModal(item);
+                    return;
+                }
+                const photoSrc = item.image_url || item.thumb;
+                if (photoSrc) {
+                    window.open(photoSrc, '_blank');
+                    AlgorithmEngine.recordEngagement(item, 'photo_click');
                 }
                 return;
             }
@@ -2481,8 +2635,20 @@
             onlyfans: 'OnlyFans / Fansly',
             instagram: 'Instagram / Reels',
             tiktok: 'TikTok / Shorts',
-            twitter: 'X / Twitter Timeline'
+            twitter: 'X',
+            amoled: 'AMOLED Negro Puro'
         };
+
+        if (themeName === 'amoled') {
+            let amoledLink = document.getElementById('amoledThemeLink');
+            if (!amoledLink && !document.querySelector('link[href*="theme-amoled.css"]')) {
+                amoledLink = document.createElement('link');
+                amoledLink.id = 'amoledThemeLink';
+                amoledLink.rel = 'stylesheet';
+                amoledLink.href = 'css/themes/theme-amoled.css';
+                document.head.appendChild(amoledLink);
+            }
+        }
 
         document.querySelectorAll('.theme-modal-item, .theme-option').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.theme === themeName);
@@ -3415,7 +3581,19 @@
             `;
         }
 
-        if (mediaUrl) {
+        if (item.type === 'photo') {
+            const photoUrl = item.image_url || item.thumb || initialThumb;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'x-lightbox-photo-wrapper';
+            wrapper.style.cssText = 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; overflow: auto; padding: 8px;';
+            wrapper.innerHTML = `
+                <img id="xLightboxPhoto" src="${photoUrl}" alt="${escapeHTML(item.title || 'Foto HD')}" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);" />
+            `;
+            mediaContainer.appendChild(wrapper);
+            if (window.AlgorithmEngine) {
+                window.AlgorithmEngine.recordEngagement(item, 'photo_click', { context: 'x' });
+            }
+        } else if (mediaUrl) {
             // Render native video player with sound button & full controls
             const wrapper = document.createElement('div');
             wrapper.className = 'x-lightbox-video-wrapper';
@@ -3634,13 +3812,19 @@
         const mediaVideoUrl = item.media_url || (isUserPost && item.video_url ? item.video_url : '');
         const initialThumb = item.thumb || FALLBACK_THUMB;
 
-        if (mediaVideoUrl) {
+        if (item.type === 'photo' || !mediaVideoUrl) {
+            const photoUrl = item.image_url || initialThumb;
             mediaContainer.innerHTML = `
-                <video src="${mediaVideoUrl}" poster="${initialThumb}" autoplay loop playsinline controls style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000;">
+                    <img src="${photoUrl}" alt="${escapeHTML(item.title || 'Foto HD')}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                </div>
             `;
+            if (window.AlgorithmEngine) {
+                window.AlgorithmEngine.recordEngagement(item, 'photo_click', { context: 'instagram' });
+            }
         } else {
             mediaContainer.innerHTML = `
-                <img src="${initialThumb}" alt="${escapeHTML(item.title || 'Media')}" style="width: 100%; height: 100%; object-fit: cover;" />
+                <video src="${mediaVideoUrl}" poster="${initialThumb}" autoplay loop playsinline controls style="width: 100%; height: 100%; object-fit: cover;"></video>
             `;
         }
 

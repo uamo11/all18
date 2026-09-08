@@ -13,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=9.0">
     <link rel="stylesheet" href="css/themes/theme-onlyfans.css?v=9.0">
+    <link rel="stylesheet" href="css/themes/theme-amoled.css?v=9.0">
 </head>
 <body data-theme="onlyfans">
     <header class="site-header">
@@ -86,14 +87,66 @@
                 <button class="theme-modal-item" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
                     <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
                     <div class="theme-item-info">
-                        <strong>X / Twitter Timeline</strong>
-                        <span>Feed cronológico negro puro</span>
+                        <strong>X</strong>
+                        <span>Feed y fotos con algoritmo HeavyRanker</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+                <button class="theme-modal-item" data-theme="amoled" type="button" onclick="window.applyTheme('amoled'); window.closeThemeModal();">
+                    <div class="theme-item-icon" style="background: #000000; border: 1px solid #333333; color: #ffffff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">🖤</div>
+                    <div class="theme-item-info">
+                        <strong>AMOLED Negro Puro</strong>
+                        <span>100% negro #000000, ahorro batería y sin distracciones</span>
                     </div>
                     <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- Universal Native Mobile Bottom Navigation Bar -->
+    <nav class="all18-bottom-nav">
+        <!-- 1. Tube -->
+        <a href="index.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z M10 9v6l5-3z"/></svg>
+            </div>
+            <span class="all18-nav-label">Tube</span>
+        </a>
+
+        <!-- 2. Multi-Hub -->
+        <a href="hub.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 0h7v7h-7z"/></svg>
+                <span class="all18-nav-badge">9</span>
+            </div>
+            <span class="all18-nav-label">Multi-Hub</span>
+        </a>
+
+        <!-- 3. Shorts -->
+        <a href="tiktok.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M17.77 10.32c-.77-.32-1.2-.59-1.81-.82V4.5h-2.5v11.25a2.75 2.75 0 1 1-2.75-2.75c.44 0 .85.1 1.22.28V10.7a5.24 5.24 0 0 0-1.22-.15 5.25 5.25 0 1 0 5.25 5.25V9.92c1.07.72 2.37 1.15 3.75 1.15v-2.5c-.71 0-1.38-.21-1.94-.57z"/></svg>
+            </div>
+            <span class="all18-nav-label">Shorts</span>
+        </a>
+
+        <!-- 4. X -->
+        <a href="twitter.html" class="all18-nav-item">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </div>
+            <span class="all18-nav-label">X</span>
+        </a>
+
+        <!-- 5. Profile -->
+        <button class="all18-nav-item" type="button" onclick="window.location.href='index.html?openProfile=1'">
+            <div class="all18-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <span class="all18-nav-label">Perfil</span>
+        </button>
+    </nav>
 
     <script src="js/app.js?v=9.0"></script>
     <script>

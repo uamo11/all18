@@ -16,6 +16,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css?v=9.0">
     <link rel="stylesheet" href="css/themes/theme-pornhub.css?v=9.0">
+    <link rel="stylesheet" href="css/themes/theme-amoled.css?v=9.2">
 </head>
 <body data-theme="pornhub" class="all18-has-nav">
 
@@ -89,16 +90,16 @@
             <svg class="ph-globe-icon" viewBox="0 0 24 24" width="18" height="18" fill="#4a90e2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
         </div>
 
-        <!-- Scrollable Category Pill Chips Bar -->
+        <!-- Scrollable Category Pill Chips Bar (Minimalist AMOLED) -->
         <div class="ph-chips-bar">
-            <button class="ph-chip" type="button" onclick="window.location.href='hub.html'" style="background: linear-gradient(135deg, rgba(255,144,0,0.25), rgba(254,44,85,0.25)); border: 1px solid #ff9000; color: #fff; font-weight: 800;">
-                <span style="color: #00e676; margin-right: 3px;">●</span> Multi-Hub (5 Webs)
-            </button>
-            <button class="ph-chip" type="button" onclick="window.openNewInstance ? window.openNewInstance('hub.html') : window.location.href='hub.html'" style="background: linear-gradient(135deg, #00e676, #00b0ff); border: 1px solid #00e676; color: #000; font-weight: 900;">
-                ⚡ Multi-Instancia Boost
+            <button class="ph-chip" type="button" onclick="window.location.href='hub.html'">
+                🌐 Multi-Hub
             </button>
             <button class="ph-chip ph-chip-shorties" type="button" onclick="window.location.href='tiktok.html'">
-                <span class="ph-chip-arrow">➤</span> Shorties
+                <span class="ph-chip-arrow">➤</span> Shorts
+            </button>
+            <button class="ph-chip" type="button" onclick="window.location.href='twitter.html'">
+                𝕏 Feed
             </button>
             <button class="ph-chip active" type="button" onclick="window.filterByCategory && window.filterByCategory('')">
                 Destacados
@@ -126,62 +127,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Subscriptions / Shorts Strip (Capturas 2 y 3) -->
-    <section class="ph-subs-section">
-        <div class="ph-section-header">
-            <div class="ph-section-header-left">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="#ff9000"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-                <span class="ph-section-title-text">Suscripciones</span>
-            </div>
-            <span class="ph-section-toggle">˄</span>
-        </div>
-
-        <!-- Horizontal Story Strip -->
-        <div class="ph-subs-carousel" id="phSubsCarousel">
-            <div class="ph-sub-card" onclick="window.location.href='tiktok.html'">
-                <div class="ph-sub-thumb-box">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" alt="diamonddarina07" />
-                    <div class="ph-sub-stats-overlay">
-                        <span class="ph-sub-author">diamonddarina07 <svg class="ph-verified-badge-mini" viewBox="0 0 24 24" width="12" height="12"><path fill="#00aaff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
-                        <div class="ph-sub-meta-row">
-                            <span>👁 2</span>
-                            <span>⏱ 0:14</span>
-                        </div>
-                    </div>
-                </div>
-                <p class="ph-sub-title">Mañana aburrida y extremadamente cachonda...</p>
-            </div>
-
-            <div class="ph-sub-card" onclick="window.location.href='tiktok.html'">
-                <div class="ph-sub-thumb-box">
-                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80" alt="EmiliaBunny" />
-                    <div class="ph-sub-stats-overlay">
-                        <span class="ph-sub-author">EmiliaBunny <svg class="ph-verified-badge-mini" viewBox="0 0 24 24" width="12" height="12"><path fill="#00aaff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
-                        <div class="ph-sub-meta-row">
-                            <span>👁 14.2K</span>
-                            <span>⏱ 0:32</span>
-                        </div>
-                    </div>
-                </div>
-                <p class="ph-sub-title">«Seré tu buena chica» - La estudiante traviesa...</p>
-            </div>
-
-            <div class="ph-sub-card" onclick="window.location.href='tiktok.html'">
-                <div class="ph-sub-thumb-box">
-                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80" alt="Milena Moon" />
-                    <div class="ph-sub-stats-overlay">
-                        <span class="ph-sub-author">Milena Moon <svg class="ph-verified-badge-mini" viewBox="0 0 24 24" width="12" height="12"><path fill="#00aaff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span>
-                        <div class="ph-sub-meta-row">
-                            <span>👁 8.9K</span>
-                            <span>⏱ 0:28</span>
-                        </div>
-                    </div>
-                </div>
-                <p class="ph-sub-title">Disfrutando la tarde en la cama...</p>
-            </div>
-        </div>
-    </section>
 
     <!-- Main Content Area: Recommended for You Section (Capturas 1, 2, 3) -->
     <main class="ph-main-feed">
@@ -253,8 +198,17 @@
                 <button class="theme-modal-item" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
                     <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
                     <div class="theme-item-info">
-                        <strong>X / Twitter Timeline</strong>
-                        <span>Feed cronológico negro puro</span>
+                        <strong>X</strong>
+                        <span>Feed interactivo negro puro con fotos y videos</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <button class="theme-modal-item" data-theme="amoled" type="button" onclick="window.applyTheme('amoled', true)">
+                    <div class="theme-item-icon" style="background: #000; border: 1px solid #555; color: #fff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">OLED</div>
+                    <div class="theme-item-info">
+                        <strong>Tema AMOLED Pure Black</strong>
+                        <span>100% negro absoluto (#000000), minimalista y optimizado</span>
                     </div>
                     <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
                 </button>
@@ -267,7 +221,7 @@
         <div class="modal-content profile-modal-box">
             <button class="modal-close" type="button" onclick="window.closeProfileModal && window.closeProfileModal()">&times;</button>
             <div class="profile-header">
-                <img id="modalUserAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" alt="Avatar" class="profile-large-avatar">
+                <img id="modalUserAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9000'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M12 14c-4.42 0-8 2-8 4v2h16v-2c0-2-3.58-4-8-4z'/%3E%3C/svg%3E" alt="Avatar" class="profile-large-avatar">
                 <h2 id="modalUserName" class="profile-name">Mi Perfil AllTube</h2>
                 <p id="modalUserHandle" class="profile-handle">@usuario</p>
             </div>
@@ -323,7 +277,7 @@
         <a href="hub.html" class="all18-nav-item">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 0h7v7h-7z"/></svg>
-                <span class="all18-nav-badge">5</span>
+                <span class="all18-nav-badge">Hub</span>
             </div>
             <span class="all18-nav-label">Multi-Hub</span>
         </a>
@@ -336,12 +290,12 @@
             <span class="all18-nav-label">Shorts</span>
         </a>
 
-        <!-- 4. Timeline (Twitter / X) -->
+        <!-- 4. X (Twitter) -->
         <a href="twitter.html" class="all18-nav-item">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </div>
-            <span class="all18-nav-label">Timeline</span>
+            <span class="all18-nav-label">X</span>
         </a>
 
         <!-- 5. Profile -->

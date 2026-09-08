@@ -15,6 +15,7 @@
     <!-- Main Style & Theme -->
     <link rel="stylesheet" href="css/style.css?v=9.0">
     <link rel="stylesheet" href="css/themes/theme-instagram.css?v=9.0">
+    <link rel="stylesheet" href="css/themes/theme-amoled.css?v=9.0">
 </head>
 <body data-theme="instagram" class="instagram-standalone-body">
 
@@ -53,43 +54,53 @@
         </div>
     </header>
 
-    <!-- Instagram Stories Bar (Captura 3) -->
+    <!-- Feed Mode Selector: Reels / Videos vs Fotos Hot / Hentai HD -->
+    <div class="ig-feed-mode-tabs" style="display: flex; background: #000000; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; gap: 10px; justify-content: center;">
+        <button class="ig-mode-btn active" id="igTabReels" type="button" onclick="window.switchIgFeedMode('reels', this)" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 6px 18px; color: #ffffff; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            🎬 Reels / Videos
+        </button>
+        <button class="ig-mode-btn" id="igTabPhotos" type="button" onclick="window.switchIgFeedMode('photos', this)" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 6px 18px; color: #888888; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            📸 Fotos Hot / Hentai HD
+        </button>
+    </div>
+
+    <!-- Instagram Stories Bar -->
     <div class="ig-stories-wrapper">
         <div class="ig-stories-container" id="igStoriesContainer">
             <!-- Your Story -->
             <div class="ig-story-item" onclick="window.openPublishModal && window.openPublishModal()">
                 <div class="ig-story-avatar-wrap your-story">
-                    <img id="igYourStoryImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Tu historia" />
+                    <img id="igYourStoryImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2338bdf8'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2338bdf8'/%3E%3C/svg%3E" alt="Tu historia" />
                     <span class="ig-story-plus">+</span>
                 </div>
                 <span class="ig-story-username">Tu historia</span>
             </div>
 
-            <!-- Creator Stories with Gradient Rings -->
+            <!-- Creator Stories with Gradient Rings (Clean Vector Avatars) -->
             <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
                 <div class="ig-story-avatar-wrap has-story">
-                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" alt="v4mpier.zabbi" />
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23f43f5e'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23f43f5e'/%3E%3C/svg%3E" alt="v4mpier.zabbi" />
                 </div>
                 <span class="ig-story-username">v4mpier.zabbi</span>
             </div>
 
             <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
                 <div class="ig-story-avatar-wrap has-story">
-                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80" alt="_valeriesss" />
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23a855f7'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23a855f7'/%3E%3C/svg%3E" alt="_valeriesss" />
                 </div>
                 <span class="ig-story-username">_valeriesss</span>
             </div>
 
             <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
                 <div class="ig-story-avatar-wrap has-story">
-                    <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&auto=format&fit=crop&q=80" alt="vmore.tti" />
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2310b981'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2310b981'/%3E%3C/svg%3E" alt="vmore.tti" />
                 </div>
                 <span class="ig-story-username">vmore.tti</span>
             </div>
 
             <div class="ig-story-item" onclick="window.location.href='tiktok.html'">
                 <div class="ig-story-avatar-wrap has-story">
-                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="leomessi" />
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23eab308'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23eab308'/%3E%3C/svg%3E" alt="leomessi" />
                 </div>
                 <span class="ig-story-username">leomessi</span>
             </div>
@@ -100,48 +111,6 @@
     <div class="main-wrapper">
         <main class="main-content ig-feed-container">
             <div id="mediaGrid" class="media-grid ig-media-grid"></div>
-
-            <!-- Interstitial: Sugerencias para ti (Captura 1 y 2) -->
-            <div class="ig-suggestions-box">
-                <div class="ig-suggestions-header">
-                    <span>Sugerencias para ti</span>
-                    <button class="ig-see-all-btn" type="button" onclick="window.showToast && window.showToast('✨ Explorando creadores destacados')">Ver todo</button>
-                </div>
-                <div class="ig-suggestions-carousel">
-                    <!-- Suggestion 1 -->
-                    <div class="ig-sug-card">
-                        <button class="ig-sug-close" type="button" onclick="this.parentElement.remove()">✕</button>
-                        <div class="ig-sug-avatar">
-                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" alt="Bren" />
-                        </div>
-                        <strong class="ig-sug-name">Bren ♫</strong>
-                        <span class="ig-sug-mutual">1 seguidor en común</span>
-                        <button class="ig-sug-follow-btn" type="button" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
-                    </div>
-
-                    <!-- Suggestion 2 -->
-                    <div class="ig-sug-card">
-                        <button class="ig-sug-close" type="button" onclick="this.parentElement.remove()">✕</button>
-                        <div class="ig-sug-avatar">
-                            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120" alt="K17M" />
-                        </div>
-                        <strong class="ig-sug-name">♛K¹⁷M♛</strong>
-                        <span class="ig-sug-mutual">1 seguidor en común</span>
-                        <button class="ig-sug-follow-btn" type="button" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
-                    </div>
-
-                    <!-- Suggestion 3 -->
-                    <div class="ig-sug-card">
-                        <button class="ig-sug-close" type="button" onclick="this.parentElement.remove()">✕</button>
-                        <div class="ig-sug-avatar">
-                            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120" alt="Juice" />
-                        </div>
-                        <strong class="ig-sug-name">🧃 juice</strong>
-                        <span class="ig-sug-mutual">1 seguidor en común</span>
-                        <button class="ig-sug-follow-btn" type="button" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
-                    </div>
-                </div>
-            </div>
 
             <div class="pagination-wrapper" style="text-align: center; padding: 24px 16px 80px 16px;">
                 <button id="btnLoadMore" class="ig-btn-load-more" type="button" onclick="window.loadMoreVideos && window.loadMoreVideos()">
@@ -265,7 +234,7 @@
 
         <!-- Profile Avatar Circle -->
         <button class="ig-nav-btn ig-nav-profile-btn" type="button" onclick="window.openProfileModal()" title="Perfil">
-            <img id="igNavAvatar" class="ig-nav-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80" alt="perfil" />
+            <img id="igNavAvatar" class="ig-nav-avatar-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%2338bdf8'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%2338bdf8'/%3E%3C/svg%3E" alt="perfil" />
         </button>
     </nav>
 
@@ -286,8 +255,8 @@
             <div class="ig-lb-top-amigos" onclick="window.showToast && window.showToast('👥 Viendo Reels con amigos')">
                 <span>Amigos</span>
                 <div class="ig-lb-friends-avatars">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50" alt="amigo1" />
-                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=50" alt="amigo2" />
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%2327272a'/%3E%3Ccircle cx='25' cy='20' r='9' fill='%23f43f5e'/%3E%3Cpath d='M10 42c0-8.28 6.72-15 15-15s15 6.72 15 15' fill='%23f43f5e'/%3E%3C/svg%3E" alt="amigo1" />
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%2327272a'/%3E%3Ccircle cx='25' cy='20' r='9' fill='%23a855f7'/%3E%3Cpath d='M10 42c0-8.28 6.72-15 15-15s15 6.72 15 15' fill='%23a855f7'/%3E%3C/svg%3E" alt="amigo2" />
                 </div>
             </div>
             <button class="ig-lightbox-camera-btn" type="button" onclick="window.openPublishModal && window.openPublishModal()" title="Crear">
@@ -352,7 +321,7 @@
 
             <!-- Mini Audio Disc -->
             <div class="ig-lb-disc-wrap">
-                <img id="igLbDiscImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60" alt="sound disc" />
+                <img id="igLbDiscImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23111'/%3E%3Ccircle cx='30' cy='30' r='10' fill='%23333'/%3E%3Ccircle cx='30' cy='30' r='4' fill='%23000'/%3E%3C/svg%3E" alt="sound disc" />
             </div>
         </div>
 
@@ -361,7 +330,7 @@
             <!-- Author Row -->
             <div class="ig-lb-author-row">
                 <div class="ig-lb-author-avatar-ring">
-                    <img id="igLbAuthorImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80" alt="avatar" />
+                    <img id="igLbAuthorImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23ec4899'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23ec4899'/%3E%3C/svg%3E" alt="avatar" />
                 </div>
                 <strong id="igLbAuthorName" class="ig-lb-author-handle">asmr_hair.haven</strong>
                 <button class="ig-lb-follow-btn" type="button" id="igLbFollowBtn" onclick="this.innerText='Siguiendo'; this.classList.add('followed');">Seguir</button>
@@ -430,8 +399,16 @@
                 <button class="theme-modal-item" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
                     <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
                     <div class="theme-item-info">
-                        <strong>X / Twitter Timeline</strong>
-                        <span>Feed cronológico negro puro</span>
+                        <strong>X</strong>
+                        <span>Feed y fotos con algoritmo HeavyRanker</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+                <button class="theme-modal-item" data-theme="amoled" type="button" onclick="window.applyTheme('amoled'); window.closeThemeModal();">
+                    <div class="theme-item-icon" style="background: #000000; border: 1px solid #333333; color: #ffffff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">🖤</div>
+                    <div class="theme-item-info">
+                        <strong>AMOLED Negro Puro</strong>
+                        <span>100% negro #000000, ahorro batería y sin distracciones</span>
                     </div>
                     <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
                 </button>
@@ -493,6 +470,30 @@
                 }
             } catch(e) {}
         });
+
+        window.switchIgFeedMode = function(mode, btnEl) {
+            document.querySelectorAll('.ig-mode-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.borderColor = 'rgba(255,255,255,0.1)';
+                b.style.color = '#888888';
+            });
+            if (btnEl) {
+                btnEl.classList.add('active');
+                btnEl.style.background = 'rgba(255,255,255,0.12)';
+                btnEl.style.borderColor = 'rgba(255,255,255,0.2)';
+                btnEl.style.color = '#ffffff';
+            }
+            if (mode === 'photos') {
+                window.state.source = 'photos';
+                window.state.query = '';
+                window.loadVideos(1, true);
+            } else {
+                window.state.source = 'all';
+                window.state.query = '';
+                window.loadVideos(1, true);
+            }
+        };
 
         window.openProfileModal = function() {
             const m = document.getElementById('igProfileModal');

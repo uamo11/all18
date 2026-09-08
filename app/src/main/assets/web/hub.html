@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css?v=9.2">
+    <link rel="stylesheet" href="css/themes/theme-amoled.css?v=9.2">
     <style>
         body {
             background: #0a0a0c;
@@ -558,6 +558,175 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Hub Mode Selector */
+        .hub-mode-selector {
+            display: flex;
+            background: #111116;
+            border-radius: 10px;
+            padding: 3px;
+            gap: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hub-mode-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .hub-mode-tab.active {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Direct Web Browser Section */
+        .hub-direct-web-section {
+            display: block;
+            margin: 0;
+            padding: 0;
+            background: #000000;
+        }
+
+        .hub-web-nav-bar {
+            background: #0d0d12;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hub-web-chips {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex: 1;
+        }
+        .hub-web-chips::-webkit-scrollbar { display: none; }
+
+        .hub-web-chip {
+            background: #181820;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #d1d1d6;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .hub-web-chip.active {
+            background: #ff9000;
+            color: #000;
+            border-color: #ff9000;
+        }
+
+        .hub-web-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .hub-web-btn {
+            background: #1f1f28;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .hub-web-btn:hover {
+            background: #2a2a38;
+        }
+
+        .hub-web-btn-open {
+            background: rgba(0, 230, 118, 0.15);
+            color: #00e676;
+            border-color: rgba(0, 230, 118, 0.3);
+        }
+
+        .hub-web-frame-wrap {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 180px);
+            min-height: 520px;
+            background: #000;
+        }
+
+        .hub-web-frame-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+
+        .hub-web-loader {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+            color: #a1a1aa;
+            font-size: 13px;
+        }
+
+        /* Staged Progressive Slot Styles */
+        .multi-slot-status {
+            font-size: 10px;
+            font-weight: 700;
+            color: #00e676;
+            background: rgba(0, 230, 118, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: auto;
+        }
+
+        .multi-slot-status.loading {
+            color: #ff9000;
+            background: rgba(255, 144, 0, 0.12);
+        }
+
+        .multi-slot-loader {
+            position: absolute;
+            inset: 0;
+            background: #050508;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #71717a;
+            font-size: 11px;
+            z-index: 5;
+            transition: opacity 0.3s;
+        }
     </style>
 </head>
 <body class="all18-has-nav">
@@ -572,7 +741,7 @@
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div class="hub-provider-count">
                     <span class="hub-pulse-dot"></span>
-                    <span>6 Redes En Vivo</span>
+                    <span>9 Portales Oficiales</span>
                 </div>
                 <button type="button" id="btnMultiInstanceToggle" class="hub-btn-multi-instance" onclick="toggleMultiInstanceGrid()">
                     ⚡ Multi-Instancia (4x)
@@ -583,16 +752,29 @@
             </div>
         </div>
 
+        <!-- Mode Selector Bar (Webs Directas Sin APIs vs Multi-Stream 4x vs Feed) -->
+        <div class="hub-mode-selector">
+            <button class="hub-mode-tab active" id="tabModeDirectWeb" onclick="setHubMode('web')">
+                🌐 Navegador Web (Directo Sin APIs)
+            </button>
+            <button class="hub-mode-tab" id="tabModeMultiStream" onclick="setHubMode('stream')">
+                ⚡ Multi-Stream (4x en Vivo)
+            </button>
+            <button class="hub-mode-tab" id="tabModeCatalog" onclick="setHubMode('catalog')">
+                📋 Catálogo Rápido
+            </button>
+        </div>
+
         <!-- Search Form -->
         <form class="hub-search-box" onsubmit="onHubSearch(event)">
-            <input type="text" id="hubSearchInput" placeholder="Buscar en Pornhub, XVideos, XNXX, YouPorn, RedTube..." autocomplete="off">
+            <input type="text" id="hubSearchInput" placeholder="Buscar en Pornhub, XVideos, SpankBang, Eporner, XNXX, Beeg..." autocomplete="off">
             <button type="submit">Buscar</button>
         </form>
 
-        <!-- Provider Switcher Chips -->
+        <!-- Provider Switcher Chips (9 Portales Adultos) -->
         <div class="hub-provider-bar">
             <button class="hub-prov-chip active" data-source="all" onclick="filterBySource('all')">
-                🔥 Todas las Webs
+                🔥 Todos los Portales
             </button>
             <button class="hub-prov-chip" data-source="pornhub" onclick="filterBySource('pornhub')">
                 🔞 Pornhub
@@ -600,8 +782,17 @@
             <button class="hub-prov-chip" data-source="xvideos" onclick="filterBySource('xvideos')">
                 🎬 XVideos
             </button>
+            <button class="hub-prov-chip" data-source="spankbang" onclick="filterBySource('spankbang')">
+                💥 SpankBang
+            </button>
+            <button class="hub-prov-chip" data-source="eporner" onclick="filterBySource('eporner')">
+                🌟 Eporner
+            </button>
             <button class="hub-prov-chip" data-source="xnxx" onclick="filterBySource('xnxx')">
                 ❌ XNXX
+            </button>
+            <button class="hub-prov-chip" data-source="beeg" onclick="filterBySource('beeg')">
+                🐝 Beeg
             </button>
             <button class="hub-prov-chip" data-source="youporn" onclick="filterBySource('youporn')">
                 💜 YouPorn
@@ -615,12 +806,42 @@
         </div>
     </header>
 
-    <!-- Multi-Instance Live Stream Grid (4 Streams Simultáneos) -->
+    <!-- 1. Direct Web Browser Section (Carga Directa de Webs Oficiales Sin APIs) -->
+    <section id="directWebSection" class="hub-direct-web-section">
+        <div class="hub-web-nav-bar">
+            <div class="hub-web-chips" id="hubWebChips">
+                <button class="hub-web-chip active" data-url="https://www.pornhub.com" onclick="switchDirectWeb('https://www.pornhub.com', this)">🔞 Pornhub</button>
+                <button class="hub-web-chip" data-url="https://www.xvideos.com" onclick="switchDirectWeb('https://www.xvideos.com', this)">🎬 XVideos</button>
+                <button class="hub-web-chip" data-url="https://spankbang.com" onclick="switchDirectWeb('https://spankbang.com', this)">💥 SpankBang</button>
+                <button class="hub-web-chip" data-url="https://www.eporner.com" onclick="switchDirectWeb('https://www.eporner.com', this)">🌟 Eporner</button>
+                <button class="hub-web-chip" data-url="https://www.xnxx.com" onclick="switchDirectWeb('https://www.xnxx.com', this)">❌ XNXX</button>
+                <button class="hub-web-chip" data-url="https://beeg.com" onclick="switchDirectWeb('https://beeg.com', this)">🐝 Beeg</button>
+                <button class="hub-web-chip" data-url="https://www.youporn.com" onclick="switchDirectWeb('https://www.youporn.com', this)">💜 YouPorn</button>
+                <button class="hub-web-chip" data-url="https://www.redtube.com" onclick="switchDirectWeb('https://www.redtube.com', this)">🔴 RedTube</button>
+                <button class="hub-web-chip" data-url="https://www.redgifs.com" onclick="switchDirectWeb('https://www.redgifs.com', this)">⚡ RedGifs</button>
+            </div>
+            <div class="hub-web-controls">
+                <button class="hub-web-btn" onclick="directWebBack()" title="Atrás">◀</button>
+                <button class="hub-web-btn" onclick="directWebForward()" title="Adelante">▶</button>
+                <button class="hub-web-btn" onclick="directWebReload()" title="Recargar">↻</button>
+                <button class="hub-web-btn hub-web-btn-open" onclick="directWebOpenNew()" title="Abrir en ventana independiente">⚡ Abrir Fuera</button>
+            </div>
+        </div>
+        <div class="hub-web-frame-wrap">
+            <div id="directWebLoader" class="hub-web-loader" style="display: none;">
+                <div class="hub-spinner"></div>
+                <span id="directWebLoadingText">Conectando al portal oficial...</span>
+            </div>
+            <iframe id="directWebFrame" src="https://www.pornhub.com" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" allow="autoplay; fullscreen; encrypted-media"></iframe>
+        </div>
+    </section>
+
+    <!-- 2. Multi-Instance Live Stream Grid (4 Streams Simultáneos Inteligentes) -->
     <section id="multiInstanceOverlay" class="multi-instance-overlay" style="display: none;">
         <div class="multi-instance-header">
             <div class="multi-instance-title">
                 <span>⚡ Multi-Instancia Ultra Boost</span>
-                <span style="font-size: 11px; color: #a1a1aa; font-weight: 500;">(4 Streams en Vivo Simultáneos)</span>
+                <span style="font-size: 11px; color: #a1a1aa; font-weight: 500;">(Carga inteligente escalonada 4x)</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <div class="multi-instance-presets">
@@ -637,12 +858,16 @@
             <!-- Slot 1: Pornhub -->
             <div class="multi-slot-card" id="slotCard_1">
                 <div class="multi-slot-toolbar">
+                    <span class="multi-slot-status" id="slotStatus_1">🟢 En Vivo (Slot 1)</span>
                     <select class="multi-slot-select" id="slotSelect_1" onchange="changeSlotProvider(1, this.value)">
                         <option value="pornhub" selected>Pornhub</option>
                         <option value="xvideos">XVideos</option>
+                        <option value="spankbang">SpankBang</option>
+                        <option value="eporner">Eporner</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="beeg">Beeg</option>
                         <option value="redtube">RedTube</option>
                         <option value="youporn">YouPorn</option>
-                        <option value="xnxx">XNXX</option>
                         <option value="redgifs">RedGifs</option>
                     </select>
                     <div style="display: flex; gap: 4px;">
@@ -652,6 +877,7 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_1">
+                    <div class="multi-slot-loader" id="slotLoader_1"><div class="hub-spinner"></div><span>Cargando Slot 1...</span></div>
                     <iframe id="slotFrame_1" src="about:blank" data-src="https://www.pornhub.com/embed/65a83a21b8f01" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
@@ -659,12 +885,16 @@
             <!-- Slot 2: XVideos -->
             <div class="multi-slot-card" id="slotCard_2">
                 <div class="multi-slot-toolbar">
+                    <span class="multi-slot-status loading" id="slotStatus_2">⏳ En Espera</span>
                     <select class="multi-slot-select" id="slotSelect_2" onchange="changeSlotProvider(2, this.value)">
                         <option value="pornhub">Pornhub</option>
                         <option value="xvideos" selected>XVideos</option>
+                        <option value="spankbang">SpankBang</option>
+                        <option value="eporner">Eporner</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="beeg">Beeg</option>
                         <option value="redtube">RedTube</option>
                         <option value="youporn">YouPorn</option>
-                        <option value="xnxx">XNXX</option>
                         <option value="redgifs">RedGifs</option>
                     </select>
                     <div style="display: flex; gap: 4px;">
@@ -674,19 +904,24 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_2">
+                    <div class="multi-slot-loader" id="slotLoader_2"><div class="hub-spinner"></div><span>Cargando en segundo plano...</span></div>
                     <iframe id="slotFrame_2" src="about:blank" data-src="https://www.xvideos.com/embedframe/74829103" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
 
-            <!-- Slot 3: RedTube -->
+            <!-- Slot 3: SpankBang / RedTube -->
             <div class="multi-slot-card" id="slotCard_3">
                 <div class="multi-slot-toolbar">
+                    <span class="multi-slot-status loading" id="slotStatus_3">⏳ En Espera</span>
                     <select class="multi-slot-select" id="slotSelect_3" onchange="changeSlotProvider(3, this.value)">
                         <option value="pornhub">Pornhub</option>
                         <option value="xvideos">XVideos</option>
-                        <option value="redtube" selected>RedTube</option>
-                        <option value="youporn">YouPorn</option>
+                        <option value="spankbang" selected>SpankBang</option>
+                        <option value="eporner">Eporner</option>
                         <option value="xnxx">XNXX</option>
+                        <option value="beeg">Beeg</option>
+                        <option value="redtube">RedTube</option>
+                        <option value="youporn">YouPorn</option>
                         <option value="redgifs">RedGifs</option>
                     </select>
                     <div style="display: flex; gap: 4px;">
@@ -696,20 +931,25 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_3">
-                    <iframe id="slotFrame_3" src="about:blank" data-src="https://embed.redtube.com/?id=8492019" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                    <div class="multi-slot-loader" id="slotLoader_3"><div class="hub-spinner"></div><span>Cargando en segundo plano...</span></div>
+                    <iframe id="slotFrame_3" src="about:blank" data-src="https://spankbang.com/8390b/embed/" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
 
-            <!-- Slot 4: RedGifs -->
+            <!-- Slot 4: Eporner / RedGifs -->
             <div class="multi-slot-card" id="slotCard_4">
                 <div class="multi-slot-toolbar">
+                    <span class="multi-slot-status loading" id="slotStatus_4">⏳ En Espera</span>
                     <select class="multi-slot-select" id="slotSelect_4" onchange="changeSlotProvider(4, this.value)">
                         <option value="pornhub">Pornhub</option>
                         <option value="xvideos">XVideos</option>
+                        <option value="spankbang">SpankBang</option>
+                        <option value="eporner" selected>Eporner</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="beeg">Beeg</option>
                         <option value="redtube">RedTube</option>
                         <option value="youporn">YouPorn</option>
-                        <option value="xnxx">XNXX</option>
-                        <option value="redgifs" selected>RedGifs</option>
+                        <option value="redgifs">RedGifs</option>
                     </select>
                     <div style="display: flex; gap: 4px;">
                         <button class="multi-slot-btn" onclick="randomizeSlot(4)" title="Video Aleatorio">🎲 Random</button>
@@ -718,11 +958,15 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_4">
-                    <iframe id="slotFrame_4" src="about:blank" data-src="https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1&muted=1" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                    <div class="multi-slot-loader" id="slotLoader_4"><div class="hub-spinner"></div><span>Cargando en segundo plano...</span></div>
+                    <iframe id="slotFrame_4" src="about:blank" data-src="https://www.eporner.com/embed/dRtQ74J11aA/" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- 3. Catalog Fast Feed Section (Opcional) -->
+    <section id="catalogSection" class="hub-catalog-section" style="display: none;">
 
     <!-- Category Quick Chips -->
     <div class="hub-cat-bar">
@@ -762,6 +1006,7 @@
             </button>
         </div>
     </main>
+    </section>
 
     <!-- Universal Native Mobile Bottom Navigation Bar -->
     <nav class="all18-bottom-nav">
@@ -777,7 +1022,7 @@
         <a href="hub.html" class="all18-nav-item active">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 0h7v7h-7z"/></svg>
-                <span class="all18-nav-badge">6</span>
+                <span class="all18-nav-badge">9</span>
             </div>
             <span class="all18-nav-label">Multi-Hub</span>
         </a>
@@ -790,12 +1035,12 @@
             <span class="all18-nav-label">Shorts</span>
         </a>
 
-        <!-- 4. Timeline (Twitter / X) -->
+        <!-- 4. X -->
         <a href="twitter.html" class="all18-nav-item">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </div>
-            <span class="all18-nav-label">Timeline</span>
+            <span class="all18-nav-label">X</span>
         </a>
 
         <!-- 5. Profile -->
@@ -810,6 +1055,8 @@
     <!-- Hub Controller Script -->
     <script>
         const state = {
+            mode: 'web', // 'web' | 'stream' | 'catalog'
+            currentWebUrl: 'https://www.pornhub.com',
             source: 'all',
             category: '',
             query: '',
@@ -819,13 +1066,338 @@
         };
 
         const SOURCE_NAMES = {
-            all: 'Todas las Webs (Mix 6 Proveedores En Vivo)',
-            pornhub: 'Pornhub.com (En Vivo)',
-            xvideos: 'XVideos.com (En Vivo)',
-            xnxx: 'XNXX.com (En Vivo)',
-            youporn: 'YouPorn.com (En Vivo)',
-            redtube: 'RedTube.com (En Vivo)',
+            all: 'Todos los Portales (9 Portales Oficiales)',
+            pornhub: 'Pornhub.com (Oficial)',
+            xvideos: 'XVideos.com (Oficial)',
+            spankbang: 'SpankBang (Oficial)',
+            eporner: 'Eporner (Oficial)',
+            xnxx: 'XNXX.com (Oficial)',
+            beeg: 'Beeg.com (Oficial)',
+            youporn: 'YouPorn.com (Oficial)',
+            redtube: 'RedTube.com (Oficial)',
             redgifs: 'RedGifs (Shorts HD)'
+        };
+
+        const MULTI_PRESETS = {
+            pornhub: [
+                'https://www.pornhub.com/embed/65a83a21b8f01',
+                'https://www.pornhub.com/embed/64d7c81921a22',
+                'https://www.pornhub.com/embed/660ad1129b8c3'
+            ],
+            xvideos: [
+                'https://www.xvideos.com/embedframe/74829103',
+                'https://www.xvideos.com/embedframe/72910294',
+                'https://www.xvideos.com/embedframe/71829105'
+            ],
+            spankbang: [
+                'https://spankbang.com/8390b/embed/',
+                'https://spankbang.com/7912a/embed/',
+                'https://spankbang.com/6510f/embed/'
+            ],
+            eporner: [
+                'https://www.eporner.com/embed/dRtQ74J11aA/',
+                'https://www.eporner.com/embed/kL81902Ja1/',
+                'https://www.eporner.com/embed/98Xa0192la/'
+            ],
+            beeg: [
+                'https://beeg.com/54829103',
+                'https://beeg.com/1829104',
+                'https://beeg.com/9281920'
+            ],
+            xnxx: [
+                'https://www.xnxx.com/embedframe/63829104',
+                'https://www.xnxx.com/embedframe/62819205',
+                'https://www.xnxx.com/embedframe/61829106'
+            ],
+            youporn: [
+                'https://www.youporn.com/embed/15829105',
+                'https://www.youporn.com/embed/15920194',
+                'https://www.youporn.com/embed/16029183'
+            ],
+            redtube: [
+                'https://embed.redtube.com/?id=8492019',
+                'https://embed.redtube.com/?id=8501928',
+                'https://embed.redtube.com/?id=8512937'
+            ],
+            redgifs: [
+                'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1',
+                'https://www.redgifs.com/ifr/richwaterloggedchinchilla?autoplay=1',
+                'https://www.redgifs.com/ifr/foolhardyillustriousalbatross?autoplay=1'
+            ]
+        };
+
+        function setHubMode(mode) {
+            state.mode = mode;
+            const tabWeb = document.getElementById('tabModeDirectWeb');
+            const tabStream = document.getElementById('tabModeMultiStream');
+            const tabCat = document.getElementById('tabModeCatalog');
+            const secWeb = document.getElementById('directWebSection');
+            const secStream = document.getElementById('multiInstanceOverlay');
+            const secCat = document.getElementById('catalogSection');
+
+            if (tabWeb) tabWeb.classList.toggle('active', mode === 'web');
+            if (tabStream) tabStream.classList.toggle('active', mode === 'stream');
+            if (tabCat) tabCat.classList.toggle('active', mode === 'catalog');
+
+            if (mode === 'web') {
+                if (secWeb) secWeb.style.display = 'block';
+                if (secStream) secStream.style.display = 'none';
+                if (secCat) secCat.style.display = 'none';
+                stopAllMultiStreams();
+            } else if (mode === 'stream') {
+                if (secWeb) secWeb.style.display = 'none';
+                if (secStream) secStream.style.display = 'block';
+                if (secCat) secCat.style.display = 'none';
+                startProgressiveMultiStream();
+            } else if (mode === 'catalog') {
+                if (secWeb) secWeb.style.display = 'none';
+                if (secStream) secStream.style.display = 'none';
+                if (secCat) secCat.style.display = 'block';
+                stopAllMultiStreams();
+                if (state.items.length === 0) fetchHubVideos(true);
+            }
+        }
+        window.setHubMode = setHubMode;
+
+        // Direct Web Browser methods
+        function switchDirectWeb(url, btnEl) {
+            state.currentWebUrl = url;
+            document.querySelectorAll('.hub-web-chip').forEach(c => c.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const loader = document.getElementById('directWebLoader');
+            const frame = document.getElementById('directWebFrame');
+            if (loader) loader.style.display = 'flex';
+            if (frame) {
+                frame.onload = () => {
+                    if (loader) loader.style.display = 'none';
+                };
+                frame.src = url;
+            }
+        }
+        window.switchDirectWeb = switchDirectWeb;
+
+        function directWebBack() {
+            const frame = document.getElementById('directWebFrame');
+            try {
+                if (frame && frame.contentWindow) frame.contentWindow.history.back();
+            } catch(e) {
+                if (frame) frame.src = state.currentWebUrl;
+            }
+        }
+        window.directWebBack = directWebBack;
+
+        function directWebForward() {
+            const frame = document.getElementById('directWebFrame');
+            try {
+                if (frame && frame.contentWindow) frame.contentWindow.history.forward();
+            } catch(e) {}
+        }
+        window.directWebForward = directWebForward;
+
+        function directWebReload() {
+            const frame = document.getElementById('directWebFrame');
+            const loader = document.getElementById('directWebLoader');
+            if (loader) loader.style.display = 'flex';
+            if (frame) {
+                const cur = frame.src;
+                frame.src = 'about:blank';
+                setTimeout(() => { frame.src = cur || state.currentWebUrl; }, 100);
+            }
+        }
+        window.directWebReload = directWebReload;
+
+        function directWebOpenNew() {
+            const frame = document.getElementById('directWebFrame');
+            const url = (frame && frame.src && frame.src !== 'about:blank') ? frame.src : state.currentWebUrl;
+            if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
+                window.AndroidApp.openNewInstance(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+        window.directWebOpenNew = directWebOpenNew;
+
+        // Intelligent Progressive Staged Multi-Stream Loader
+        let stagedLoadTimers = [];
+
+        function loadSlotStream(slotNum) {
+            const frame = document.getElementById(`slotFrame_${slotNum}`);
+            const loader = document.getElementById(`slotLoader_${slotNum}`);
+            const status = document.getElementById(`slotStatus_${slotNum}`);
+            if (!frame) return;
+
+            const targetUrl = frame.dataset.src || '';
+            if (!targetUrl) return;
+
+            if (status) {
+                status.textContent = `🟢 En Vivo (Slot ${slotNum})`;
+                status.classList.remove('loading');
+            }
+
+            frame.onload = () => {
+                if (loader) loader.style.opacity = '0';
+                setTimeout(() => { if (loader) loader.style.display = 'none'; }, 300);
+            };
+
+            frame.src = targetUrl;
+        }
+
+        function startProgressiveMultiStream() {
+            stagedLoadTimers.forEach(t => clearTimeout(t));
+            stagedLoadTimers = [];
+
+            // Reset all slot status & loaders
+            for (let i = 1; i <= 4; i++) {
+                const loader = document.getElementById(`slotLoader_${i}`);
+                const status = document.getElementById(`slotStatus_${i}`);
+                if (loader) {
+                    loader.style.display = 'flex';
+                    loader.style.opacity = '1';
+                }
+                if (status && i > 1) {
+                    status.textContent = '⏳ Cargando en segundo plano...';
+                    status.classList.add('loading');
+                }
+            }
+
+            // Staged schedule: Slot 1 plays immediately, Slot 2 at 600ms, Slot 3 at 1200ms, Slot 4 at 1800ms
+            loadSlotStream(1);
+            stagedLoadTimers.push(setTimeout(() => loadSlotStream(2), 600));
+            stagedLoadTimers.push(setTimeout(() => loadSlotStream(3), 1200));
+            stagedLoadTimers.push(setTimeout(() => loadSlotStream(4), 1800));
+        }
+
+        function stopAllMultiStreams() {
+            stagedLoadTimers.forEach(t => clearTimeout(t));
+            stagedLoadTimers = [];
+            for (let i = 1; i <= 4; i++) {
+                const frame = document.getElementById(`slotFrame_${i}`);
+                if (frame) frame.src = 'about:blank';
+            }
+        }
+
+        window.toggleMultiInstanceGrid = function() {
+            const overlay = document.getElementById('multiInstanceOverlay');
+            const btn = document.getElementById('btnMultiInstanceToggle');
+            if (!overlay) return;
+            const isVisible = overlay.style.display !== 'none';
+            if (isVisible) {
+                setHubMode('web');
+                if (btn) btn.classList.remove('active');
+            } else {
+                setHubMode('stream');
+                if (btn) btn.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        window.setMultiInstanceLayout = function(count) {
+            const slot3 = document.getElementById('slotCard_3');
+            const slot4 = document.getElementById('slotCard_4');
+            const btn2 = document.getElementById('btnPreset2');
+            const btn4 = document.getElementById('btnPreset4');
+
+            if (count === 2) {
+                if (slot3) slot3.style.display = 'none';
+                if (slot4) slot4.style.display = 'none';
+                if (btn2) btn2.classList.add('active');
+                if (btn4) btn4.classList.remove('active');
+            } else {
+                if (slot3) slot3.style.display = 'flex';
+                if (slot4) slot4.style.display = 'flex';
+                if (btn2) btn2.classList.remove('active');
+                if (btn4) btn4.classList.add('active');
+            }
+        };
+
+        window.changeSlotProvider = function(slotNum, prov) {
+            const frame = document.getElementById(`slotFrame_${slotNum}`);
+            const loader = document.getElementById(`slotLoader_${slotNum}`);
+            if (!frame) return;
+            const urls = MULTI_PRESETS[prov] || MULTI_PRESETS.pornhub;
+            const nextUrl = urls[Math.floor(Math.random() * urls.length)];
+            frame.dataset.src = nextUrl;
+            if (loader) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+            }
+            loadSlotStream(slotNum);
+        };
+
+        window.randomizeSlot = function(slotNum) {
+            const sel = document.getElementById(`slotSelect_${slotNum}`);
+            const prov = sel ? sel.value : 'pornhub';
+            window.changeSlotProvider(slotNum, prov);
+        };
+
+        window.toggleSlotAudio = function(slotNum) {
+            for (let i = 1; i <= 4; i++) {
+                const card = document.getElementById(`slotCard_${i}`);
+                const btn = document.getElementById(`audioBtn_${i}`);
+                const frame = document.getElementById(`slotFrame_${i}`);
+                if (i === slotNum) {
+                    const isMuted = btn.textContent.includes('Mute');
+                    if (isMuted) {
+                        btn.textContent = '🔊 Audio';
+                        btn.classList.add('audio-on');
+                        if (card) card.classList.add('active-audio');
+                        if (frame && frame.contentWindow) {
+                            try {
+                                frame.contentWindow.postMessage('{"event":"command","func":"unMute"}', '*');
+                                frame.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
+                            } catch (e) {}
+                        }
+                    } else {
+                        btn.textContent = '🔇 Mute';
+                        btn.classList.remove('audio-on');
+                        if (card) card.classList.remove('active-audio');
+                        if (frame && frame.contentWindow) {
+                            try {
+                                frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
+                            } catch (e) {}
+                        }
+                    }
+                } else {
+                    if (btn) {
+                        btn.textContent = '🔇 Mute';
+                        btn.classList.remove('audio-on');
+                    }
+                    if (card) card.classList.remove('active-audio');
+                    if (frame && frame.contentWindow) {
+                        try {
+                            frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
+                        } catch (e) {}
+                    }
+                }
+            }
+        };
+
+        window.fullscreenSlot = function(slotNum) {
+            const frame = document.getElementById(`slotFrame_${slotNum}`);
+            if (frame) {
+                if (frame.requestFullscreen) frame.requestFullscreen();
+                else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+            }
+        };
+
+        window.openSeparateWindow = function() {
+            if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
+                window.AndroidApp.openNewInstance('hub.html');
+            } else {
+                window.open('hub.html', '_blank');
+            }
+        };
+
+        window.openPipMode = function() {
+            if (window.AndroidApp && typeof window.AndroidApp.enterPipMode === 'function') {
+                const ok = window.AndroidApp.enterPipMode();
+                if (!ok) {
+                    if (typeof showToast === 'function') showToast('Modo PiP flotante no soportado en este dispositivo');
+                }
+            } else {
+                if (typeof showToast === 'function') showToast('PiP flotante disponible en app All18 Android');
+            }
         };
 
         function initHub() {
@@ -833,6 +1405,8 @@
             const q = params.get('q');
             const s = params.get('source');
             const c = params.get('category');
+            const mode = params.get('mode');
+
             if (q) {
                 state.query = q;
                 const input = document.getElementById('hubSearchInput');
@@ -842,7 +1416,15 @@
             if (c) state.category = c;
 
             updateActiveChips();
-            fetchHubVideos(true);
+
+            if (mode === 'stream') {
+                setHubMode('stream');
+            } else if (mode === 'catalog' || q || c || (s && s !== 'all')) {
+                setHubMode('catalog');
+                fetchHubVideos(true);
+            } else {
+                setHubMode('web');
+            }
         }
 
         function updateActiveChips() {
@@ -861,11 +1443,31 @@
         }
 
         function filterBySource(src) {
-            if (state.source === src && !state.query) return;
             state.source = src;
             state.page = 1;
             updateActiveChips();
-            fetchHubVideos(true);
+
+            // Synchronize direct web selector if in web mode
+            const webUrls = {
+                pornhub: 'https://www.pornhub.com',
+                xvideos: 'https://www.xvideos.com',
+                spankbang: 'https://spankbang.com',
+                eporner: 'https://www.eporner.com',
+                xnxx: 'https://www.xnxx.com',
+                beeg: 'https://beeg.com',
+                youporn: 'https://www.youporn.com',
+                redtube: 'https://www.redtube.com',
+                redgifs: 'https://www.redgifs.com'
+            };
+
+            if (state.mode === 'web' && webUrls[src]) {
+                const chip = document.querySelector(`.hub-web-chip[data-url="${webUrls[src]}"]`);
+                switchDirectWeb(webUrls[src], chip);
+            } else {
+                setHubMode('catalog');
+                fetchHubVideos(true);
+            }
+
             if (window.AndroidApp && window.AndroidApp.vibrate) {
                 window.AndroidApp.vibrate(20);
             }
@@ -875,6 +1477,7 @@
             state.category = cat;
             state.page = 1;
             updateActiveChips();
+            setHubMode('catalog');
             fetchHubVideos(true);
             if (window.AndroidApp && window.AndroidApp.vibrate) {
                 window.AndroidApp.vibrate(20);
@@ -887,6 +1490,7 @@
             state.query = input ? input.value.trim() : '';
             state.page = 1;
             updateActiveChips();
+            setHubMode('catalog');
             fetchHubVideos(true);
         }
 
@@ -935,6 +1539,8 @@
                 });
         }
 
+        const AMOLED_FALLBACK_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23000000'/%3E%3Ccircle cx='320' cy='180' r='36' fill='%23111115' stroke='%2322222a' stroke-width='2'/%3E%3Cpolygon points='314,166 334,180 314,194' fill='%23ffffff'/%3E%3Ctext x='320' y='245' font-family='sans-serif' font-size='15' font-weight='800' fill='%23666677' text-anchor='middle'%3EALL18 HD%3C/text%3E%3C/svg%3E";
+
         function renderCards(items, reset) {
             const grid = document.getElementById('hubVideoGrid');
             if (!grid) return;
@@ -944,8 +1550,7 @@
                 const sourceName = item.source || 'All18';
                 const duration = item.duration || '10:00';
                 const views = item.views || '150K vistas';
-                const rating = item.rating || '96%';
-                const thumb = item.thumb || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500';
+                const thumb = item.thumb || AMOLED_FALLBACK_SVG;
                 const author = item.author || '@CreadorAll18';
 
                 const watchUrl = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(sourceName)}&from=hub`;
@@ -953,7 +1558,7 @@
                 return `
                     <a href="${watchUrl}" class="hub-card">
                         <div class="hub-thumb-box">
-                            <img class="hub-thumb-img" src="${thumb}" alt="${item.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500'">
+                            <img class="hub-thumb-img" src="${thumb}" alt="${item.title}" loading="lazy" onerror="this.src='${AMOLED_FALLBACK_SVG}'">
                             <span class="hub-badge-source ${sourceClass}">${sourceName}</span>
                             <span class="hub-badge-hd">${item.quality || '1080p'}</span>
                             <span class="hub-badge-dur">${duration}</span>
@@ -980,180 +1585,6 @@
             state.page += 1;
             fetchHubVideos(false);
         }
-
-        // Multi-Instance Live Streams Controller
-        const MULTI_PRESETS = {
-            pornhub: [
-                'https://www.pornhub.com/embed/65a83a21b8f01',
-                'https://www.pornhub.com/embed/64d7c81921a22',
-                'https://www.pornhub.com/embed/660ad1129b8c3'
-            ],
-            xvideos: [
-                'https://www.xvideos.com/embedframe/74829103',
-                'https://www.xvideos.com/embedframe/72910294',
-                'https://www.xvideos.com/embedframe/71829105'
-            ],
-            xnxx: [
-                'https://www.xnxx.com/embedframe/63829104',
-                'https://www.xnxx.com/embedframe/62819205',
-                'https://www.xnxx.com/embedframe/61829106'
-            ],
-            youporn: [
-                'https://www.youporn.com/embed/15829105',
-                'https://www.youporn.com/embed/15920194',
-                'https://www.youporn.com/embed/16029183'
-            ],
-            redtube: [
-                'https://embed.redtube.com/?id=8492019',
-                'https://embed.redtube.com/?id=8501928',
-                'https://embed.redtube.com/?id=8512937'
-            ],
-            redgifs: [
-                'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1',
-                'https://www.redgifs.com/ifr/richwaterloggedchinchilla?autoplay=1',
-                'https://www.redgifs.com/ifr/foolhardyillustriousalbatross?autoplay=1'
-            ]
-        };
-
-        window.toggleMultiInstanceGrid = function() {
-            const overlay = document.getElementById('multiInstanceOverlay');
-            const btn = document.getElementById('btnMultiInstanceToggle');
-            if (!overlay) return;
-            const isVisible = overlay.style.display !== 'none';
-            if (isVisible) {
-                // Pause and clear all streams to free decoders & network
-                overlay.style.display = 'none';
-                if (btn) btn.classList.remove('active');
-                for (let i = 1; i <= 4; i++) {
-                    const frame = document.getElementById(`slotFrame_${i}`);
-                    if (frame) frame.src = 'about:blank';
-                }
-            } else {
-                // Open and lazy-load stream URLs
-                overlay.style.display = 'block';
-                if (btn) btn.classList.add('active');
-                for (let i = 1; i <= 4; i++) {
-                    const frame = document.getElementById(`slotFrame_${i}`);
-                    if (frame && (!frame.src || frame.src === 'about:blank')) {
-                        frame.src = frame.dataset.src || '';
-                    }
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        window.setMultiInstanceLayout = function(count) {
-            const grid = document.getElementById('multiStreamGrid');
-            const slot3 = document.getElementById('slotCard_3');
-            const slot4 = document.getElementById('slotCard_4');
-            const btn2 = document.getElementById('btnPreset2');
-            const btn4 = document.getElementById('btnPreset4');
-
-            if (count === 2) {
-                if (slot3) slot3.style.display = 'none';
-                if (slot4) slot4.style.display = 'none';
-                if (btn2) btn2.classList.add('active');
-                if (btn4) btn4.classList.remove('active');
-            } else {
-                if (slot3) slot3.style.display = 'flex';
-                if (slot4) slot4.style.display = 'flex';
-                if (btn2) btn2.classList.remove('active');
-                if (btn4) btn4.classList.add('active');
-            }
-        };
-
-        window.changeSlotProvider = function(slotNum, prov) {
-            const frame = document.getElementById(`slotFrame_${slotNum}`);
-            if (!frame) return;
-            const urls = MULTI_PRESETS[prov] || MULTI_PRESETS.pornhub;
-            const nextUrl = urls[Math.floor(Math.random() * urls.length)];
-            frame.dataset.src = nextUrl;
-            frame.src = nextUrl;
-        };
-
-        window.randomizeSlot = function(slotNum) {
-            const sel = document.getElementById(`slotSelect_${slotNum}`);
-            const prov = sel ? sel.value : 'pornhub';
-            window.changeSlotProvider(slotNum, prov);
-        };
-
-        window.toggleSlotAudio = function(slotNum) {
-            for (let i = 1; i <= 4; i++) {
-                const card = document.getElementById(`slotCard_${i}`);
-                const btn = document.getElementById(`audioBtn_${i}`);
-                const frame = document.getElementById(`slotFrame_${i}`);
-                if (i === slotNum) {
-                    const isMuted = btn.textContent.includes('Mute');
-                    if (isMuted) {
-                        btn.textContent = '🔊 Audio';
-                        btn.classList.add('audio-on');
-                        if (card) card.classList.add('active-audio');
-                        if (frame && frame.contentWindow) {
-                            try {
-                                frame.contentWindow.postMessage('{"event":"command","func":"unMute"}', '*');
-                                frame.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
-                                if (frame.src.includes('redgifs.com') && frame.src.includes('muted=1')) {
-                                    frame.src = frame.src.replace('muted=1', 'muted=0');
-                                }
-                            } catch (e) {}
-                        }
-                    } else {
-                        btn.textContent = '🔇 Mute';
-                        btn.classList.remove('audio-on');
-                        if (card) card.classList.remove('active-audio');
-                        if (frame && frame.contentWindow) {
-                            try {
-                                frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
-                                if (frame.src.includes('redgifs.com') && frame.src.includes('muted=0')) {
-                                    frame.src = frame.src.replace('muted=0', 'muted=1');
-                                }
-                            } catch (e) {}
-                        }
-                    }
-                } else {
-                    if (btn) {
-                        btn.textContent = '🔇 Mute';
-                        btn.classList.remove('audio-on');
-                    }
-                    if (card) card.classList.remove('active-audio');
-                    if (frame && frame.contentWindow) {
-                        try {
-                            frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
-                            if (frame.src.includes('redgifs.com') && frame.src.includes('muted=0')) {
-                                frame.src = frame.src.replace('muted=0', 'muted=1');
-                            }
-                        } catch (e) {}
-                    }
-                }
-            }
-        };
-
-        window.fullscreenSlot = function(slotNum) {
-            const frame = document.getElementById(`slotFrame_${slotNum}`);
-            if (frame) {
-                if (frame.requestFullscreen) frame.requestFullscreen();
-                else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-            }
-        };
-
-        window.openSeparateWindow = function() {
-            if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
-                window.AndroidApp.openNewInstance('hub.html');
-            } else {
-                window.open('hub.html', '_blank');
-            }
-        };
-
-        window.openPipMode = function() {
-            if (window.AndroidApp && typeof window.AndroidApp.enterPipMode === 'function') {
-                const ok = window.AndroidApp.enterPipMode();
-                if (!ok) {
-                    if (typeof showToast === 'function') showToast('Modo PiP flotante no soportado en este dispositivo');
-                }
-            } else {
-                if (typeof showToast === 'function') showToast('PiP flotante disponible en app All18 Android');
-            }
-        };
 
         document.addEventListener('DOMContentLoaded', initHub);
     </script>

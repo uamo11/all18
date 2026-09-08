@@ -1,0 +1,100 @@
+/* ==========================================================================
+   TEMA AMOLED PURE BLACK: Optimizado para pantallas OLED
+   Fondo 100% negro absoluto (#000000), contraste limpio, sin botones chillones
+   ni elementos visuales agresivos. Cero distracciones y máximo confort visual.
+   ========================================================================== */
+
+body[data-theme="amoled"],
+body.amoled-mode {
+    --bg-main: #000000 !important;
+    --bg-surface: #030303 !important;
+    --bg-card: #080808 !important;
+    --bg-card-hover: #101010 !important;
+    --bg-header: rgba(0, 0, 0, 0.96) !important;
+    --border-color: rgba(255, 255, 255, 0.08) !important;
+    --border-highlight: rgba(255, 255, 255, 0.15) !important;
+    --text-main: #f5f5f7 !important;
+    --text-muted: #8e8e93 !important;
+    --text-dim: #636366 !important;
+    --primary: #ffffff !important;
+    --primary-hover: #e5e5ea !important;
+    --primary-glow: rgba(255, 255, 255, 0.12) !important;
+    --accent: #d1d1d6 !important;
+    background-color: #000000 !important;
+    color: #f5f5f7 !important;
+}
+
+body[data-theme="amoled"] .ph-header,
+body[data-theme="amoled"] .hub-appbar,
+body[data-theme="amoled"] .x-site-header,
+body[data-theme="amoled"] .all18-bottom-nav {
+    background: #000000 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-theme="amoled"] .ph-chip,
+body[data-theme="amoled"] .hub-prov-chip,
+body[data-theme="amoled"] .hub-cat-chip {
+    background: #0d0d0f !important;
+    color: #a1a1aa !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="amoled"] .ph-chip.active,
+body[data-theme="amoled"] .hub-prov-chip.active,
+body[data-theme="amoled"] .hub-cat-chip.active {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+body[data-theme="amoled"] .video-card,
+body[data-theme="amoled"] .media-card,
+body[data-theme="amoled"] .photo-card {
+    background: #050505 !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme="amoled"] .video-card:hover,
+body[data-theme="amoled"] .media-card:hover {
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Ocultar elementos invasivos y botones chillones en modo AMOLED */
+body[data-theme="amoled"] .ph-subs-section,
+body[data-theme="amoled"] .fake-ads,
+body[data-theme="amoled"] .rainbow-btn {
+    display: none !important;
+}
+
+body[data-theme="amoled"] .x-compose-fab {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15) !important;
+}
+
+body[data-theme="amoled"] .x-compose-fab svg {
+    fill: #000000 !important;
+}
+
+body[data-theme="amoled"] ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: #000000;
+}
+
+body[data-theme="amoled"] ::-webkit-scrollbar-thumb {
+    background: #222226;
+    border-radius: 3px;
+}
+
+body[data-theme="amoled"] .all18-nav-item.active {
+    color: #ffffff !important;
+}
+
+body[data-theme="amoled"] .all18-nav-item.active .all18-nav-icon svg {
+    fill: #ffffff !important;
+}

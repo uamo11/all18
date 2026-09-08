@@ -15,6 +15,7 @@
     <!-- Main Style & Theme -->
     <link rel="stylesheet" href="css/style.css?v=9.0">
     <link rel="stylesheet" href="css/themes/theme-tiktok.css?v=9.0">
+    <link rel="stylesheet" href="css/themes/theme-amoled.css?v=9.0">
 </head>
 <body data-theme="tiktok" class="tiktok-standalone-body">
 
@@ -95,8 +96,17 @@
                 <button class="theme-modal-item" data-theme="twitter" type="button" onclick="window.location.href='twitter.html'">
                     <div class="theme-item-icon" style="background: #000; border: 1px solid #333; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center;">𝕏</div>
                     <div class="theme-item-info">
-                        <strong>X / Twitter Timeline</strong>
-                        <span>Feed cronológico negro puro</span>
+                        <strong>X</strong>
+                        <span>Feed y fotos con algoritmo HeavyRanker</span>
+                    </div>
+                    <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
+                </button>
+
+                <button class="theme-modal-item" data-theme="amoled" type="button" onclick="window.applyTheme('amoled'); window.closeThemeModal();">
+                    <div class="theme-item-icon" style="background: #000000; border: 1px solid #333333; color: #ffffff; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center;">🖤</div>
+                    <div class="theme-item-info">
+                        <strong>AMOLED Negro Puro</strong>
+                        <span>100% negro #000000, ahorro batería y sin distracciones</span>
                     </div>
                     <span class="theme-item-check" style="font-weight: 900; font-size: 16px;">✓</span>
                 </button>
@@ -156,7 +166,7 @@
                 </div>
                 <div class="tt-header-right">
                     <div class="tt-story-bubble">
-                        <img id="ttStoryAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&auto=format&fit=crop&q=80" alt="story" />
+                        <img id="ttStoryAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%2327272a'/%3E%3Ccircle cx='25' cy='20' r='9' fill='%23fe2c55'/%3E%3Cpath d='M10 42c0-8.28 6.72-15 15-15s15 6.72 15 15' fill='%23fe2c55'/%3E%3C/svg%3E" alt="story" />
                         <span class="tt-story-badge">4</span>
                     </div>
                     <button class="tt-icon-btn" type="button" title="Compartir">
@@ -174,7 +184,7 @@
                 <div class="tt-avatar-wrapper">
                     <div class="tt-thought-bubble">¿Qué piensas?</div>
                     <div class="tt-avatar-main">
-                        <img id="ttProfileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" alt="Avatar" />
+                        <img id="ttProfileAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%2318181b'/%3E%3Ccircle cx='40' cy='32' r='14' fill='%23fe2c55'/%3E%3Cpath d='M16 68c0-13.25 10.75-24 24-24s24 10.75 24 24' fill='%23fe2c55'/%3E%3C/svg%3E" alt="Avatar" />
                         <button class="tt-avatar-plus" type="button" onclick="window.openPublishModal && window.openPublishModal()">+</button>
                     </div>
                 </div>
@@ -362,7 +372,7 @@
         <a href="hub.html" class="all18-nav-item">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 0h7v7h-7z"/></svg>
-                <span class="all18-nav-badge">5</span>
+                <span class="all18-nav-badge">9</span>
             </div>
             <span class="all18-nav-label">Multi-Hub</span>
         </a>
@@ -375,12 +385,12 @@
             <span class="all18-nav-label">Shorts</span>
         </a>
 
-        <!-- 4. Timeline (Twitter / X) -->
+        <!-- 4. X -->
         <a href="twitter.html" class="all18-nav-item">
             <div class="all18-nav-icon">
                 <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </div>
-            <span class="all18-nav-label">Timeline</span>
+            <span class="all18-nav-label">X</span>
         </a>
 
         <!-- 5. Profile -->
