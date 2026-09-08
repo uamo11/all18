@@ -51,8 +51,13 @@
                 <span class="ph-logo-text">All</span><span class="ph-logo-badge">Tube</span>
             </a>
 
-            <!-- Right: Search + Profile / Login -->
+            <!-- Right: Search + Multi-Instance + Profile / Login -->
             <div class="ph-header-right">
+                <button class="ph-search-btn" type="button" title="Abrir en Nueva Instancia / Ventana" onclick="window.openNewInstance ? window.openNewInstance('index.html') : window.open('index.html', '_blank')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                    </svg>
+                </button>
                 <button class="ph-search-btn" type="button" title="Buscar" onclick="window.toggleSearchModal && window.toggleSearchModal()">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                         <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
@@ -88,6 +93,9 @@
         <div class="ph-chips-bar">
             <button class="ph-chip" type="button" onclick="window.location.href='hub.html'" style="background: linear-gradient(135deg, rgba(255,144,0,0.25), rgba(254,44,85,0.25)); border: 1px solid #ff9000; color: #fff; font-weight: 800;">
                 <span style="color: #00e676; margin-right: 3px;">●</span> Multi-Hub (5 Webs)
+            </button>
+            <button class="ph-chip" type="button" onclick="window.openNewInstance ? window.openNewInstance('hub.html') : window.location.href='hub.html'" style="background: linear-gradient(135deg, #00e676, #00b0ff); border: 1px solid #00e676; color: #000; font-weight: 900;">
+                ⚡ Multi-Instancia Boost
             </button>
             <button class="ph-chip ph-chip-shorties" type="button" onclick="window.location.href='tiktok.html'">
                 <span class="ph-chip-arrow">➤</span> Shorties

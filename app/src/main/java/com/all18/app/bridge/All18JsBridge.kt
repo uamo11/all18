@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.webkit.JavascriptInterface
 import android.widget.Toast
@@ -15,7 +16,7 @@ class All18JsBridge(private val activity: MainActivity) {
     fun isNativeApp(): Boolean = true
 
     @JavascriptInterface
-    fun getAppVersion(): String = "1.2.0"
+    fun getAppVersion(): String = "1.2.1"
 
     @JavascriptInterface
     fun isMultiInstanceSupported(): Boolean = true
@@ -32,7 +33,9 @@ class All18JsBridge(private val activity: MainActivity) {
                 val intent = Intent(activity, MainActivity::class.java).apply {
                     action = Intent.ACTION_VIEW
                     data = Uri.parse(fullUrl)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
+                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                 }
                 activity.startActivity(intent)
                 showToast("Nueva instancia All18 iniciada")
@@ -40,6 +43,24 @@ class All18JsBridge(private val activity: MainActivity) {
                 showToast("Error al abrir instancia: ${e.message}")
             }
         }
+    }
+
+    @JavascriptInterface
+    fun enterPipMode(): Boolean {
+        var success = false
+        activity.runOnUiThread {
+            success = activity.enterPipMode()
+            if (!success) {
+                showToast("Modo PiP no disponible en este dispositivo")
+            }
+        }
+        return success
+    }
+
+    @JavascriptInterface
+    fun isPipSupported(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                activity.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)
     }
 
     @JavascriptInterface

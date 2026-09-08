@@ -622,11 +622,13 @@
                 <span>⚡ Multi-Instancia Ultra Boost</span>
                 <span style="font-size: 11px; color: #a1a1aa; font-weight: 500;">(4 Streams en Vivo Simultáneos)</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <div class="multi-instance-presets">
                     <button class="multi-preset-btn" id="btnPreset2" onclick="setMultiInstanceLayout(2)">2 Pantallas</button>
                     <button class="multi-preset-btn active" id="btnPreset4" onclick="setMultiInstanceLayout(4)">4 Pantallas</button>
                 </div>
+                <button type="button" class="multi-preset-btn" onclick="openPipMode()" title="Reproducir en ventana flotante PiP">📱 PiP</button>
+                <button type="button" class="multi-preset-btn" onclick="openSeparateWindow()" title="Abrir en ventana independiente">⚡ Nueva Ventana</button>
                 <button type="button" class="multi-preset-btn" style="background: rgba(254,44,85,0.2); color: #fe2c55; border-color: #fe2c55;" onclick="toggleMultiInstanceGrid()">✕ Cerrar</button>
             </div>
         </div>
@@ -650,7 +652,7 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_1">
-                    <iframe id="slotFrame_1" src="https://www.pornhub.com/embed/65a83a21b8f01" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                    <iframe id="slotFrame_1" src="about:blank" data-src="https://www.pornhub.com/embed/65a83a21b8f01" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
 
@@ -672,7 +674,7 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_2">
-                    <iframe id="slotFrame_2" src="https://www.xvideos.com/embedframe/74829103" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                    <iframe id="slotFrame_2" src="about:blank" data-src="https://www.xvideos.com/embedframe/74829103" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
 
@@ -694,7 +696,7 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_3">
-                    <iframe id="slotFrame_3" src="https://embed.redtube.com/?id=8492019" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                    <iframe id="slotFrame_3" src="about:blank" data-src="https://embed.redtube.com/?id=8492019" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
 
@@ -716,7 +718,7 @@
                     </div>
                 </div>
                 <div class="multi-slot-video-box" id="slotBox_4">
-                    <iframe id="slotFrame_4" src="https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                    <iframe id="slotFrame_4" src="about:blank" data-src="https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1&muted=1" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
                 </div>
             </div>
         </div>
@@ -1018,9 +1020,24 @@
             const btn = document.getElementById('btnMultiInstanceToggle');
             if (!overlay) return;
             const isVisible = overlay.style.display !== 'none';
-            overlay.style.display = isVisible ? 'none' : 'block';
-            if (btn) btn.classList.toggle('active', !isVisible);
-            if (!isVisible) {
+            if (isVisible) {
+                // Pause and clear all streams to free decoders & network
+                overlay.style.display = 'none';
+                if (btn) btn.classList.remove('active');
+                for (let i = 1; i <= 4; i++) {
+                    const frame = document.getElementById(`slotFrame_${i}`);
+                    if (frame) frame.src = 'about:blank';
+                }
+            } else {
+                // Open and lazy-load stream URLs
+                overlay.style.display = 'block';
+                if (btn) btn.classList.add('active');
+                for (let i = 1; i <= 4; i++) {
+                    const frame = document.getElementById(`slotFrame_${i}`);
+                    if (frame && (!frame.src || frame.src === 'about:blank')) {
+                        frame.src = frame.dataset.src || '';
+                    }
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
@@ -1050,6 +1067,7 @@
             if (!frame) return;
             const urls = MULTI_PRESETS[prov] || MULTI_PRESETS.pornhub;
             const nextUrl = urls[Math.floor(Math.random() * urls.length)];
+            frame.dataset.src = nextUrl;
             frame.src = nextUrl;
         };
 
@@ -1063,16 +1081,34 @@
             for (let i = 1; i <= 4; i++) {
                 const card = document.getElementById(`slotCard_${i}`);
                 const btn = document.getElementById(`audioBtn_${i}`);
+                const frame = document.getElementById(`slotFrame_${i}`);
                 if (i === slotNum) {
                     const isMuted = btn.textContent.includes('Mute');
                     if (isMuted) {
                         btn.textContent = '🔊 Audio';
                         btn.classList.add('audio-on');
-                        card.classList.add('active-audio');
+                        if (card) card.classList.add('active-audio');
+                        if (frame && frame.contentWindow) {
+                            try {
+                                frame.contentWindow.postMessage('{"event":"command","func":"unMute"}', '*');
+                                frame.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
+                                if (frame.src.includes('redgifs.com') && frame.src.includes('muted=1')) {
+                                    frame.src = frame.src.replace('muted=1', 'muted=0');
+                                }
+                            } catch (e) {}
+                        }
                     } else {
                         btn.textContent = '🔇 Mute';
                         btn.classList.remove('audio-on');
-                        card.classList.remove('active-audio');
+                        if (card) card.classList.remove('active-audio');
+                        if (frame && frame.contentWindow) {
+                            try {
+                                frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
+                                if (frame.src.includes('redgifs.com') && frame.src.includes('muted=0')) {
+                                    frame.src = frame.src.replace('muted=0', 'muted=1');
+                                }
+                            } catch (e) {}
+                        }
                     }
                 } else {
                     if (btn) {
@@ -1080,6 +1116,14 @@
                         btn.classList.remove('audio-on');
                     }
                     if (card) card.classList.remove('active-audio');
+                    if (frame && frame.contentWindow) {
+                        try {
+                            frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
+                            if (frame.src.includes('redgifs.com') && frame.src.includes('muted=0')) {
+                                frame.src = frame.src.replace('muted=0', 'muted=1');
+                            }
+                        } catch (e) {}
+                    }
                 }
             }
         };
@@ -1097,6 +1141,17 @@
                 window.AndroidApp.openNewInstance('hub.html');
             } else {
                 window.open('hub.html', '_blank');
+            }
+        };
+
+        window.openPipMode = function() {
+            if (window.AndroidApp && typeof window.AndroidApp.enterPipMode === 'function') {
+                const ok = window.AndroidApp.enterPipMode();
+                if (!ok) {
+                    if (typeof showToast === 'function') showToast('Modo PiP flotante no soportado en este dispositivo');
+                }
+            } else {
+                if (typeof showToast === 'function') showToast('PiP flotante disponible en app All18 Android');
             }
         };
 

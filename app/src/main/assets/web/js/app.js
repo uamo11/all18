@@ -1973,12 +1973,48 @@
     window.shareCurrentVideo = function () {
         if (state.activeModalItem) {
             const shareUrl = window.location.origin + window.location.pathname + '?v=' + state.activeModalItem.id;
+            if (window.AndroidApp && typeof window.AndroidApp.shareLink === 'function') {
+                window.AndroidApp.shareLink(state.activeModalItem.title || 'Video All18', shareUrl);
+                return;
+            }
             navigator.clipboard.writeText(shareUrl).then(() => {
                 showToast('🔗 ¡Enlace del video copiado al portapapeles!');
             }).catch(() => {
                 showToast('URL: ' + shareUrl);
             });
         }
+    };
+
+    window.openNewInstance = function (url) {
+        const target = url || 'index.html';
+        if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
+            window.AndroidApp.openNewInstance(target);
+        } else {
+            window.open(target, '_blank');
+        }
+    };
+
+    window.requestPipMode = function () {
+        if (window.AndroidApp && typeof window.AndroidApp.enterPipMode === 'function') {
+            const ok = window.AndroidApp.enterPipMode();
+            if (!ok) {
+                showToast('Modo PiP flotante no soportado en este dispositivo');
+            }
+        } else {
+            const video = document.querySelector('video');
+            if (video && document.pictureInPictureEnabled) {
+                video.requestPictureInPicture().catch(() => {
+                    showToast('PiP no disponible');
+                });
+            } else {
+                showToast('PiP flotante disponible en app All18 Android');
+            }
+        }
+    };
+
+    window.openVideoInNewInstance = function () {
+        const currentUrl = window.location.href;
+        window.openNewInstance(currentUrl);
     };
 
     window.toggleFollowCreator = function () {

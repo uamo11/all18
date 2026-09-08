@@ -70,14 +70,30 @@ class All18ApiInterceptor(private val context: Context) {
 
     private fun proxyRedGifsRequest(request: WebResourceRequest): WebResourceResponse? {
         return try {
-            val reqBuilder = Request.Builder().url(request.url.toString())
+            val url = request.url.toString()
+            val reqBuilder = Request.Builder().url(url)
             for ((key, value) in request.requestHeaders) {
-                if (!key.equals("Origin", ignoreCase = true) && !key.equals("Referer", ignoreCase = true)) {
+                val kLower = key.lowercase()
+                if (kLower != "origin" && kLower != "referer" && kLower != "user-agent") {
                     reqBuilder.header(key, value)
                 }
             }
-            reqBuilder.header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0 Mobile")
-            val resp = client.newCall(reqBuilder.build()).execute()
+            reqBuilder.header("User-Agent", REDGIFS_UA)
+            reqBuilder.header("Referer", "https://www.redgifs.com/")
+            reqBuilder.header("Origin", "https://www.redgifs.com")
+            reqBuilder.header("Accept", "application/json, text/plain, */*")
+
+            var resp = client.newCall(reqBuilder.build()).execute()
+            if (resp.code == 401) {
+                redGifsToken = null
+                redGifsExpires = 0L
+                val freshToken = getRedGifsToken()
+                if (freshToken != null) {
+                    reqBuilder.header("Authorization", "Bearer $freshToken")
+                    resp = client.newCall(reqBuilder.build()).execute()
+                }
+            }
+
             val bodyBytes = resp.body?.bytes() ?: ByteArray(0)
             val contentType = resp.header("Content-Type", "application/json; charset=utf-8") ?: "application/json"
 
@@ -125,14 +141,15 @@ class All18ApiInterceptor(private val context: Context) {
 
             for ((key, value) in request.requestHeaders) {
                 val kLower = key.lowercase()
-                if (kLower != "referer" && kLower != "origin") {
+                if (kLower != "referer" && kLower != "origin" && kLower != "user-agent") {
                     reqBuilder.header(key, value)
                 }
             }
 
             // Impersonate legitimate RedGifs web client to eliminate 403 Forbidden
             reqBuilder.header("Referer", "https://www.redgifs.com/")
-            reqBuilder.header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
+            reqBuilder.header("Origin", "https://www.redgifs.com")
+            reqBuilder.header("User-Agent", REDGIFS_UA)
 
             val resp = mediaClient.newCall(reqBuilder.build()).execute()
 
@@ -649,7 +666,12 @@ class All18ApiInterceptor(private val context: Context) {
                 val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
 
                 val thM = thumbPattern.matcher(cardContent)
-                val thumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+                val rawThumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+                val thumb = when {
+                    rawThumb.startsWith("//") -> "https:$rawThumb"
+                    rawThumb.isNotBlank() -> rawThumb
+                    else -> "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"
+                }
 
                 val dM = durPattern.matcher(cardContent)
                 val duration = if (dM.find()) (dM.group(1) ?: dM.group(2))?.trim() ?: "10:00" else "10:00"
@@ -717,7 +739,12 @@ class All18ApiInterceptor(private val context: Context) {
                 val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
 
                 val thM = thumbPattern.matcher(cardContent)
-                val thumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+                val rawThumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+                val thumb = when {
+                    rawThumb.startsWith("//") -> "https:$rawThumb"
+                    rawThumb.isNotBlank() -> rawThumb
+                    else -> "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"
+                }
 
                 val dM = durPattern.matcher(cardContent)
                 val duration = if (dM.find()) (dM.group(1) ?: dM.group(2))?.trim() ?: "08:45" else "08:45"
@@ -793,7 +820,12 @@ class All18ApiInterceptor(private val context: Context) {
                 val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
 
                 val thM = thumbPattern.matcher(cardContent)
-                val thumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+                val rawThumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
+                val thumb = when {
+                    rawThumb.startsWith("//") -> "https:$rawThumb"
+                    rawThumb.isNotBlank() -> rawThumb
+                    else -> "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"
+                }
 
                 val dM = durPattern.matcher(cardContent)
                 val duration = if (dM.find()) dM.group(1)?.trim() ?: "11:30" else "11:30"
@@ -842,12 +874,17 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val regex = Pattern.compile("class=\"thumb-inside\">.*?<a href=\"/video\\.([a-zA-Z0-9_-]+)/[^\"]*\".*?data-src=\"([^\"]+)\"(?:.*?title=\"([^\"]+)\")?(?:.*?<span class=\"duration\">([^<]+)</span>)?", Pattern.DOTALL)
+            val regex = Pattern.compile("""class="thumb-inside">.*?<a href="/video[._-]?([a-zA-Z0-9_-]+)/[^"]*".*?(?:data-src|src)="([^"]+)"(?:.*?title="([^"]+)")?(?:.*?<span class="duration">([^<]+)</span>)?""", Pattern.DOTALL)
             val matcher = regex.matcher(html)
 
             while (matcher.find()) {
                 val vid = matcher.group(1) ?: continue
-                val thumb = matcher.group(2) ?: ""
+                val rawThumb = matcher.group(2) ?: ""
+                val thumb = when {
+                    rawThumb.startsWith("//") -> "https:$rawThumb"
+                    rawThumb.isNotBlank() -> rawThumb
+                    else -> "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"
+                }
                 val rawTitle = matcher.group(3) ?: "Video XVideos"
                 val duration = matcher.group(4)?.trim() ?: "10 min"
                 val title = Html.fromHtml(rawTitle, Html.FROM_HTML_MODE_LEGACY).toString()
@@ -896,12 +933,17 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val regex = Pattern.compile("class=\"thumb-inside\">.*?<a href=\"/video-([a-zA-Z0-9_-]+)/[^\"]*\".*?data-src=\"([^\"]+)\"(?:.*?title=\"([^\"]+)\")?", Pattern.DOTALL)
+            val regex = Pattern.compile("""class="thumb-inside">.*?<a href="/video-([a-zA-Z0-9_-]+)/[^"]*".*?(?:data-src|src)="([^"]+)"(?:.*?title="([^"]+)")?""", Pattern.DOTALL)
             val matcher = regex.matcher(html)
 
             while (matcher.find()) {
                 val vid = matcher.group(1) ?: continue
-                val thumb = matcher.group(2) ?: ""
+                val rawThumb = matcher.group(2) ?: ""
+                val thumb = when {
+                    rawThumb.startsWith("//") -> "https:$rawThumb"
+                    rawThumb.isNotBlank() -> rawThumb
+                    else -> "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600"
+                }
                 val rawTitle = matcher.group(3) ?: "Video XNXX"
                 val title = Html.fromHtml(rawTitle, Html.FROM_HTML_MODE_LEGACY).toString()
 

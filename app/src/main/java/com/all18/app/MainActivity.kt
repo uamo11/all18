@@ -1,13 +1,16 @@
 package com.all18.app
 
 import android.annotation.SuppressLint
+import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -105,9 +108,9 @@ class MainActivity : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-        // Custom User Agent (v1.2.0 Ultra Boost)
+        // Custom User Agent (v1.2.1 Ultra Boost Multi-Instance)
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.2.0"
+        settings.userAgentString = "$defaultUa All18App/1.2.1"
         settings.setSupportMultipleWindows(true)
 
         // Hardware acceleration
@@ -198,7 +201,29 @@ class MainActivity : AppCompatActivity() {
                 tempWebView.webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val target = request?.url?.toString() ?: return false
-                        binding.webView.loadUrl(target)
+                        try {
+                            if (target.startsWith("https://appassets.androidplatform.net") ||
+                                target.startsWith("file:///android_asset") ||
+                                target.endsWith(".html") ||
+                                target.contains(".html?")
+                            ) {
+                                val intent = Intent(this@MainActivity, MainActivity::class.java).apply {
+                                    action = Intent.ACTION_VIEW
+                                    data = Uri.parse(target)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
+                                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                                }
+                                startActivity(intent)
+                            } else if (isUserGesture && (target.startsWith("http://") || target.startsWith("https://"))) {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(target))
+                                startActivity(intent)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("All18", "Error handling auxiliary window url: ${e.message}")
+                        } finally {
+                            tempWebView.destroy()
+                        }
                         return true
                     }
                 }
@@ -355,6 +380,42 @@ class MainActivity : AppCompatActivity() {
     private fun showSystemUI() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+        }
+    }
+
+    fun enterPipMode(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return try {
+                val aspectRatio = Rational(16, 9)
+                val params = PictureInPictureParams.Builder()
+                    .setAspectRatio(aspectRatio)
+                    .build()
+                enterPictureInPictureMode(params)
+            } catch (e: Exception) {
+                Log.e("All18", "Error entering PiP mode: ${e.message}")
+                false
+            }
+        }
+        return false
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (customView != null) {
+            enterPipMode()
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            binding.progressBar.visibility = View.GONE
+            hideSystemUI()
+        } else {
+            showSystemUI()
         }
     }
 

@@ -26,7 +26,7 @@
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:launchMode="standard"
-            android:documentLaunchMode="intoExisting"
+            android:documentLaunchMode="always"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|uiMode"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
