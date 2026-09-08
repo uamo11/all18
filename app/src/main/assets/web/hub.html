@@ -898,22 +898,82 @@
             redgifs: 'RedGifs (Shorts HD)'
         };
 
+        const HUB_CACHE_KEY = 'all18_hub_cache_v2';
+
+        function saveHubState() {
+            if (!state.items || state.items.length === 0) return;
+            try {
+                const data = {
+                    source: state.source,
+                    category: state.category,
+                    query: state.query,
+                    page: state.page,
+                    items: state.items,
+                    scrollY: window.scrollY || window.pageYOffset || 0,
+                    savedAt: Date.now()
+                };
+                sessionStorage.setItem(HUB_CACHE_KEY, JSON.stringify(data));
+            } catch (e) {}
+        }
+
         function initHub() {
             const params = new URLSearchParams(window.location.search);
-            const q = params.get('q');
-            const s = params.get('source');
-            const c = params.get('category');
+            const q = (params.get('q') || '').trim();
+            const s = params.get('source') || '';
+            const c = params.get('category') || '';
 
-            if (q) {
-                state.query = q;
-                const input = document.getElementById('hubSearchInput');
-                if (input) input.value = q;
+            // Check if we have valid cached state from previous navigation
+            let hasRestored = false;
+            try {
+                const cachedRaw = sessionStorage.getItem(HUB_CACHE_KEY);
+                if (cachedRaw) {
+                    const cached = JSON.parse(cachedRaw);
+                    const matchesParams = (!q || q === cached.query) &&
+                                          (!s || s === cached.source) &&
+                                          (!c || c === cached.category);
+
+                    if (matchesParams && Array.isArray(cached.items) && cached.items.length > 0) {
+                        state.source = cached.source || 'all';
+                        state.category = cached.category || '';
+                        state.query = cached.query || '';
+                        state.page = cached.page || 1;
+                        state.items = cached.items;
+
+                        const input = document.getElementById('hubSearchInput');
+                        if (input && state.query) input.value = state.query;
+
+                        updateActiveChips();
+                        renderCards(state.items, true);
+
+                        const countEl = document.getElementById('hubStatusCount');
+                        if (countEl) countEl.textContent = `${state.items.length} videos disponibles`;
+                        const btnMore = document.getElementById('btnHubLoadMore');
+                        if (btnMore) btnMore.style.display = 'block';
+
+                        if (cached.scrollY > 0) {
+                            setTimeout(() => {
+                                window.scrollTo({ top: cached.scrollY, behavior: 'instant' });
+                            }, 40);
+                        }
+                        hasRestored = true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Hub cache restore error:', e);
             }
-            if (s) state.source = s;
-            if (c) state.category = c;
 
-            updateActiveChips();
-            fetchHubVideos(true);
+            if (!hasRestored) {
+                if (q) {
+                    state.query = q;
+                    const input = document.getElementById('hubSearchInput');
+                    if (input) input.value = q;
+                }
+                if (s) state.source = s;
+                if (c) state.category = c;
+
+                updateActiveChips();
+                fetchHubVideos(true);
+            }
         }
 
         function updateActiveChips() {
@@ -934,6 +994,7 @@
         function filterBySource(src) {
             state.source = src;
             state.page = 1;
+            try { sessionStorage.removeItem(HUB_CACHE_KEY); } catch (e) {}
             updateActiveChips();
             fetchHubVideos(true);
 
@@ -945,6 +1006,7 @@
         function filterByCategory(cat) {
             state.category = cat;
             state.page = 1;
+            try { sessionStorage.removeItem(HUB_CACHE_KEY); } catch (e) {}
             updateActiveChips();
             fetchHubVideos(true);
             if (window.AndroidApp && window.AndroidApp.vibrate) {
@@ -957,6 +1019,7 @@
             const input = document.getElementById('hubSearchInput');
             state.query = input ? input.value.trim() : '';
             state.page = 1;
+            try { sessionStorage.removeItem(HUB_CACHE_KEY); } catch (e) {}
             updateActiveChips();
             fetchHubVideos(true);
         }
@@ -994,6 +1057,7 @@
 
                         if (countEl) countEl.textContent = `${state.items.length} videos disponibles`;
                         if (btnMore && newItems.length > 0) btnMore.style.display = 'block';
+                        saveHubState();
                     } else {
                         if (countEl) countEl.textContent = 'No se encontraron videos';
                     }
@@ -1049,8 +1113,9 @@
                 grid.insertAdjacentHTML('beforeend', html);
             }
 
-            // Setup hover preview listeners
+            // Setup hover preview listeners and click save
             grid.querySelectorAll('.hub-card').forEach(card => {
+                card.addEventListener('click', saveHubState);
                 const video = card.querySelector('.hub-preview-video');
                 if (video && !card._hasHoverPreview) {
                     card._hasHoverPreview = true;
@@ -1072,7 +1137,17 @@
             fetchHubVideos(false);
         }
 
-        document.addEventListener('DOMContentLoaded', initHub);
+        window.addEventListener('beforeunload', saveHubState);
+        window.addEventListener('pagehide', saveHubState);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') saveHubState();
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            initHub();
+            document.querySelectorAll('.all18-bottom-nav a').forEach(a => {
+                a.addEventListener('click', saveHubState);
+            });
+        });
     </script>
 </body>
 </html>

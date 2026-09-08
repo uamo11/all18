@@ -133,7 +133,7 @@ class All18ApiInterceptor(private val context: Context) {
             )
         } catch (e: Exception) {
             Log.e("All18Api", "Error proxying RedGifs: ${e.message}")
-            null
+            createJsonResponse("{\"status\":\"error\",\"message\":\"${e.message}\",\"gifs\":[]}")
         }
     }
 
@@ -381,14 +381,17 @@ class All18ApiInterceptor(private val context: Context) {
                 val fRT = executor.submit(Callable { fetchRedTube(queryTerm, page) })
                 val fRG = executor.submit(Callable { fetchRedGifs(queryTerm, page) })
 
-                val phItems = try { fPH.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                val xvItems = try { fXV.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                val xnItems = try { fXN.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                val epItems = try { fEP.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                val ypItems = try { fYP.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                val rtItems = try { fRT.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                val rgItems = try { fRG.get(7, TimeUnit.SECONDS) } catch (e: Exception) { JSONArray() }
-                executor.shutdown()
+                val deadline = System.currentTimeMillis() + 3500L
+                fun getRemaining() = maxOf(100L, deadline - System.currentTimeMillis())
+
+                val phItems = try { fPH.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val xvItems = try { fXV.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val xnItems = try { fXN.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val epItems = try { fEP.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val ypItems = try { fYP.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val rtItems = try { fRT.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val rgItems = try { fRG.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                executor.shutdownNow()
 
                 val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), epItems.length(), ypItems.length(), rtItems.length(), rgItems.length())
                 for (i in 0 until maxLen) {
@@ -1119,12 +1122,12 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val cardPattern = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"([\s\S]*?)(?=<div[^>]+id="video_|<div id="content"|class="pagination"|</div>\s*<script>xv\.thumbs|$)""", Pattern.DOTALL)
-            val matcher = cardPattern.matcher(html)
-
-            while (matcher.find()) {
-                val vid = matcher.group(1) ?: continue
-                val cardHtml = matcher.group(2) ?: continue
+            val chunks = html.split("id=\"video_")
+            for (i in 1 until chunks.size) {
+                val cardHtml = chunks[i]
+                val idEnd = cardHtml.indexOf('"')
+                if (idEnd <= 0) continue
+                val vid = cardHtml.substring(0, idEnd)
 
                 // Official cover extraction: check data-src > data-sfwthumb > data-mzl > src (skip lightbox-blank.gif)
                 val thumbM = Pattern.compile("""(?:data-src|data-sfwthumb|data-mzl|src)="([^"]+)"""").matcher(cardHtml)
@@ -1225,12 +1228,12 @@ class All18ApiInterceptor(private val context: Context) {
             val resp = client.newCall(req).execute()
             val html = resp.body?.string() ?: return list
 
-            val cardPattern = Pattern.compile("""<div[^>]+id="video_([a-zA-Z0-9_-]+)"([\s\S]*?)(?=<div[^>]+id="video_|<div id="content"|class="pagination"|</div>\s*<script>xv\.thumbs|$)""", Pattern.DOTALL)
-            val matcher = cardPattern.matcher(html)
-
-            while (matcher.find()) {
-                val vid = matcher.group(1) ?: continue
-                val cardHtml = matcher.group(2) ?: continue
+            val chunks = html.split("id=\"video_")
+            for (i in 1 until chunks.size) {
+                val cardHtml = chunks[i]
+                val idEnd = cardHtml.indexOf('"')
+                if (idEnd <= 0) continue
+                val vid = cardHtml.substring(0, idEnd)
 
                 // Official cover extraction: check data-src > data-sfwthumb > data-mzl > src (skip lightbox-blank.gif)
                 val thumbM = Pattern.compile("""(?:data-src|data-sfwthumb|data-mzl|src)="([^"]+)"""").matcher(cardHtml)

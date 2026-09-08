@@ -633,11 +633,77 @@
     };
     window.AlgorithmEngine = AlgorithmEngine;
 
+    const FEED_CACHE_PREFIX = 'all18_feed_cache_v2_';
+    let lastFetchCallInfo = { time: 0, key: '' };
+
+    function getFeedCacheKey() {
+        const path = window.location.pathname;
+        const pageName = path.includes('tiktok.html') ? 'tiktok' : (path.includes('twitter.html') ? 'twitter' : 'tube');
+        const theme = document.body.dataset.theme || pageName;
+        return `${pageName}_${theme}_${state.source || 'all'}_${state.category || ''}`;
+    }
+
+    function saveFeedCache() {
+        if (!state.items || state.items.length === 0 || state.query) return;
+        try {
+            const key = FEED_CACHE_PREFIX + getFeedCacheKey();
+            const payload = {
+                items: state.items.slice(0, 48),
+                scrollY: window.scrollY || window.pageYOffset || 0,
+                savedAt: Date.now()
+            };
+            sessionStorage.setItem(key, JSON.stringify(payload));
+        } catch (e) {}
+    }
+
+    function tryRestoreFeedCache() {
+        if (state.query) return false;
+        try {
+            const key = FEED_CACHE_PREFIX + getFeedCacheKey();
+            const raw = sessionStorage.getItem(key);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (Array.isArray(data.items) && data.items.length > 0) {
+                    const targetGrid = elements.grid || document.getElementById('mediaGrid');
+                    if (targetGrid) {
+                        targetGrid.innerHTML = '';
+                        state.items = [...data.items];
+                        renderCards(state.items);
+                        const badge = elements.itemCount || document.getElementById('itemCount');
+                        if (badge) badge.textContent = `(${state.items.length}+ videos)`;
+                        if (data.scrollY > 0) {
+                            setTimeout(() => window.scrollTo({ top: data.scrollY, behavior: 'instant' }), 40);
+                        }
+                        return true;
+                    }
+                }
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    function getCuratedLocalFeed(src) {
+        return [
+            { id: 'ph_65a83a21b8f01', source: 'Pornhub', title: 'Sensual Latina Exclusiva HD', duration: '12:30', views: '280K vistas', rating: '98%', author: '@PornhubStar', thumb: 'https://ci.phncdn.com/videos/202401/15/sample.jpg', embed_url: 'https://www.pornhub.com/embed/65a83a21b8f01', quality: '1080p HD' },
+            { id: 'xv_ommelke9c80', source: 'XVideos', title: 'Hot College Blonde HD Special', duration: '15:20', views: '320K vistas', rating: '97%', author: '@XVideosStar', thumb: 'https://thumbs-gcore.xvideos-cdn.com/videos/thumbs169poster/sample.jpg', embed_url: 'https://www.xvideos.com/embedframe/ommelke9c80', quality: '1080p HD' },
+            { id: 'xn_1imfom09', source: 'XNXX', title: 'Top Model Colección Ardiente', duration: '11:45', views: '240K vistas', rating: '96%', author: '@XNXXCreator', thumb: 'https://thumb-cdn77.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg', embed_url: 'https://www.xnxx.com/embedframe/1imfom09', quality: '1080p HD' },
+            { id: 'rg_sprycaringafricangroundhornbill', source: 'RedGifs', title: 'Short Hot Loop Viral', duration: 'Short', views: '150K vistas', rating: '99%', author: '@All18Creator', thumb: 'https://media.redgifs.com/sprycaringafricangroundhornbill-poster.jpg', media_url: 'https://media.redgifs.com/sprycaringafricangroundhornbill.mp4', embed_url: 'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill', type: 'short', quality: '1080p 60fps' },
+            { id: 'ep_cIG0retUIzC', source: 'Eporner', title: 'Exclusivo Pure 1080p 60fps Ultra', duration: '14:10', views: '190K vistas', rating: '99%', author: '@EpornerStar', thumb: 'https://static-eporner.com/sample.jpg', embed_url: 'https://www.eporner.com/embed/cIG0retUIzC/', quality: '1080p 60fps' }
+        ];
+    }
+
     async function fetchContent(reset = false) {
         if (state.view === 'favorites') {
             renderFavorites();
             return;
         }
+
+        const fetchKey = `${state.source}_${state.category}_${state.query}_${state.page}_${reset}`;
+        const now = Date.now();
+        if (state.loading && reset && now - lastFetchCallInfo.time < 400 && lastFetchCallInfo.key === fetchKey) {
+            return;
+        }
+        lastFetchCallInfo = { time: now, key: fetchKey };
 
         const currentSession = ++state.searchSessionId;
         state.loading = true;
@@ -646,11 +712,18 @@
         const countBadge = elements.itemCount || document.getElementById('itemCount');
         const loadMoreBtn = elements.loadMoreBtn || document.getElementById('btnLoadMore');
 
+        let hasClearedSkeletons = !reset;
+
         if (reset) {
             state.page = 1;
             state.items = [];
-            if (grid) grid.innerHTML = getSkeletonHTML(12);
-            if (countBadge) countBadge.textContent = '(cargando...)';
+            // Try instant cache restoration first (0ms load without screen flash)
+            if (!state.query && tryRestoreFeedCache()) {
+                hasClearedSkeletons = true;
+            } else {
+                if (grid) grid.innerHTML = getSkeletonHTML(12);
+                if (countBadge) countBadge.textContent = '(cargando...)';
+            }
         }
 
         if (loadMoreBtn) {
@@ -664,8 +737,6 @@
         const src = state.source;
         const page = state.page;
         const filter = state.filter;
-
-        let hasClearedSkeletons = !reset;
 
         function appendProgressiveItems(items) {
             if (state.searchSessionId !== currentSession) return;
@@ -685,6 +756,7 @@
 
             state.items.push(...uniqueItems);
             renderCards(uniqueItems);
+            saveFeedCache();
 
             const badge = elements.itemCount || document.getElementById('itemCount');
             if (badge) {
@@ -867,12 +939,17 @@
         const btnLoad = elements.loadMoreBtn || document.getElementById('btnLoadMore');
 
         if (!hasClearedSkeletons && targetGrid) {
-            targetGrid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
-                    <h3 style="font-size: 20px; margin-bottom: 8px;">No se encontraron resultados</h3>
-                    <p style="color: var(--text-dim);">Prueba con otra categoría o búsqueda.</p>
-                </div>
-            `;
+            const fallbackCurated = getCuratedLocalFeed(state.source);
+            if (fallbackCurated && fallbackCurated.length > 0) {
+                appendProgressiveItems(fallbackCurated);
+            } else {
+                targetGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                        <h3 style="font-size: 20px; margin-bottom: 8px;">No se encontraron resultados</h3>
+                        <p style="color: var(--text-dim);">Prueba con otra categoría o búsqueda.</p>
+                    </div>
+                `;
+            }
             if (btnLoad) btnLoad.style.display = 'none';
         } else if (btnLoad) {
             btnLoad.innerHTML = '⚡ Cargar más videos';
@@ -1511,6 +1588,7 @@
                 window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title || '')}&source=${encodeURIComponent(item.source || '')}&from=${pageFrom}`;
             } else {
                 openWatchView(item);
+            }
         });
 
         // Desktop Hover Preview for Video Thumbnails
