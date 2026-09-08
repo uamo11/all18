@@ -19,7 +19,15 @@ import android.text.Html
 
 class All18ApiInterceptor(private val context: Context) {
 
+    private val httpCache = try {
+        val cacheDir = File(context.cacheDir, "all18_http_cache")
+        okhttp3.Cache(cacheDir, 50L * 1024L * 1024L)
+    } catch (e: Exception) {
+        null
+    }
+
     private val client = OkHttpClient.Builder()
+        .apply { if (httpCache != null) cache(httpCache) }
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .followRedirects(true)
@@ -647,6 +655,22 @@ class All18ApiInterceptor(private val context: Context) {
         private const val REDGIFS_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         const val AMOLED_DEFAULT_POSTER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23000000'/%3E%3Ccircle cx='320' cy='180' r='36' fill='%23111115' stroke='%2322222a' stroke-width='2'/%3E%3Cpolygon points='314,166 334,180 314,194' fill='%23ffffff'/%3E%3Ctext x='320' y='245' font-family='sans-serif' font-size='15' font-weight='800' fill='%23666677' text-anchor='middle'%3EALL18 HD%3C/text%3E%3C/svg%3E"
 
+        val VIDEO_SAFE_HOSTS = setOf(
+            "pornhub.com",
+            "phncdn.com",
+            "xvideos.com",
+            "xvideos-cdn.com",
+            "xnxx.com",
+            "xnxx-cdn.com",
+            "spankbang.com",
+            "sb-cd.com",
+            "eporner.com",
+            "redgifs.com",
+            "redtube.com",
+            "youporn.com",
+            "beeg.com"
+        )
+
         val AD_DOMAINS = setOf(
             "exoclick.com",
             "trafficjunky.net",
@@ -678,13 +702,21 @@ class All18ApiInterceptor(private val context: Context) {
             "clickadu.com",
             "adsterra.com",
             "hilltopads.net",
-            "monetag.com",
-            "engine.phncdn.com"
+            "monetag.com"
         )
 
+        fun isAdHost(hostStr: String?): Boolean {
+            val host = hostStr?.lowercase()?.trim() ?: return false
+            // 1. SAFELIST: Never block official video platforms, CDNs, or thumbnails
+            if (VIDEO_SAFE_HOSTS.any { host == it || host.endsWith(".$it") }) {
+                return false
+            }
+            // 2. AD BLOCK: Block recognized advertising networks
+            return AD_DOMAINS.any { host == it || host.endsWith(".$it") }
+        }
+
         fun isAdRequest(uri: Uri): Boolean {
-            val host = uri.host?.lowercase() ?: return false
-            return AD_DOMAINS.any { host.contains(it) }
+            return isAdHost(uri.host)
         }
     }
 

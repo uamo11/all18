@@ -1078,9 +1078,6 @@
                             <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-1.602.89 1.002 3.43c.18.61-.41 1.15-.99.91l-4.75-2.02-1.96.18c-.66.06-1.32.09-1.98.09-4.421 0-8.004-3.58-8.004-8.02zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.744 6.02 6.085 6.02.69 0 1.38-.03 2.08-.1l.6-.05 3.39 1.44-.69-2.36.27-.15c2.15-1.19 3.49-3.46 3.49-5.93 0-3.38-2.75-6.13-6.13H9.756z"/></svg>
                             <span>${commentsCount}</span>
                         </div>
-                            <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-1.602.89 1.002 3.43c.18.61-.41 1.15-.99.91l-4.75-2.02-1.96.18c-.66.06-1.32.09-1.98.09-4.421 0-8.004-3.58-8.004-8.02zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.744 6.02 6.085 6.02.69 0 1.38-.03 2.08-.1l.6-.05 3.39 1.44-.69-2.36.27-.15c2.15-1.19 3.49-3.46 3.49-5.93 0-3.38-2.75-6.13-6.13H9.756z"/></svg>
-                            <span>${commentsCount}</span>
-                        </div>
                         <div class="x-action-item x-action-repost" title="Repostear">
                             <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.9 2 2 2H16v2H7.5c-2.21 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 20.12l-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.9-2-2-2H8V4h8.5c2.21 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14z"/></svg>
                             <span>${repostsCount}</span>
@@ -1430,6 +1427,15 @@
                     const current = parseInt(countSpan.textContent, 10) || rawLikes;
                     countSpan.textContent = isNowFav ? current + 1 : Math.max(0, current - 1);
                 }
+            });
+        }
+
+        // X Share Interaction
+        const xShareBtn = card.querySelector('.x-action-share');
+        if (xShareBtn) {
+            xShareBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.shareVideoItem(item);
             });
         }
 
@@ -2214,18 +2220,93 @@
         }
     };
 
-    window.shareCurrentVideo = function () {
-        if (state.activeModalItem) {
-            const shareUrl = window.location.origin + window.location.pathname + '?v=' + state.activeModalItem.id;
-            if (window.AndroidApp && typeof window.AndroidApp.shareLink === 'function') {
-                window.AndroidApp.shareLink(state.activeModalItem.title || 'Video All18', shareUrl);
-                return;
-            }
+    function getPublicShareUrl(item) {
+        if (!item) return '';
+        // If url is already an official external HTTP link
+        if (item.url && typeof item.url === 'string' && item.url.startsWith('http') && 
+            !item.url.includes('androidplatform.net') && !item.url.includes('android_asset')) {
+            return item.url;
+        }
+
+        const embedUrl = item.embed_url || '';
+        if (embedUrl.includes('pornhub.com/embed/')) {
+            const id = embedUrl.split('/embed/')[1]?.split(/[?&#]/)[0] || item.raw_id || (item.id ? item.id.replace(/^ph_/, '') : '');
+            return `https://www.pornhub.com/view_video.php?viewkey=${id}`;
+        }
+        if (embedUrl.includes('xvideos.com/embedframe/')) {
+            const id = embedUrl.split('/embedframe/')[1]?.split(/[?&#]/)[0] || item.raw_id;
+            return `https://www.xvideos.com/video.${id}/`;
+        }
+        if (embedUrl.includes('xnxx.com/embedframe/')) {
+            const id = embedUrl.split('/embedframe/')[1]?.split(/[?&#]/)[0] || item.raw_id;
+            return `https://www.xnxx.com/video-${id}/`;
+        }
+        if (embedUrl.includes('spankbang.com/')) {
+            const id = embedUrl.replace(/.*spankbang\.com\//, '').replace(/\/embed\/?/, '').split(/[?&#]/)[0];
+            return `https://spankbang.com/${id}/video/`;
+        }
+        if (embedUrl.includes('eporner.com/embed/')) {
+            const id = embedUrl.split('/embed/')[1]?.split('/')[0];
+            return `https://www.eporner.com/video/${id}/`;
+        }
+        if (embedUrl.includes('redgifs.com/ifr/')) {
+            const id = embedUrl.split('/ifr/')[1]?.split(/[?&#]/)[0];
+            return `https://www.redgifs.com/watch/${id}`;
+        }
+        if (embedUrl.includes('redtube.com/')) {
+            const id = embedUrl.split('/redtube.com/')[1]?.split(/[?&#]/)[0];
+            return `https://www.redtube.com/${id}`;
+        }
+        if (embedUrl.includes('youporn.com/embed/')) {
+            const id = embedUrl.split('/embed/')[1]?.split(/[?&#]/)[0];
+            return `https://www.youporn.com/watch/${id}/`;
+        }
+        if (item.media_url && typeof item.media_url === 'string' && item.media_url.startsWith('http')) {
+            return item.media_url;
+        }
+        if (embedUrl.startsWith('http') && !embedUrl.includes('androidplatform.net')) {
+            return embedUrl;
+        }
+        if (item.title) {
+            return `https://www.pornhub.com/video/search?search=${encodeURIComponent(item.title)}`;
+        }
+        return '';
+    }
+    window.getPublicShareUrl = getPublicShareUrl;
+
+    window.shareVideoItem = function (item) {
+        if (!item) return;
+        const shareUrl = getPublicShareUrl(item);
+        if (!shareUrl) {
+            showToast('No se encontró enlace público para compartir');
+            return;
+        }
+        const title = item.title || 'Video All18';
+
+        if (window.AndroidApp && typeof window.AndroidApp.shareLink === 'function') {
+            window.AndroidApp.shareLink(title, shareUrl);
+            return;
+        }
+
+        if (navigator.share) {
+            navigator.share({ title: title, url: shareUrl }).catch(() => {});
+            return;
+        }
+
+        if (navigator.clipboard) {
             navigator.clipboard.writeText(shareUrl).then(() => {
-                showToast('🔗 ¡Enlace del video copiado al portapapeles!');
+                showToast('🔗 ¡Enlace oficial copiado al portapapeles!');
             }).catch(() => {
                 showToast('URL: ' + shareUrl);
             });
+        } else {
+            showToast('URL: ' + shareUrl);
+        }
+    };
+
+    window.shareCurrentVideo = function () {
+        if (state.activeModalItem) {
+            window.shareVideoItem(state.activeModalItem);
         }
     };
 
@@ -4031,15 +4112,7 @@
         if (shareBtn) {
             shareBtn.onclick = (e) => {
                 e.stopPropagation();
-                const shareUrl = window.location.origin + window.location.pathname.replace('twitter.html', 'watch.html') + '?v=' + encodeURIComponent(item.id) + '&from=twitter';
-                if (window.AndroidApp && typeof window.AndroidApp.shareLink === 'function') {
-                    window.AndroidApp.shareLink(item.title || 'Video All18', shareUrl);
-                } else if (navigator.clipboard) {
-                    navigator.clipboard.writeText(shareUrl);
-                    showToast('🔗 Enlace copiado al portapapeles');
-                } else {
-                    showToast('🔗 ' + shareUrl);
-                }
+                window.shareVideoItem(item);
             };
         }
 
@@ -4180,10 +4253,7 @@
         if (shareBtn) {
             shareBtn.onclick = (e) => {
                 e.stopPropagation();
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(window.location.href);
-                    showToast('🔗 Enlace de Reel copiado');
-                }
+                window.shareVideoItem(item);
             };
         }
 

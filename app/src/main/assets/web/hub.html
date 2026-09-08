@@ -738,47 +738,24 @@
                 <div class="hub-logo-text">All<span>18</span></div>
                 <span class="hub-badge-pill">Multi-Hub</span>
             </a>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <div class="hub-provider-count" style="color: #00e676; background: rgba(0, 230, 118, 0.12); border-color: rgba(0, 230, 118, 0.3);" title="Protección activa contra publicidad y popups">
-                    <span class="hub-pulse-dot"></span>
-                    <span>🛡️ AdBlock Shield: Activo</span>
-                </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <div class="hub-provider-count" style="color: #ff9000; background: rgba(255, 144, 0, 0.12); border-color: rgba(255, 144, 0, 0.3);">
                     <span class="hub-pulse-dot" style="background:#ff9000; box-shadow:0 0 6px #ff9000;"></span>
-                    <span>9 Portales</span>
+                    <span>9 Portales Oficiales</span>
                 </div>
-                <button type="button" id="btnMultiInstanceToggle" class="hub-btn-multi-instance" onclick="toggleMultiInstanceGrid()">
-                    ⚡ Multi-Instancia (4x)
-                </button>
-                <button type="button" class="hub-btn-new-window" onclick="openSeparateWindow()" title="Abrir otra ventana/instancia de All18">
-                    ⧉ Nueva App
-                </button>
             </div>
-        </div>
-
-        <!-- Mode Selector Bar (Webs Directas Sin APIs vs Multi-Stream 4x vs Feed) -->
-        <div class="hub-mode-selector">
-            <button class="hub-mode-tab active" id="tabModeDirectWeb" onclick="setHubMode('web')">
-                🌐 Navegador Web (Directo Sin APIs)
-            </button>
-            <button class="hub-mode-tab" id="tabModeMultiStream" onclick="setHubMode('stream')">
-                ⚡ Multi-Stream (4x en Vivo)
-            </button>
-            <button class="hub-mode-tab" id="tabModeCatalog" onclick="setHubMode('catalog')">
-                📋 Catálogo Rápido
-            </button>
         </div>
 
         <!-- Search Form -->
         <form class="hub-search-box" onsubmit="onHubSearch(event)">
-            <input type="text" id="hubSearchInput" placeholder="Buscar en Pornhub, XVideos, SpankBang, Eporner, XNXX, Beeg..." autocomplete="off">
+            <input type="text" id="hubSearchInput" placeholder="Buscar en 9 portales de videos..." autocomplete="off">
             <button type="submit">Buscar</button>
         </form>
 
         <!-- Provider Switcher Chips (9 Portales Adultos) -->
         <div class="hub-provider-bar">
             <button class="hub-prov-chip active" data-source="all" onclick="filterBySource('all')">
-                🔥 Todos los Portales
+                🔥 Todos
             </button>
             <button class="hub-prov-chip" data-source="pornhub" onclick="filterBySource('pornhub')">
                 🔞 Pornhub
@@ -795,6 +772,9 @@
             <button class="hub-prov-chip" data-source="xnxx" onclick="filterBySource('xnxx')">
                 ❌ XNXX
             </button>
+            <button class="hub-prov-chip" data-source="redgifs" onclick="filterBySource('redgifs')">
+                ⚡ RedGifs
+            </button>
             <button class="hub-prov-chip" data-source="beeg" onclick="filterBySource('beeg')">
                 🐝 Beeg
             </button>
@@ -804,173 +784,11 @@
             <button class="hub-prov-chip" data-source="redtube" onclick="filterBySource('redtube')">
                 🔴 RedTube
             </button>
-            <button class="hub-prov-chip" data-source="redgifs" onclick="filterBySource('redgifs')">
-                ⚡ RedGifs
-            </button>
         </div>
     </header>
 
-    <!-- 1. Direct Web Browser Section (Carga Directa de Webs Oficiales Sin APIs) -->
-    <section id="directWebSection" class="hub-direct-web-section">
-        <div class="hub-web-nav-bar">
-            <div class="hub-web-chips" id="hubWebChips">
-                <button class="hub-web-chip active" data-url="https://www.pornhub.com" onclick="switchDirectWeb('https://www.pornhub.com', this)">🔞 Pornhub</button>
-                <button class="hub-web-chip" data-url="https://www.xvideos.com" onclick="switchDirectWeb('https://www.xvideos.com', this)">🎬 XVideos</button>
-                <button class="hub-web-chip" data-url="https://spankbang.com" onclick="switchDirectWeb('https://spankbang.com', this)">💥 SpankBang</button>
-                <button class="hub-web-chip" data-url="https://www.eporner.com" onclick="switchDirectWeb('https://www.eporner.com', this)">🌟 Eporner</button>
-                <button class="hub-web-chip" data-url="https://www.xnxx.com" onclick="switchDirectWeb('https://www.xnxx.com', this)">❌ XNXX</button>
-                <button class="hub-web-chip" data-url="https://beeg.com" onclick="switchDirectWeb('https://beeg.com', this)">🐝 Beeg</button>
-                <button class="hub-web-chip" data-url="https://www.youporn.com" onclick="switchDirectWeb('https://www.youporn.com', this)">💜 YouPorn</button>
-                <button class="hub-web-chip" data-url="https://www.redtube.com" onclick="switchDirectWeb('https://www.redtube.com', this)">🔴 RedTube</button>
-                <button class="hub-web-chip" data-url="https://www.redgifs.com" onclick="switchDirectWeb('https://www.redgifs.com', this)">⚡ RedGifs</button>
-            </div>
-            <div class="hub-web-controls">
-                <button class="hub-web-btn" onclick="directWebBack()" title="Atrás">◀</button>
-                <button class="hub-web-btn" onclick="directWebForward()" title="Adelante">▶</button>
-                <button class="hub-web-btn" onclick="directWebReload()" title="Recargar">↻</button>
-                <button class="hub-web-btn hub-web-btn-open" onclick="directWebOpenNew()" title="Abrir en ventana independiente">⚡ Abrir Fuera</button>
-            </div>
-        </div>
-        <div class="hub-web-frame-wrap">
-            <div id="directWebLoader" class="hub-web-loader" style="display: none;">
-                <div class="hub-spinner"></div>
-                <span id="directWebLoadingText">Conectando al portal oficial...</span>
-            </div>
-            <iframe id="directWebFrame" src="https://www.pornhub.com" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" allow="autoplay; fullscreen; encrypted-media"></iframe>
-        </div>
-    </section>
-
-    <!-- 2. Multi-Instance Live Stream Grid (4 Streams Simultáneos Inteligentes) -->
-    <section id="multiInstanceOverlay" class="multi-instance-overlay" style="display: none;">
-        <div class="multi-instance-header">
-            <div class="multi-instance-title">
-                <span>⚡ Multi-Instancia Ultra Boost</span>
-                <span style="font-size: 11px; color: #a1a1aa; font-weight: 500;">(Carga inteligente escalonada 4x)</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <div class="multi-instance-presets">
-                    <button class="multi-preset-btn" id="btnPreset2" onclick="setMultiInstanceLayout(2)">2 Pantallas</button>
-                    <button class="multi-preset-btn active" id="btnPreset4" onclick="setMultiInstanceLayout(4)">4 Pantallas</button>
-                </div>
-                <button type="button" class="multi-preset-btn" onclick="openPipMode()" title="Reproducir en ventana flotante PiP">📱 PiP</button>
-                <button type="button" class="multi-preset-btn" onclick="openSeparateWindow()" title="Abrir en ventana independiente">⚡ Nueva Ventana</button>
-                <button type="button" class="multi-preset-btn" style="background: rgba(254,44,85,0.2); color: #fe2c55; border-color: #fe2c55;" onclick="toggleMultiInstanceGrid()">✕ Cerrar</button>
-            </div>
-        </div>
-
-        <div id="multiStreamGrid" class="multi-stream-grid grid-4">
-            <!-- Slot 1: Pornhub -->
-            <div class="multi-slot-card" id="slotCard_1">
-                <div class="multi-slot-toolbar">
-                    <span class="multi-slot-status" id="slotStatus_1">🟢 En Vivo (Slot 1)</span>
-                    <select class="multi-slot-select" id="slotSelect_1" onchange="changeSlotProvider(1, this.value)">
-                        <option value="pornhub" selected>Pornhub</option>
-                        <option value="xvideos">XVideos</option>
-                        <option value="spankbang">SpankBang</option>
-                        <option value="eporner">Eporner</option>
-                        <option value="xnxx">XNXX</option>
-                        <option value="beeg">Beeg</option>
-                        <option value="redtube">RedTube</option>
-                        <option value="youporn">YouPorn</option>
-                        <option value="redgifs">RedGifs</option>
-                    </select>
-                    <div style="display: flex; gap: 4px;">
-                        <button class="multi-slot-btn" onclick="randomizeSlot(1)" title="Video Aleatorio">🎲 Random</button>
-                        <button class="multi-slot-btn" id="audioBtn_1" onclick="toggleSlotAudio(1)" title="Activar/Desactivar Audio">🔇 Mute</button>
-                        <button class="multi-slot-btn" onclick="fullscreenSlot(1)" title="Pantalla Completa">⛶</button>
-                    </div>
-                </div>
-                <div class="multi-slot-video-box" id="slotBox_1">
-                    <div class="multi-slot-loader" id="slotLoader_1"><div class="hub-spinner"></div><span>Cargando Slot 1...</span></div>
-                    <iframe id="slotFrame_1" src="about:blank" data-src="https://www.pornhub.com/embed/65a83a21b8f01" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
-                </div>
-            </div>
-
-            <!-- Slot 2: XVideos -->
-            <div class="multi-slot-card" id="slotCard_2">
-                <div class="multi-slot-toolbar">
-                    <span class="multi-slot-status loading" id="slotStatus_2">⏳ En Espera</span>
-                    <select class="multi-slot-select" id="slotSelect_2" onchange="changeSlotProvider(2, this.value)">
-                        <option value="pornhub">Pornhub</option>
-                        <option value="xvideos" selected>XVideos</option>
-                        <option value="spankbang">SpankBang</option>
-                        <option value="eporner">Eporner</option>
-                        <option value="xnxx">XNXX</option>
-                        <option value="beeg">Beeg</option>
-                        <option value="redtube">RedTube</option>
-                        <option value="youporn">YouPorn</option>
-                        <option value="redgifs">RedGifs</option>
-                    </select>
-                    <div style="display: flex; gap: 4px;">
-                        <button class="multi-slot-btn" onclick="randomizeSlot(2)" title="Video Aleatorio">🎲 Random</button>
-                        <button class="multi-slot-btn" id="audioBtn_2" onclick="toggleSlotAudio(2)" title="Activar/Desactivar Audio">🔇 Mute</button>
-                        <button class="multi-slot-btn" onclick="fullscreenSlot(2)" title="Pantalla Completa">⛶</button>
-                    </div>
-                </div>
-                <div class="multi-slot-video-box" id="slotBox_2">
-                    <div class="multi-slot-loader" id="slotLoader_2"><div class="hub-spinner"></div><span>Cargando en segundo plano...</span></div>
-                    <iframe id="slotFrame_2" src="about:blank" data-src="https://www.xvideos.com/embedframe/74829103" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
-                </div>
-            </div>
-
-            <!-- Slot 3: SpankBang / RedTube -->
-            <div class="multi-slot-card" id="slotCard_3">
-                <div class="multi-slot-toolbar">
-                    <span class="multi-slot-status loading" id="slotStatus_3">⏳ En Espera</span>
-                    <select class="multi-slot-select" id="slotSelect_3" onchange="changeSlotProvider(3, this.value)">
-                        <option value="pornhub">Pornhub</option>
-                        <option value="xvideos">XVideos</option>
-                        <option value="spankbang" selected>SpankBang</option>
-                        <option value="eporner">Eporner</option>
-                        <option value="xnxx">XNXX</option>
-                        <option value="beeg">Beeg</option>
-                        <option value="redtube">RedTube</option>
-                        <option value="youporn">YouPorn</option>
-                        <option value="redgifs">RedGifs</option>
-                    </select>
-                    <div style="display: flex; gap: 4px;">
-                        <button class="multi-slot-btn" onclick="randomizeSlot(3)" title="Video Aleatorio">🎲 Random</button>
-                        <button class="multi-slot-btn" id="audioBtn_3" onclick="toggleSlotAudio(3)" title="Activar/Desactivar Audio">🔇 Mute</button>
-                        <button class="multi-slot-btn" onclick="fullscreenSlot(3)" title="Pantalla Completa">⛶</button>
-                    </div>
-                </div>
-                <div class="multi-slot-video-box" id="slotBox_3">
-                    <div class="multi-slot-loader" id="slotLoader_3"><div class="hub-spinner"></div><span>Cargando en segundo plano...</span></div>
-                    <iframe id="slotFrame_3" src="about:blank" data-src="https://spankbang.com/8390b/embed/" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
-                </div>
-            </div>
-
-            <!-- Slot 4: Eporner / RedGifs -->
-            <div class="multi-slot-card" id="slotCard_4">
-                <div class="multi-slot-toolbar">
-                    <span class="multi-slot-status loading" id="slotStatus_4">⏳ En Espera</span>
-                    <select class="multi-slot-select" id="slotSelect_4" onchange="changeSlotProvider(4, this.value)">
-                        <option value="pornhub">Pornhub</option>
-                        <option value="xvideos">XVideos</option>
-                        <option value="spankbang">SpankBang</option>
-                        <option value="eporner" selected>Eporner</option>
-                        <option value="xnxx">XNXX</option>
-                        <option value="beeg">Beeg</option>
-                        <option value="redtube">RedTube</option>
-                        <option value="youporn">YouPorn</option>
-                        <option value="redgifs">RedGifs</option>
-                    </select>
-                    <div style="display: flex; gap: 4px;">
-                        <button class="multi-slot-btn" onclick="randomizeSlot(4)" title="Video Aleatorio">🎲 Random</button>
-                        <button class="multi-slot-btn" id="audioBtn_4" onclick="toggleSlotAudio(4)" title="Activar/Desactivar Audio">🔇 Mute</button>
-                        <button class="multi-slot-btn" onclick="fullscreenSlot(4)" title="Pantalla Completa">⛶</button>
-                    </div>
-                </div>
-                <div class="multi-slot-video-box" id="slotBox_4">
-                    <div class="multi-slot-loader" id="slotLoader_4"><div class="hub-spinner"></div><span>Cargando en segundo plano...</span></div>
-                    <iframe id="slotFrame_4" src="about:blank" data-src="https://www.eporner.com/embed/dRtQ74J11aA/" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. Catalog Fast Feed Section (Opcional) -->
-    <section id="catalogSection" class="hub-catalog-section" style="display: none;">
+    <!-- Unified 9-Portal Video Catalog Feed -->
+    <section id="catalogSection" class="hub-catalog-section" style="display: block;">
 
     <!-- Category Quick Chips -->
     <div class="hub-cat-bar">
@@ -1059,8 +877,6 @@
     <!-- Hub Controller Script -->
     <script>
         const state = {
-            mode: 'web', // 'web' | 'stream' | 'catalog'
-            currentWebUrl: 'https://www.pornhub.com',
             source: 'all',
             category: '',
             query: '',
@@ -1070,338 +886,16 @@
         };
 
         const SOURCE_NAMES = {
-            all: 'Todos los Portales (9 Portales Oficiales)',
-            pornhub: 'Pornhub.com (Oficial)',
-            xvideos: 'XVideos.com (Oficial)',
+            all: 'Todos los Portales (9 Fuentes)',
+            pornhub: 'Pornhub (Oficial)',
+            xvideos: 'XVideos (Oficial)',
             spankbang: 'SpankBang (Oficial)',
             eporner: 'Eporner (Oficial)',
-            xnxx: 'XNXX.com (Oficial)',
-            beeg: 'Beeg.com (Oficial)',
-            youporn: 'YouPorn.com (Oficial)',
-            redtube: 'RedTube.com (Oficial)',
+            xnxx: 'XNXX (Oficial)',
+            beeg: 'Beeg (Oficial)',
+            youporn: 'YouPorn (Oficial)',
+            redtube: 'RedTube (Oficial)',
             redgifs: 'RedGifs (Shorts HD)'
-        };
-
-        const MULTI_PRESETS = {
-            pornhub: [
-                'https://www.pornhub.com/embed/65a83a21b8f01',
-                'https://www.pornhub.com/embed/64d7c81921a22',
-                'https://www.pornhub.com/embed/660ad1129b8c3'
-            ],
-            xvideos: [
-                'https://www.xvideos.com/embedframe/74829103',
-                'https://www.xvideos.com/embedframe/72910294',
-                'https://www.xvideos.com/embedframe/71829105'
-            ],
-            spankbang: [
-                'https://spankbang.com/8390b/embed/',
-                'https://spankbang.com/7912a/embed/',
-                'https://spankbang.com/6510f/embed/'
-            ],
-            eporner: [
-                'https://www.eporner.com/embed/dRtQ74J11aA/',
-                'https://www.eporner.com/embed/kL81902Ja1/',
-                'https://www.eporner.com/embed/98Xa0192la/'
-            ],
-            beeg: [
-                'https://beeg.com/54829103',
-                'https://beeg.com/1829104',
-                'https://beeg.com/9281920'
-            ],
-            xnxx: [
-                'https://www.xnxx.com/embedframe/63829104',
-                'https://www.xnxx.com/embedframe/62819205',
-                'https://www.xnxx.com/embedframe/61829106'
-            ],
-            youporn: [
-                'https://www.youporn.com/embed/15829105',
-                'https://www.youporn.com/embed/15920194',
-                'https://www.youporn.com/embed/16029183'
-            ],
-            redtube: [
-                'https://embed.redtube.com/?id=8492019',
-                'https://embed.redtube.com/?id=8501928',
-                'https://embed.redtube.com/?id=8512937'
-            ],
-            redgifs: [
-                'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1',
-                'https://www.redgifs.com/ifr/richwaterloggedchinchilla?autoplay=1',
-                'https://www.redgifs.com/ifr/foolhardyillustriousalbatross?autoplay=1'
-            ]
-        };
-
-        function setHubMode(mode) {
-            state.mode = mode;
-            const tabWeb = document.getElementById('tabModeDirectWeb');
-            const tabStream = document.getElementById('tabModeMultiStream');
-            const tabCat = document.getElementById('tabModeCatalog');
-            const secWeb = document.getElementById('directWebSection');
-            const secStream = document.getElementById('multiInstanceOverlay');
-            const secCat = document.getElementById('catalogSection');
-
-            if (tabWeb) tabWeb.classList.toggle('active', mode === 'web');
-            if (tabStream) tabStream.classList.toggle('active', mode === 'stream');
-            if (tabCat) tabCat.classList.toggle('active', mode === 'catalog');
-
-            if (mode === 'web') {
-                if (secWeb) secWeb.style.display = 'block';
-                if (secStream) secStream.style.display = 'none';
-                if (secCat) secCat.style.display = 'none';
-                stopAllMultiStreams();
-            } else if (mode === 'stream') {
-                if (secWeb) secWeb.style.display = 'none';
-                if (secStream) secStream.style.display = 'block';
-                if (secCat) secCat.style.display = 'none';
-                startProgressiveMultiStream();
-            } else if (mode === 'catalog') {
-                if (secWeb) secWeb.style.display = 'none';
-                if (secStream) secStream.style.display = 'none';
-                if (secCat) secCat.style.display = 'block';
-                stopAllMultiStreams();
-                if (state.items.length === 0) fetchHubVideos(true);
-            }
-        }
-        window.setHubMode = setHubMode;
-
-        // Direct Web Browser methods
-        function switchDirectWeb(url, btnEl) {
-            state.currentWebUrl = url;
-            document.querySelectorAll('.hub-web-chip').forEach(c => c.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
-
-            const loader = document.getElementById('directWebLoader');
-            const frame = document.getElementById('directWebFrame');
-            if (loader) loader.style.display = 'flex';
-            if (frame) {
-                frame.onload = () => {
-                    if (loader) loader.style.display = 'none';
-                };
-                frame.src = url;
-            }
-        }
-        window.switchDirectWeb = switchDirectWeb;
-
-        function directWebBack() {
-            const frame = document.getElementById('directWebFrame');
-            try {
-                if (frame && frame.contentWindow) frame.contentWindow.history.back();
-            } catch(e) {
-                if (frame) frame.src = state.currentWebUrl;
-            }
-        }
-        window.directWebBack = directWebBack;
-
-        function directWebForward() {
-            const frame = document.getElementById('directWebFrame');
-            try {
-                if (frame && frame.contentWindow) frame.contentWindow.history.forward();
-            } catch(e) {}
-        }
-        window.directWebForward = directWebForward;
-
-        function directWebReload() {
-            const frame = document.getElementById('directWebFrame');
-            const loader = document.getElementById('directWebLoader');
-            if (loader) loader.style.display = 'flex';
-            if (frame) {
-                const cur = frame.src;
-                frame.src = 'about:blank';
-                setTimeout(() => { frame.src = cur || state.currentWebUrl; }, 100);
-            }
-        }
-        window.directWebReload = directWebReload;
-
-        function directWebOpenNew() {
-            const frame = document.getElementById('directWebFrame');
-            const url = (frame && frame.src && frame.src !== 'about:blank') ? frame.src : state.currentWebUrl;
-            if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
-                window.AndroidApp.openNewInstance(url);
-            } else {
-                window.open(url, '_blank');
-            }
-        }
-        window.directWebOpenNew = directWebOpenNew;
-
-        // Intelligent Progressive Staged Multi-Stream Loader
-        let stagedLoadTimers = [];
-
-        function loadSlotStream(slotNum) {
-            const frame = document.getElementById(`slotFrame_${slotNum}`);
-            const loader = document.getElementById(`slotLoader_${slotNum}`);
-            const status = document.getElementById(`slotStatus_${slotNum}`);
-            if (!frame) return;
-
-            const targetUrl = frame.dataset.src || '';
-            if (!targetUrl) return;
-
-            if (status) {
-                status.textContent = `🟢 En Vivo (Slot ${slotNum})`;
-                status.classList.remove('loading');
-            }
-
-            frame.onload = () => {
-                if (loader) loader.style.opacity = '0';
-                setTimeout(() => { if (loader) loader.style.display = 'none'; }, 300);
-            };
-
-            frame.src = targetUrl;
-        }
-
-        function startProgressiveMultiStream() {
-            stagedLoadTimers.forEach(t => clearTimeout(t));
-            stagedLoadTimers = [];
-
-            // Reset all slot status & loaders
-            for (let i = 1; i <= 4; i++) {
-                const loader = document.getElementById(`slotLoader_${i}`);
-                const status = document.getElementById(`slotStatus_${i}`);
-                if (loader) {
-                    loader.style.display = 'flex';
-                    loader.style.opacity = '1';
-                }
-                if (status && i > 1) {
-                    status.textContent = '⏳ Cargando en segundo plano...';
-                    status.classList.add('loading');
-                }
-            }
-
-            // Staged schedule: Slot 1 plays immediately, Slot 2 at 600ms, Slot 3 at 1200ms, Slot 4 at 1800ms
-            loadSlotStream(1);
-            stagedLoadTimers.push(setTimeout(() => loadSlotStream(2), 600));
-            stagedLoadTimers.push(setTimeout(() => loadSlotStream(3), 1200));
-            stagedLoadTimers.push(setTimeout(() => loadSlotStream(4), 1800));
-        }
-
-        function stopAllMultiStreams() {
-            stagedLoadTimers.forEach(t => clearTimeout(t));
-            stagedLoadTimers = [];
-            for (let i = 1; i <= 4; i++) {
-                const frame = document.getElementById(`slotFrame_${i}`);
-                if (frame) frame.src = 'about:blank';
-            }
-        }
-
-        window.toggleMultiInstanceGrid = function() {
-            const overlay = document.getElementById('multiInstanceOverlay');
-            const btn = document.getElementById('btnMultiInstanceToggle');
-            if (!overlay) return;
-            const isVisible = overlay.style.display !== 'none';
-            if (isVisible) {
-                setHubMode('web');
-                if (btn) btn.classList.remove('active');
-            } else {
-                setHubMode('stream');
-                if (btn) btn.classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        window.setMultiInstanceLayout = function(count) {
-            const slot3 = document.getElementById('slotCard_3');
-            const slot4 = document.getElementById('slotCard_4');
-            const btn2 = document.getElementById('btnPreset2');
-            const btn4 = document.getElementById('btnPreset4');
-
-            if (count === 2) {
-                if (slot3) slot3.style.display = 'none';
-                if (slot4) slot4.style.display = 'none';
-                if (btn2) btn2.classList.add('active');
-                if (btn4) btn4.classList.remove('active');
-            } else {
-                if (slot3) slot3.style.display = 'flex';
-                if (slot4) slot4.style.display = 'flex';
-                if (btn2) btn2.classList.remove('active');
-                if (btn4) btn4.classList.add('active');
-            }
-        };
-
-        window.changeSlotProvider = function(slotNum, prov) {
-            const frame = document.getElementById(`slotFrame_${slotNum}`);
-            const loader = document.getElementById(`slotLoader_${slotNum}`);
-            if (!frame) return;
-            const urls = MULTI_PRESETS[prov] || MULTI_PRESETS.pornhub;
-            const nextUrl = urls[Math.floor(Math.random() * urls.length)];
-            frame.dataset.src = nextUrl;
-            if (loader) {
-                loader.style.display = 'flex';
-                loader.style.opacity = '1';
-            }
-            loadSlotStream(slotNum);
-        };
-
-        window.randomizeSlot = function(slotNum) {
-            const sel = document.getElementById(`slotSelect_${slotNum}`);
-            const prov = sel ? sel.value : 'pornhub';
-            window.changeSlotProvider(slotNum, prov);
-        };
-
-        window.toggleSlotAudio = function(slotNum) {
-            for (let i = 1; i <= 4; i++) {
-                const card = document.getElementById(`slotCard_${i}`);
-                const btn = document.getElementById(`audioBtn_${i}`);
-                const frame = document.getElementById(`slotFrame_${i}`);
-                if (i === slotNum) {
-                    const isMuted = btn.textContent.includes('Mute');
-                    if (isMuted) {
-                        btn.textContent = '🔊 Audio';
-                        btn.classList.add('audio-on');
-                        if (card) card.classList.add('active-audio');
-                        if (frame && frame.contentWindow) {
-                            try {
-                                frame.contentWindow.postMessage('{"event":"command","func":"unMute"}', '*');
-                                frame.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[100]}', '*');
-                            } catch (e) {}
-                        }
-                    } else {
-                        btn.textContent = '🔇 Mute';
-                        btn.classList.remove('audio-on');
-                        if (card) card.classList.remove('active-audio');
-                        if (frame && frame.contentWindow) {
-                            try {
-                                frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
-                            } catch (e) {}
-                        }
-                    }
-                } else {
-                    if (btn) {
-                        btn.textContent = '🔇 Mute';
-                        btn.classList.remove('audio-on');
-                    }
-                    if (card) card.classList.remove('active-audio');
-                    if (frame && frame.contentWindow) {
-                        try {
-                            frame.contentWindow.postMessage('{"event":"command","func":"mute"}', '*');
-                        } catch (e) {}
-                    }
-                }
-            }
-        };
-
-        window.fullscreenSlot = function(slotNum) {
-            const frame = document.getElementById(`slotFrame_${slotNum}`);
-            if (frame) {
-                if (frame.requestFullscreen) frame.requestFullscreen();
-                else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-            }
-        };
-
-        window.openSeparateWindow = function() {
-            if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
-                window.AndroidApp.openNewInstance('hub.html');
-            } else {
-                window.open('hub.html', '_blank');
-            }
-        };
-
-        window.openPipMode = function() {
-            if (window.AndroidApp && typeof window.AndroidApp.enterPipMode === 'function') {
-                const ok = window.AndroidApp.enterPipMode();
-                if (!ok) {
-                    if (typeof showToast === 'function') showToast('Modo PiP flotante no soportado en este dispositivo');
-                }
-            } else {
-                if (typeof showToast === 'function') showToast('PiP flotante disponible en app All18 Android');
-            }
         };
 
         function initHub() {
@@ -1409,7 +903,6 @@
             const q = params.get('q');
             const s = params.get('source');
             const c = params.get('category');
-            const mode = params.get('mode');
 
             if (q) {
                 state.query = q;
@@ -1420,15 +913,7 @@
             if (c) state.category = c;
 
             updateActiveChips();
-
-            if (mode === 'stream') {
-                setHubMode('stream');
-            } else if (mode === 'catalog' || q || c || (s && s !== 'all')) {
-                setHubMode('catalog');
-                fetchHubVideos(true);
-            } else {
-                setHubMode('web');
-            }
+            fetchHubVideos(true);
         }
 
         function updateActiveChips() {
@@ -1450,27 +935,7 @@
             state.source = src;
             state.page = 1;
             updateActiveChips();
-
-            // Synchronize direct web selector if in web mode
-            const webUrls = {
-                pornhub: 'https://www.pornhub.com',
-                xvideos: 'https://www.xvideos.com',
-                spankbang: 'https://spankbang.com',
-                eporner: 'https://www.eporner.com',
-                xnxx: 'https://www.xnxx.com',
-                beeg: 'https://beeg.com',
-                youporn: 'https://www.youporn.com',
-                redtube: 'https://www.redtube.com',
-                redgifs: 'https://www.redgifs.com'
-            };
-
-            if (state.mode === 'web' && webUrls[src]) {
-                const chip = document.querySelector(`.hub-web-chip[data-url="${webUrls[src]}"]`);
-                switchDirectWeb(webUrls[src], chip);
-            } else {
-                setHubMode('catalog');
-                fetchHubVideos(true);
-            }
+            fetchHubVideos(true);
 
             if (window.AndroidApp && window.AndroidApp.vibrate) {
                 window.AndroidApp.vibrate(20);
@@ -1481,7 +946,6 @@
             state.category = cat;
             state.page = 1;
             updateActiveChips();
-            setHubMode('catalog');
             fetchHubVideos(true);
             if (window.AndroidApp && window.AndroidApp.vibrate) {
                 window.AndroidApp.vibrate(20);
@@ -1494,7 +958,6 @@
             state.query = input ? input.value.trim() : '';
             state.page = 1;
             updateActiveChips();
-            setHubMode('catalog');
             fetchHubVideos(true);
         }
 

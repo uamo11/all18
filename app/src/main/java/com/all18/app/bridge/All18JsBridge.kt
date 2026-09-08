@@ -16,7 +16,7 @@ class All18JsBridge(private val activity: MainActivity) {
     fun isNativeApp(): Boolean = true
 
     @JavascriptInterface
-    fun getAppVersion(): String = "1.3.1"
+    fun getAppVersion(): String = "1.3.2"
 
     @JavascriptInterface
     fun isMultiInstanceSupported(): Boolean = true

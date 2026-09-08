@@ -127,23 +127,32 @@ body.twitter-standalone-body {
     max-width: 600px !important;
     margin: 0 auto !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
-    justify-content: space-around !important;
+    justify-content: space-between !important;
     height: 48px !important;
     padding: 0 !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
 }
+.x-tabs-bar::-webkit-scrollbar { display: none !important; }
 
 .x-tab-btn {
-    flex: 1 !important;
+    flex: 1 0 auto !important;
     height: 100% !important;
     background: transparent !important;
     border: none !important;
     color: #71767b !important;
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
+    padding: 0 14px !important;
+    white-space: nowrap !important;
     position: relative !important;
     cursor: pointer !important;
     transition: background-color 0.15s ease, color 0.15s ease !important;
@@ -340,6 +349,8 @@ body[data-theme="twitter"] .x-post-header {
 
 body[data-theme="twitter"] .x-author-meta {
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 4px !important;
     overflow: hidden !important;
@@ -473,25 +484,30 @@ body[data-theme="twitter"] .duration-badge {
    ========================================== */
 body[data-theme="twitter"] .x-action-bar {
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    padding-top: 2px !important;
+    padding-top: 4px !important;
     color: #71767b !important;
     box-sizing: border-box !important;
 }
 
 body[data-theme="twitter"] .x-action-item {
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 6px !important;
-    font-size: 12.5px !important;
+    gap: 4px !important;
+    font-size: 12px !important;
     color: #71767b !important;
     cursor: pointer !important;
     background: transparent !important;
     border: none !important;
-    padding: 6px 4px !important;
+    padding: 6px 3px !important;
     border-radius: 9999px !important;
+    white-space: nowrap !important;
     transition: color 0.15s ease, background-color 0.15s ease !important;
 }
 

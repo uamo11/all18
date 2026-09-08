@@ -129,29 +129,44 @@ class All18UnitTest {
             "https://serve.popads.net/serve.js",
             "https://creative.stripcdn.com/banner.mp4",
             "https://chaturbate.com/affiliates/in/?track=default",
-            "https://engine.phncdn.com/as.js"
+            "https://delivery.adsterra.com/ad.js",
+            "https://ad.hilltopads.net/track"
         )
 
         for (urlStr in blockedUrls) {
             val host = URI(urlStr).host ?: ""
-            val isBlocked = All18ApiInterceptor.AD_DOMAINS.any { host.contains(it) }
+            val isBlocked = All18ApiInterceptor.isAdHost(host)
             assertTrue("Should block ad network: $urlStr", isBlocked)
         }
 
         val allowedUrls = listOf(
             "https://www.pornhub.com/embed/ph65a83a21b8f01",
+            "https://ci.phncdn.com/videos/202401/15/sample.jpg",
+            "https://engine.phncdn.com/player/video.mp4",
             "https://www.xvideos.com/embedframe/74829103",
+            "https://img-hw.xvideos-cdn.com/videos/thumbs169poster/sample.jpg",
             "https://www.xnxx.com/embedframe/63829104",
+            "https://img-hw.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg",
             "https://www.eporner.com/embed/cIG0retUIzC/",
             "https://spankbang.com/7849102/embed/",
-            "https://media.redgifs.com/sample.mp4"
+            "https://sb-cd.com/video.mp4",
+            "https://media.redgifs.com/sample.mp4",
+            "https://www.redtube.com/12345",
+            "https://www.youporn.com/watch/67890",
+            "https://beeg.com/123"
         )
 
         for (urlStr in allowedUrls) {
             val host = URI(urlStr).host ?: ""
-            val isBlocked = All18ApiInterceptor.AD_DOMAINS.any { host.contains(it) }
+            val isBlocked = All18ApiInterceptor.isAdHost(host)
             assertFalse("Should allow video provider: $urlStr", isBlocked)
         }
+
+        // Verify VIDEO_SAFE_HOSTS completeness
+        assertTrue("pornhub.com should be in VIDEO_SAFE_HOSTS", All18ApiInterceptor.VIDEO_SAFE_HOSTS.contains("pornhub.com"))
+        assertTrue("phncdn.com should be in VIDEO_SAFE_HOSTS", All18ApiInterceptor.VIDEO_SAFE_HOSTS.contains("phncdn.com"))
+        assertTrue("xvideos-cdn.com should be in VIDEO_SAFE_HOSTS", All18ApiInterceptor.VIDEO_SAFE_HOSTS.contains("xvideos-cdn.com"))
+        assertTrue("xnxx-cdn.com should be in VIDEO_SAFE_HOSTS", All18ApiInterceptor.VIDEO_SAFE_HOSTS.contains("xnxx-cdn.com"))
     }
 
     @Test
@@ -216,5 +231,28 @@ class All18UnitTest {
 
         val finalRankedScore = engagementScore * decay
         assertEquals(175.5, finalRankedScore, 0.001)
+    }
+
+    @Test
+    fun testPublicShareUrlResolution() {
+        fun getPublicShareUrl(embedUrl: String, rawId: String, source: String): String {
+            val src = source.lowercase()
+            return when {
+                src.contains("pornhub") -> "https://www.pornhub.com/view_video.php?viewkey=$rawId"
+                src.contains("xvideos") -> "https://www.xvideos.com/video.$rawId/"
+                src.contains("xnxx") -> "https://www.xnxx.com/video-$rawId/"
+                src.contains("spankbang") -> "https://spankbang.com/$rawId/video/"
+                src.contains("eporner") -> "https://www.eporner.com/video/$rawId/"
+                src.contains("redgifs") -> "https://www.redgifs.com/watch/$rawId"
+                src.contains("redtube") -> "https://www.redtube.com/$rawId"
+                src.contains("youporn") -> "https://www.youporn.com/watch/$rawId/"
+                else -> embedUrl
+            }
+        }
+
+        assertEquals("https://www.pornhub.com/view_video.php?viewkey=65a83a21b8f01", getPublicShareUrl("https://www.pornhub.com/embed/65a83a21b8f01", "65a83a21b8f01", "Pornhub"))
+        assertEquals("https://www.xvideos.com/video.ubmkpe1b0ad/", getPublicShareUrl("https://www.xvideos.com/embedframe/ubmkpe1b0ad", "ubmkpe1b0ad", "XVideos"))
+        assertEquals("https://www.xnxx.com/video-63829104/", getPublicShareUrl("https://www.xnxx.com/embedframe/63829104", "63829104", "XNXX"))
+        assertFalse("Share URL must not be internal asset path", getPublicShareUrl("https://www.pornhub.com/embed/65a83a21b8f01", "65a83a21b8f01", "Pornhub").contains("appassets.androidplatform.net"))
     }
 }

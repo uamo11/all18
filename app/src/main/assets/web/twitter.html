@@ -34,16 +34,8 @@
                 </svg>
             </a>
 
-            <!-- Right: Suscribirse & Theme/Settings -->
+            <!-- Right: Settings -->
             <div class="x-header-actions">
-                <button class="x-btn-settings" type="button" title="Abrir en Nueva Instancia / Ventana" onclick="window.openNewInstance ? window.openNewInstance('twitter.html') : window.open('twitter.html', '_blank')">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
-                    </svg>
-                </button>
-                <button class="x-btn-subscribe" type="button" onclick="window.openPublishModal && window.openPublishModal()">
-                    Suscribirse
-                </button>
                 <button class="x-btn-settings" type="button" title="Configuración y Temas" onclick="window.openThemeModal(event)">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                         <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
@@ -52,7 +44,7 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs ("Para ti" | "Siguiendo" | "📸 Fotos Hot / Hentai" | "Virgin NSFW 18+") -->
+        <!-- Navigation Tabs ("Para ti" | "Siguiendo" | "📸 Fotos" | "🔥 NSFW") -->
         <nav class="x-tabs-bar">
             <button class="x-tab-btn active" type="button" onclick="window.switchXTab('foryou', this)">
                 <span>Para ti</span>
@@ -61,27 +53,13 @@
                 <span>Siguiendo</span>
             </button>
             <button class="x-tab-btn" type="button" onclick="window.switchXTab('photos', this)">
-                <span>📸 Fotos Hot / Hentai</span>
+                <span>📸 Fotos</span>
             </button>
             <button class="x-tab-btn" type="button" onclick="window.switchXTab('nsfw', this)">
-                <span>Virgin NSFW (18+)</span>
+                <span>🔥 NSFW</span>
             </button>
         </nav>
     </header>
-
-    <!-- Spaces Live Audio Pill Banner -->
-    <div class="x-spaces-banner-wrapper">
-        <div class="x-spaces-pill">
-            <div class="x-spaces-avatar-mini">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%231d9bf0'/%3E%3Cpath d='M16 8v16m-5-12v8m10-8v8' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E" alt="live" />
-                <span class="x-spaces-dot"></span>
-            </div>
-            <span class="x-spaces-title"><strong>@All18Exclusive</strong> Sala en Vivo</span>
-            <div class="x-spaces-wave">
-                <span></span><span></span><span></span><span></span>
-            </div>
-        </div>
-    </div>
 
     <!-- Timeline Main Wrapper -->
     <div class="main-wrapper">

@@ -200,23 +200,17 @@
                     </div>
                 </div>
 
-                <!-- Cinema Player Pro Quick Toolbar (v1.3.1) -->
+                <!-- Cinema Player Pro Quick Toolbar (Clean AMOLED) -->
                 <div class="player-pro-toolbar">
                     <div class="pro-tools-left">
-                        <button type="button" class="btn-pro-tool" title="Retroceder 10 segundos" onclick="window.seekVideo && window.seekVideo(-10)">
-                            <span>⏪</span> -10s
-                        </button>
-                        <button type="button" class="btn-pro-tool" title="Adelantar 10 segundos" onclick="window.seekVideo && window.seekVideo(10)">
-                            <span>⏩</span> +10s
-                        </button>
                         <button type="button" id="btnSpeedSelector" class="btn-pro-tool" title="Velocidad de reproducción" onclick="window.cyclePlaybackSpeed && window.cyclePlaybackSpeed()">
                             <span>⚡</span> <span id="speedValueLabel">1.0x</span>
                         </button>
-                    </div>
-                    <div class="pro-tools-right">
                         <button type="button" class="btn-pro-tool" title="Girar Pantalla (Sensor Landscape / Portrait)" onclick="window.togglePlayerOrientation && window.togglePlayerOrientation()">
                             <span>🔄</span> Girar
                         </button>
+                    </div>
+                    <div class="pro-tools-right">
                         <button type="button" id="btnSleepTimer" class="btn-pro-tool" title="Temporizador de Sueño" onclick="window.openSleepTimerModal && window.openSleepTimerModal()">
                             <span>💤</span> <span id="sleepTimerBadge">Dormir</span>
                         </button>
@@ -259,9 +253,6 @@
                             </button>
                             <button type="button" id="watchPipBtn" class="btn-watch-action" onclick="window.requestPipMode && window.requestPipMode()" title="Ventana flotante PiP">
                                 <span>📱</span> PiP
-                            </button>
-                            <button type="button" id="watchNewInstBtn" class="btn-watch-action" onclick="window.openVideoInNewInstance && window.openVideoInNewInstance()" title="Abrir video en nueva ventana independiente">
-                                <span>⚡</span> Nueva Ventana
                             </button>
                         </div>
                     </div>
