@@ -308,6 +308,13 @@
             document.querySelectorAll('.x-tab-btn').forEach(b => b.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
 
+            // Reset scroll position immediately to the top on tab switch
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) mainContent.scrollTop = 0;
+
             if (tabName === 'foryou') {
                 window.state.source = 'all';
                 window.state.query = '';

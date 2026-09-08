@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-        // Custom User Agent (v1.4.1 Ultra Fast Feed Caching & Fix)
+        // Custom User Agent (v1.4.2 Ultra Fast Feed Caching & Fix)
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.4.1"
+        settings.userAgentString = "$defaultUa All18App/1.4.2"
         settings.setSupportMultipleWindows(true)
 
         // Hardware acceleration
@@ -209,6 +209,19 @@ class MainActivity : AppCompatActivity() {
                             return true
                         }
                         try {
+                            if (target.contains("redgifs.com/watch/") || target.contains("redgifs.com/ifr/")) {
+                                val rawId = target.substringAfter("watch/").substringBefore("?").substringBefore("/").trim()
+                                if (rawId.isNotBlank()) {
+                                    binding.webView.post {
+                                        binding.webView.evaluateJavascript(
+                                            "if(window.openWatchCinemaItem){ window.openWatchCinemaItem('rg_$rawId'); } else { window.location.href = 'watch.html?id=rg_$rawId'; }",
+                                            null
+                                        )
+                                    }
+                                }
+                                return true
+                            }
+
                             if (target.startsWith("https://appassets.androidplatform.net") ||
                                 target.startsWith("file:///android_asset") ||
                                 target.endsWith(".html") ||
@@ -223,8 +236,11 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 startActivity(intent)
                             } else if (isUserGesture && (target.startsWith("http://") || target.startsWith("https://"))) {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(target))
-                                startActivity(intent)
+                                // Block external browser launch for embedded video platforms
+                                if (!target.contains("redgifs.com") && !target.contains("pornhub.com") && !target.contains("xvideos.com") && !target.contains("xnxx.com") && !target.contains("youporn.com")) {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(target))
+                                    startActivity(intent)
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e("All18", "Error handling auxiliary window url: ${e.message}")

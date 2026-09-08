@@ -52,8 +52,11 @@
                 <span class="ph-logo-text">All</span><span class="ph-logo-badge">Tube</span>
             </a>
 
-            <!-- Right: Search + Multi-Instance + Profile / Login -->
+            <!-- Right: Grid Switcher + Search + Multi-Instance + Profile / Login -->
             <div class="ph-header-right">
+                <button class="ph-search-btn btn-grid-density" type="button" title="Cambiar cuadrícula (1, 2, 3 columnas)" onclick="window.cycleGridDensity && window.cycleGridDensity()">
+                    <span class="density-icon" style="font-size: 15px;">▦</span>
+                </button>
                 <button class="ph-search-btn" type="button" title="Abrir en Nueva Instancia / Ventana" onclick="window.openNewInstance ? window.openNewInstance('index.html') : window.open('index.html', '_blank')">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                         <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>

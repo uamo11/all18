@@ -171,6 +171,11 @@ class All18ApiInterceptor(private val context: Context) {
             reqBuilder.header("Origin", "https://www.redgifs.com")
             reqBuilder.header("User-Agent", REDGIFS_UA)
 
+            val token = getRedGifsToken()
+            if (!token.isNullOrEmpty()) {
+                reqBuilder.header("Authorization", "Bearer $token")
+            }
+
             val resp = mediaClient.newCall(reqBuilder.build()).execute()
 
             val contentType = resp.header("Content-Type") ?: if (url.contains(".mp4")) "video/mp4" else "image/jpeg"
@@ -362,6 +367,10 @@ class All18ApiInterceptor(private val context: Context) {
             "youporn" -> {
                 val ypItems = fetchYouPorn(queryTerm, page)
                 for (i in 0 until ypItems.length()) allItems.put(ypItems.getJSONObject(i))
+                if (allItems.length() == 0) {
+                    val fallbackItems = getCuratedFallbackVideos("youporn")
+                    for (i in 0 until fallbackItems.length()) allItems.put(fallbackItems.getJSONObject(i))
+                }
             }
             "eporner" -> {
                 val epItems = fetchEporner(queryTerm, page)
@@ -371,8 +380,8 @@ class All18ApiInterceptor(private val context: Context) {
                 val fallbackItems = getCuratedFallbackVideos(source)
                 for (i in 0 until fallbackItems.length()) allItems.put(fallbackItems.getJSONObject(i))
             }
-            else -> { // "all" - Concurrent parallel queries across all 7 networks
-                val executor = Executors.newFixedThreadPool(7)
+            else -> { // "all" - Concurrent parallel queries across 8 networks (including HD photos for social feed)
+                val executor = Executors.newFixedThreadPool(8)
                 val fPH = executor.submit(Callable { fetchPornhub(queryTerm, page, filter) })
                 val fXV = executor.submit(Callable { fetchXVideos(queryTerm, page) })
                 val fXN = executor.submit(Callable { fetchXNXX(queryTerm, page) })
@@ -380,6 +389,7 @@ class All18ApiInterceptor(private val context: Context) {
                 val fYP = executor.submit(Callable { fetchYouPorn(queryTerm, page) })
                 val fRT = executor.submit(Callable { fetchRedTube(queryTerm, page) })
                 val fRG = executor.submit(Callable { fetchRedGifs(queryTerm, page) })
+                val fPT = executor.submit(Callable { fetchPhotos(queryTerm, "", page) })
 
                 val deadline = System.currentTimeMillis() + 3500L
                 fun getRemaining() = maxOf(100L, deadline - System.currentTimeMillis())
@@ -391,9 +401,11 @@ class All18ApiInterceptor(private val context: Context) {
                 val ypItems = try { fYP.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
                 val rtItems = try { fRT.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
                 val rgItems = try { fRG.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
+                val ptItems = try { fPT.get(getRemaining(), TimeUnit.MILLISECONDS) } catch (e: Exception) { JSONArray() }
                 executor.shutdownNow()
 
                 val maxLen = maxOf(phItems.length(), xvItems.length(), xnItems.length(), epItems.length(), ypItems.length(), rtItems.length(), rgItems.length())
+                var ptIdx = 0
                 for (i in 0 until maxLen) {
                     if (i < phItems.length()) allItems.put(phItems.getJSONObject(i))
                     if (i < xvItems.length()) allItems.put(xvItems.getJSONObject(i))
@@ -402,6 +414,10 @@ class All18ApiInterceptor(private val context: Context) {
                     if (i < ypItems.length()) allItems.put(ypItems.getJSONObject(i))
                     if (i < rtItems.length()) allItems.put(rtItems.getJSONObject(i))
                     if (i < rgItems.length()) allItems.put(rgItems.getJSONObject(i))
+                    // Interleave 1 HD photo every 3 items if available for rich social feed
+                    if (ptIdx < ptItems.length()) {
+                        allItems.put(ptItems.getJSONObject(ptIdx++))
+                    }
                 }
             }
         }
@@ -431,12 +447,19 @@ class All18ApiInterceptor(private val context: Context) {
             Triple("ph_65a83a21b8f01", "Pornhub", "Sensual Latina Exclusiva"),
             Triple("xv_74829103", "XVideos", "Casero Ardiente HD"),
             Triple("xn_63829104", "XNXX", "Top Model Colección Especial"),
-            Triple("yp_15829105", "YouPorn", "Pasión Intensa Estudio"),
+            Triple("yp_190113161", "YouPorn", "Morena Ardiente Sensual HD"),
+            Triple("yp_200002091", "YouPorn", "Colegiala Pasión Exclusiva"),
+            Triple("yp_223621841", "YouPorn", "Amateur Latina Casero Real"),
+            Triple("yp_191812201", "YouPorn", "Top Model Glamour Sensual"),
+            Triple("yp_260653471", "YouPorn", "Trío Intenso Noche Salvaje"),
+            Triple("yp_15829105", "YouPorn", "Pasión Intensa Estudio HD"),
+            Triple("yp_14892011", "YouPorn", "Sensual Masaje Tailandés HD"),
+            Triple("yp_16239104", "YouPorn", "Romance Ardiente Pareja Real"),
             Triple("rt_8492019", "RedTube", "Trío Salvaje Exclusivo"),
             Triple("rg_sprycaringafricangroundhornbill", "RedGifs", "Short Hot Viral Loop"),
             Triple("sb_7849102", "SpankBang", "Top Latina Glamour 4K"),
             Triple("bg_9182301", "Beeg", "Sensual Ultra HD Collection"),
-            Triple("ep_cIG0retUIzC", "Eporner", "Exclusivo Pure 1080p 60fps")
+            Triple("ep_cIG0retUIzC", "Eporner", "Exclusivo Pure 1080p HD")
         )
         for ((id, src, title) in baseItems) {
             if (source != "all" && !source.equals(src, ignoreCase = true)) continue
@@ -573,7 +596,7 @@ class All18ApiInterceptor(private val context: Context) {
                     put("embed_url", "https://www.redgifs.com/ifr/$rawId?autoplay=1")
                     put("source", "RedGifs")
                     put("type", "short")
-                    put("quality", "1080p 60fps")
+                    put("quality", "1080p HD")
                 }
             }
             id.startsWith("yd_") || id.startsWith("kc_") || id.startsWith("sf_") -> {
@@ -614,7 +637,7 @@ class All18ApiInterceptor(private val context: Context) {
                     put("media_url", "")
                     put("source", "Eporner")
                     put("type", "video")
-                    put("quality", "1080p 60fps")
+                    put("quality", "1080p HD")
                 }
             }
             id.startsWith("sb_") -> {
@@ -763,8 +786,14 @@ class All18ApiInterceptor(private val context: Context) {
         val list = JSONArray()
         val token = getRedGifsToken() ?: return list
 
-        val cleanQuery = if (query.isBlank()) "hot" else query
-        val url = "https://api.redgifs.com/v2/gifs/search?search_text=${Uri.encode(cleanQuery)}&count=24&page=$page&order=trending"
+        val defaultTags = listOf("trending", "latina", "amateur", "cosplay", "dance", "hot", "model", "fitness", "asian", "babe")
+        val cleanQuery = if (query.isBlank() || query.equals("trending", ignoreCase = true) || query.equals("hot", ignoreCase = true)) {
+            defaultTags[(page - 1).coerceAtLeast(0) % defaultTags.size]
+        } else query.trim()
+        val effectivePage = if (query.isBlank() || query.equals("trending", ignoreCase = true) || query.equals("hot", ignoreCase = true)) {
+            ((page - 1).coerceAtLeast(0) / defaultTags.size) + 1
+        } else page
+        val url = "https://api.redgifs.com/v2/gifs/search?search_text=${Uri.encode(cleanQuery)}&count=24&page=$effectivePage&order=trending"
 
         try {
             val req = Request.Builder()
@@ -842,7 +871,7 @@ class All18ApiInterceptor(private val context: Context) {
                 item.put("embed_url", "https://www.redgifs.com/ifr/$gid?autoplay=1")
                 item.put("source", "RedGifs")
                 item.put("type", "short")
-                item.put("quality", "1080p 60fps")
+                item.put("quality", "1080p HD")
                 list.put(item)
             }
         } catch (e: Exception) {
@@ -1039,65 +1068,76 @@ class All18ApiInterceptor(private val context: Context) {
                 .build()
 
             val resp = client.newCall(req).execute()
-            val html = resp.body?.string() ?: return list
+            val html = resp.body?.string() ?: ""
 
-            val articleRegex = Pattern.compile("""<article[^>]+data-video-id="(\d+)"[^>]*>(.*?)</article>""", Pattern.DOTALL)
-            val matcher = articleRegex.matcher(html)
+            if (html.contains("data-video-id=\"")) {
+                val chunks = html.split("data-video-id=\"")
+                for (cIdx in 1 until chunks.size) {
+                    val chunk = chunks[cIdx]
+                    val vid = chunk.substringBefore("\"").trim()
+                    if (vid.isEmpty() || !vid.all { it.isDigit() }) continue
 
-            val titlePattern = Pattern.compile("""class="video-title-text[^"]*"[^>]*>.*?<span>(.*?)</span>|aria-label="([^"]+)"""", Pattern.DOTALL)
-            val thumbPattern = Pattern.compile("""<img[^>]+(?:data-poster|data-src)="([^"]+)"""")
-            val durPattern = Pattern.compile("""class="video-duration[^"]*"[^>]*>.*?<span>([^<]+)</span>""", Pattern.DOTALL)
+                    val cardContent = chunk.substring(0, minOf(chunk.length, 2500))
 
-            while (matcher.find()) {
-                val vid = matcher.group(1) ?: continue
-                val cardContent = matcher.group(2) ?: continue
-                val fullTag = matcher.group(0) ?: ""
+                    val titleMatcher = Pattern.compile("""class="video-title-text[^"]*"[^>]*>\s*<span>([^<]+)</span>|aria-label="([^"]+)"""", Pattern.DOTALL).matcher(cardContent)
+                    val rawTitle = if (titleMatcher.find()) {
+                        titleMatcher.group(1) ?: titleMatcher.group(2) ?: "Video YouPorn"
+                    } else "Video YouPorn"
+                    val title = cleanHtmlText(rawTitle)
 
-                val tM = titlePattern.matcher(cardContent)
-                val rawTitle = if (tM.find()) {
-                    tM.group(1) ?: tM.group(2) ?: "Video YouPorn"
-                } else {
-                    val labelM = Pattern.compile("""aria-label="([^"]+)"""").matcher(fullTag)
-                    if (labelM.find()) {
-                        labelM.group(1) ?: "Video YouPorn"
-                    } else {
-                        "Video YouPorn"
+                    val thumbMatcher = Pattern.compile("""(?:data-poster|data-src)="([^"]+)"""").matcher(cardContent)
+                    val rawThumb = if (thumbMatcher.find()) thumbMatcher.group(1)?.trim() ?: "" else ""
+                    val thumb = when {
+                        rawThumb.startsWith("//") -> "https:$rawThumb"
+                        rawThumb.isNotBlank() -> rawThumb
+                        else -> AMOLED_DEFAULT_POSTER
                     }
-                }
-                val title = Html.fromHtml(rawTitle.trim(), Html.FROM_HTML_MODE_LEGACY).toString()
 
-                val thM = thumbPattern.matcher(cardContent)
-                val rawThumb = if (thM.find()) thM.group(1)?.trim() ?: "" else ""
-                val thumb = when {
-                    rawThumb.startsWith("//") -> "https:$rawThumb"
-                    rawThumb.isNotBlank() -> rawThumb
-                    else -> AMOLED_DEFAULT_POSTER
-                }
+                    val mediaMatcher = Pattern.compile("""data-mediabook="([^"]+)"""").matcher(cardContent)
+                    val previewVideo = if (mediaMatcher.find()) {
+                        mediaMatcher.group(1)?.replace("&amp;", "&") ?: ""
+                    } else ""
 
-                val dM = durPattern.matcher(cardContent)
-                val duration = if (dM.find()) dM.group(1)?.trim() ?: "11:30" else "11:30"
+                    val durMatcher = Pattern.compile("""class="video-duration[^"]*"[^>]*>\s*<span>([^<]+)</span>""", Pattern.DOTALL).matcher(cardContent)
+                    val duration = if (durMatcher.find()) durMatcher.group(1)?.trim() ?: "11:30" else "11:30"
 
-                val item = JSONObject().apply {
-                    put("id", "yp_$vid")
-                    put("raw_id", vid)
-                    put("title", title)
-                    put("duration", duration)
-                    put("views", "220K vistas")
-                    put("rating", "96%")
-                    put("author", "@YouPornStar")
-                    put("thumb", thumb)
-                    put("thumbs", JSONArray().apply { put(thumb); put(AMOLED_DEFAULT_POSTER) })
-                    put("url", "https://www.youporn.com/watch/$vid/")
-                    put("embed_url", "https://www.youporn.com/embed/$vid")
-                    put("media_url", "")
-                    put("source", "YouPorn")
-                    put("type", "video")
-                    put("quality", "1080p HD")
+                    val authorMatcher = Pattern.compile("""class="author-title-text\s*"[^>]*>([^<]+)</a>""").matcher(cardContent)
+                    val author = if (authorMatcher.find()) authorMatcher.group(1)?.trim() ?: "YouPornStar" else "YouPornStar"
+
+                    val item = JSONObject().apply {
+                        put("id", "yp_$vid")
+                        put("raw_id", vid)
+                        put("title", title)
+                        put("duration", duration)
+                        put("views", "220K vistas")
+                        put("rating", "96%")
+                        put("author", "@$author")
+                        put("thumb", thumb)
+                        put("thumbs", JSONArray().apply { put(thumb); put(AMOLED_DEFAULT_POSTER) })
+                        put("url", "https://www.youporn.com/watch/$vid/")
+                        put("embed_url", "https://www.youporn.com/embed/$vid")
+                        put("media_url", "")
+                        if (previewVideo.isNotBlank()) {
+                            put("preview_url", previewVideo)
+                            put("preview_video", previewVideo)
+                        }
+                        put("source", "YouPorn")
+                        put("type", "video")
+                        put("quality", "1080p HD")
+                    }
+                    list.put(item)
+                    if (list.length() >= 24) break
                 }
-                list.put(item)
             }
         } catch (e: Exception) {
             Log.e("All18Api", "Error scraping YouPorn: ${e.message}")
+        }
+
+        if (list.length() == 0) {
+            val curated = getCuratedFallbackVideos("youporn")
+            for (i in 0 until curated.length()) {
+                list.put(curated.getJSONObject(i))
+            }
         }
         return list
     }
@@ -1356,6 +1396,9 @@ class All18ApiInterceptor(private val context: Context) {
                         }
                     val title = if (titleWords.isNotBlank()) titleWords else "Foto HD Exclusiva"
 
+                    val hdThumb = sampleUrl.ifEmpty { jpegUrl.ifEmpty { fileUrl } }
+                    val aspect = if (height > 0) width.toFloat() / height.toFloat() else 1.0f
+
                     val item = JSONObject().apply {
                         put("id", "yd_$id")
                         put("raw_id", id)
@@ -1364,12 +1407,15 @@ class All18ApiInterceptor(private val context: Context) {
                         put("views", "${(score * 180 + 3200)} vistas")
                         put("rating", "${minOf(99, 90 + score % 10)}%")
                         put("author", "@$author")
-                        put("thumb", previewUrl)
-                        put("photo_url", jpegUrl.ifEmpty { sampleUrl })
-                        put("media_url", jpegUrl.ifEmpty { sampleUrl })
-                        put("embed_url", jpegUrl.ifEmpty { sampleUrl })
+                        put("thumb", hdThumb)
+                        put("photo_url", hdThumb)
+                        put("media_url", hdThumb)
+                        put("embed_url", hdThumb)
+                        put("width", width)
+                        put("height", height)
+                        put("aspect_ratio", aspect)
                         put("thumbs", JSONArray().apply {
-                            put(previewUrl)
+                            put(hdThumb)
                             put(sampleUrl)
                             put(fileUrl)
                             put(AMOLED_DEFAULT_POSTER)
@@ -1421,6 +1467,9 @@ class All18ApiInterceptor(private val context: Context) {
                             }
                         val title = if (titleWords.isNotBlank()) titleWords else "Foto HD Exclusiva"
 
+                        val hdThumb = sampleUrl.ifEmpty { jpegUrl.ifEmpty { fileUrl } }
+                        val aspect = if (height > 0) width.toFloat() / height.toFloat() else 1.0f
+
                         val item = JSONObject().apply {
                             put("id", "kc_$id")
                             put("raw_id", id)
@@ -1429,12 +1478,15 @@ class All18ApiInterceptor(private val context: Context) {
                             put("views", "${(score * 150 + 2800)} vistas")
                             put("rating", "${minOf(99, 92 + score % 8)}%")
                             put("author", "@$author")
-                            put("thumb", previewUrl)
-                            put("photo_url", jpegUrl.ifEmpty { sampleUrl })
-                            put("media_url", jpegUrl.ifEmpty { sampleUrl })
-                            put("embed_url", jpegUrl.ifEmpty { sampleUrl })
+                            put("thumb", hdThumb)
+                            put("photo_url", hdThumb)
+                            put("media_url", hdThumb)
+                            put("embed_url", hdThumb)
+                            put("width", width)
+                            put("height", height)
+                            put("aspect_ratio", aspect)
                             put("thumbs", JSONArray().apply {
-                                put(previewUrl)
+                                put(hdThumb)
                                 put(sampleUrl)
                                 put(fileUrl)
                                 put(AMOLED_DEFAULT_POSTER)
@@ -1496,6 +1548,41 @@ class All18ApiInterceptor(private val context: Context) {
         return list
     }
 
+    private fun cleanHtmlText(raw: String): String {
+        if (raw.isBlank()) return ""
+        val s = try {
+            Html.fromHtml(raw, Html.FROM_HTML_MODE_LEGACY).toString()
+        } catch (e: Exception) {
+            raw
+        }
+        return s.replace("&#039;", "'")
+            .replace("&#39;", "'")
+            .replace("&apos;", "'")
+            .replace("&quot;", "\"")
+            .replace("&amp;", "&")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&nbsp;", " ")
+            .replace("Ã¡", "á")
+            .replace("Ã©", "é")
+            .replace("Ã­", "í")
+            .replace("Ã³", "ó")
+            .replace("Ãº", "ú")
+            .replace("Ã±", "ñ")
+            .replace("Ã‘", "Ñ")
+            .replace("Ã", "Á")
+            .replace("Ã‰", "É")
+            .replace("Ã", "Í")
+            .replace("Ã“", "Ó")
+            .replace("Ãš", "Ú")
+            .replace("â€™", "'")
+            .replace("â€œ", "\"")
+            .replace("â€", "\"")
+            .replace("â€“", "-")
+            .replace("â€”", "-")
+            .trim()
+    }
+
     private fun fetchEporner(query: String, page: Int): JSONArray {
         val list = JSONArray()
         val cleanQuery = if (query.isBlank()) "trending" else query
@@ -1517,7 +1604,8 @@ class All18ApiInterceptor(private val context: Context) {
                 val v = videos.getJSONObject(i)
                 val id = v.optString("id")
                 if (id.isEmpty()) continue
-                val title = v.optString("title", "Video Eporner")
+                val rawTitle = v.optString("title", "Video Eporner")
+                val title = cleanHtmlText(rawTitle)
                 val views = v.optInt("views", 12000)
                 val viewsStr = if (views > 1_000_000) "${views / 1_000_000}M" else "${views / 1000}K"
                 val lengthMin = v.optString("length_min", "10:00")
@@ -1549,7 +1637,7 @@ class All18ApiInterceptor(private val context: Context) {
                     put("media_url", "")
                     put("source", "Eporner")
                     put("type", "video")
-                    put("quality", "1080p 60fps")
+                    put("quality", "1080p HD")
                 }
                 list.put(item)
             }

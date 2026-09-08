@@ -2769,11 +2769,49 @@ button, input, select, textarea {
         font-size: 13px;
     }
 
-    /* FEED PRINCIPAL EN MÓVIL: 1 VIDEO GRANDE POR FILA */
-    #mediaGrid.media-grid {
-        grid-template-columns: 1fr !important;
-        gap: 18px !important;
+    /* FEED PRINCIPAL EN MÓVIL: DENSIDAD CONFIGURABLE */
+    #mediaGrid.media-grid,
+    .media-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
         padding: 0 4px !important;
+    }
+
+    #mediaGrid.media-grid.grid-cols-1,
+    .media-grid.grid-cols-1 {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    #mediaGrid.media-grid.grid-cols-2,
+    .media-grid.grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    #mediaGrid.media-grid.grid-cols-3,
+    .media-grid.grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .media-grid.grid-cols-3 .video-card .video-title {
+        font-size: 11px !important;
+        line-height: 1.25 !important;
+    }
+
+    .media-grid.grid-cols-3 .video-card .video-info {
+        padding: 6px 8px !important;
+    }
+
+    .media-grid.grid-cols-3 .duration-badge {
+        font-size: 10px !important;
+        padding: 1px 4px !important;
+    }
+
+    .media-grid.grid-cols-3 .source-badge-pill {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
     }
 
     #mediaGrid .video-card {
@@ -3133,6 +3171,48 @@ body[data-theme="twitter"] .thumb-img {
     height: 100% !important;
     object-fit: cover !important;
     transition: transform 0.3s ease !important;
+}
+
+/* Responsive Photo Card (Portrait, Square, Landscape - Zero Crop) */
+body[data-theme="twitter"] .thumb-container.is-photo-card,
+.thumb-container.is-photo-card {
+    padding-top: 0 !important;
+    aspect-ratio: unset !important;
+    height: auto !important;
+    min-height: 180px !important;
+    max-height: 600px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #000000 !important;
+    overflow: hidden !important;
+}
+
+body[data-theme="twitter"] .thumb-container.is-photo-card .thumb-img,
+.thumb-container.is-photo-card .thumb-img {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 600px !important;
+    object-fit: contain !important;
+    background: #000000 !important;
+}
+
+.btn-grid-density {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.btn-grid-density:active {
+    transform: scale(0.92) !important;
 }
 
 body[data-theme="twitter"] .card-fav-btn {

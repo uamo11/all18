@@ -118,6 +118,7 @@
         try { setupPublishEngine(); } catch (e) { console.error('setupPublishEngine error:', e); }
         try { checkAgeGate(); } catch (e) { console.error('checkAgeGate error:', e); }
         try { updateFavoritesBadge(); } catch (e) { console.error('updateFavoritesBadge error:', e); }
+        try { setGridDensity(localStorage.getItem('all18_grid_density') || '2', false); } catch (e) {}
         try { renderCategories(DEFAULT_CATEGORIES); } catch (e) { console.error('renderCategories error:', e); }
         try { loadCategoriesFromAPI(); } catch (e) { console.error('loadCategoriesFromAPI error:', e); }
         try { initFirebase(); } catch (e) { console.error('initFirebase error:', e); }
@@ -344,7 +345,7 @@
                             source: 'RedGifs',
                             tags: g.tags || ['shorts', 'hot'],
                             type: 'short',
-                            quality: '1080p 60fps'
+                            quality: '1080p HD'
                         };
                     })
                     .filter(Boolean);
@@ -687,16 +688,20 @@
             { id: 'ph_65a83a21b8f01', source: 'Pornhub', title: 'Sensual Latina Exclusiva HD', duration: '12:30', views: '280K vistas', rating: '98%', author: '@PornhubStar', thumb: 'https://ci.phncdn.com/videos/202401/15/sample.jpg', embed_url: 'https://www.pornhub.com/embed/65a83a21b8f01', quality: '1080p HD' },
             { id: 'xv_ommelke9c80', source: 'XVideos', title: 'Hot College Blonde HD Special', duration: '15:20', views: '320K vistas', rating: '97%', author: '@XVideosStar', thumb: 'https://thumbs-gcore.xvideos-cdn.com/videos/thumbs169poster/sample.jpg', embed_url: 'https://www.xvideos.com/embedframe/ommelke9c80', quality: '1080p HD' },
             { id: 'xn_1imfom09', source: 'XNXX', title: 'Top Model Colección Ardiente', duration: '11:45', views: '240K vistas', rating: '96%', author: '@XNXXCreator', thumb: 'https://thumb-cdn77.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg', embed_url: 'https://www.xnxx.com/embedframe/1imfom09', quality: '1080p HD' },
-            { id: 'rg_sprycaringafricangroundhornbill', source: 'RedGifs', title: 'Short Hot Loop Viral', duration: 'Short', views: '150K vistas', rating: '99%', author: '@All18Creator', thumb: 'https://media.redgifs.com/sprycaringafricangroundhornbill-poster.jpg', media_url: 'https://media.redgifs.com/sprycaringafricangroundhornbill.mp4', embed_url: 'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill', type: 'short', quality: '1080p 60fps' },
-            { id: 'ep_cIG0retUIzC', source: 'Eporner', title: 'Exclusivo Pure 1080p 60fps Ultra', duration: '14:10', views: '190K vistas', rating: '99%', author: '@EpornerStar', thumb: 'https://static-eporner.com/sample.jpg', embed_url: 'https://www.eporner.com/embed/cIG0retUIzC/', quality: '1080p 60fps' }
+            { id: 'rg_sprycaringafricangroundhornbill', source: 'RedGifs', title: 'Short Hot Loop Viral', duration: 'Short', views: '150K vistas', rating: '99%', author: '@All18Creator', thumb: 'https://media.redgifs.com/sprycaringafricangroundhornbill-poster.jpg', media_url: 'https://media.redgifs.com/sprycaringafricangroundhornbill.mp4', embed_url: 'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill', type: 'short', quality: '1080p HD' },
+            { id: 'ep_cIG0retUIzC', source: 'Eporner', title: 'Exclusivo Pure 1080p Ultra', duration: '14:10', views: '190K vistas', rating: '99%', author: '@EpornerStar', thumb: 'https://static-eporner.com/sample.jpg', embed_url: 'https://www.eporner.com/embed/cIG0retUIzC/', quality: '1080p HD' }
         ];
     }
+
+    const globalSeenShortsIds = new Set();
 
     async function fetchContent(reset = false) {
         if (state.view === 'favorites') {
             renderFavorites();
             return;
         }
+
+        const isTikTokMode = document.body.dataset.theme === 'tiktok' || state.view === 'shorts';
 
         const fetchKey = `${state.source}_${state.category}_${state.query}_${state.page}_${reset}`;
         const now = Date.now();
@@ -717,6 +722,7 @@
         if (reset) {
             state.page = 1;
             state.items = [];
+            globalSeenShortsIds.clear();
             // Try instant cache restoration first (0ms load without screen flash)
             if (!state.query && tryRestoreFeedCache()) {
                 hasClearedSkeletons = true;
@@ -746,8 +752,19 @@
             if (!targetGrid) return;
 
             const existingIds = new Set(state.items.map(i => i.id));
-            const uniqueItems = items.filter(i => !existingIds.has(i.id));
+            const uniqueItems = items.filter(i => {
+                if (existingIds.has(i.id)) return false;
+                if (isTikTokMode && (globalSeenShortsIds.has(i.id) || (i.raw_id && globalSeenShortsIds.has(i.raw_id)))) return false;
+                return true;
+            });
             if (uniqueItems.length === 0) return;
+
+            if (isTikTokMode) {
+                uniqueItems.forEach(i => {
+                    if (i.id) globalSeenShortsIds.add(i.id);
+                    if (i.raw_id) globalSeenShortsIds.add(i.raw_id);
+                });
+            }
 
             if (!hasClearedSkeletons) {
                 targetGrid.innerHTML = '';
@@ -1140,15 +1157,12 @@
                     <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
                         <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
                         ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
-                        <span class="duration-badge" style="${isPhoto ? 'background: linear-gradient(135deg, #ec4899, #8b5cf6); font-weight:800;' : ''}">${isPhoto ? '📸 FOTO HD' : (item.duration || '0:34')}</span>
-                        ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
+                        ${!isPhoto ? `<span class="duration-badge">${item.duration || '0:34'}</span>` : ''}
+                        ${!isPhoto && savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                         ${!isPhoto ? `
                         <div class="x-center-play">
                             <svg viewBox="0 0 24 24" width="32" height="32" fill="#ffffff"><path d="M8 5v14l11-7z"/></svg>
-                        </div>` : `
-                        <div class="x-center-play" style="opacity: 0.88;">
-                            <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffffff"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                        </div>`}
+                        </div>` : ''}
                     </div>
                     <div class="x-action-bar">
                         <div class="x-action-item x-action-reply" title="Comentarios">
@@ -1314,9 +1328,9 @@
                 <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
                     <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
                     ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
-                    <span class="duration-badge" style="${isPhoto ? 'background: linear-gradient(135deg, #ec4899, #8b5cf6); font-weight:800;' : ''}">${isPhoto ? '📸 FOTO HD' : (item.duration || '18:50')}</span>
-                    <span class="source-badge-pill ${item.source || 'Pornhub'}">${isPhoto ? 'Booru / Foto' : (item.source || 'Pornhub')}</span>
-                    ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
+                    ${!isPhoto ? `<span class="duration-badge">${item.duration || '18:50'}</span>` : ''}
+                    ${!isPhoto ? `<span class="source-badge-pill ${item.source || 'Pornhub'}">${item.source || 'Pornhub'}</span>` : ''}
+                    ${!isPhoto && savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                     <button class="card-fav-btn ${isFav ? 'active' : ''}" title="Guardar en favoritos" data-id="${item.id}">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </button>
@@ -1349,7 +1363,10 @@
                 if (item.hd_url && videoEl.src !== item.hd_url) {
                     videoEl.src = item.hd_url;
                     videoEl.play().catch(() => {});
-                } else if (item.embed_url) {
+                } else if (item.sd_url && videoEl.src !== item.sd_url) {
+                    videoEl.src = item.sd_url;
+                    videoEl.play().catch(() => {});
+                } else if (item.source !== 'RedGifs' && item.embed_url) {
                     const thumbContainer = card.querySelector('.thumb-container');
                     if (thumbContainer) {
                         thumbContainer.innerHTML = `
@@ -1918,12 +1935,6 @@
     // ==========================================
     // LIVE COMMENTS & HOT REACTIONS ENGINE
     // ==========================================
-    const DEFAULT_SAMPLE_COMMENTS = [
-        { id: 'c1', user_name: 'CarlosM', user_avatar: CREATOR_AVATARS[0], text: '¡Increíble video! La calidad es una locura 🔥🔥🔥', created_at: 'Hace 2 horas' },
-        { id: 'c2', user_name: '@DiablaHot', user_avatar: CREATOR_AVATARS[1], text: 'Me encantó la escena del minuto 03:20 💦💦', created_at: 'Hace 5 horas' },
-        { id: 'c3', user_name: 'LatinLover', user_avatar: CREATOR_AVATARS[2], text: 'Excelente contenido, suban más de esta modelo por favor ⭐👑', created_at: 'Ayer' }
-    ];
-
     async function loadCommentsForVideo(videoId) {
         const listEl = document.getElementById('commentsFeedList');
         const badgeEl = document.getElementById('commentsCountBadge');
@@ -1954,12 +1965,19 @@
                     localStorage.setItem(localKey, JSON.stringify(comments));
                 }
             } catch (err) {
-                // fallback to local/sample
+                // Ignore cloud error, keep local comments
             }
         }
 
         if (comments.length === 0) {
-            comments = DEFAULT_SAMPLE_COMMENTS;
+            if (badgeEl) badgeEl.textContent = '(0)';
+            listEl.innerHTML = `
+                <div class="empty-comments-state" style="text-align: center; padding: 28px 16px; color: #71767b; font-size: 13px;">
+                    <span style="font-size: 24px; display: block; margin-bottom: 6px;">💬</span>
+                    Sé el primero en comentar este video.
+                </div>
+            `;
+            return;
         }
 
         if (badgeEl) badgeEl.textContent = `(${comments.length})`;
@@ -4421,6 +4439,43 @@
             showToast(window.isTikTokMuted ? '🔇 Audio silenciado' : '🔊 Audio activado');
         }
     };
+
+    // ==========================================
+    // GRID DENSITY CONTROLLER (1, 2, 3 COLUMNS)
+    // ==========================================
+    function setGridDensity(cols, showNotify = false) {
+        const d = (cols === '1' || cols === '2' || cols === '3') ? cols : '2';
+        try {
+            localStorage.setItem('all18_grid_density', d);
+        } catch (e) {}
+
+        const grids = document.querySelectorAll('#mediaGrid, .media-grid, #hubVideoGrid, .hub-video-grid');
+        grids.forEach(g => {
+            g.classList.remove('grid-cols-1', 'grid-cols-2', 'grid-cols-3');
+            g.classList.add(`grid-cols-${d}`);
+        });
+
+        document.querySelectorAll('.btn-grid-density').forEach(btn => {
+            btn.setAttribute('data-density', d);
+            btn.title = `Cuadrícula: ${d} ${d === '1' ? 'columna' : 'columnas'}`;
+            const icon = btn.querySelector('.density-icon');
+            if (icon) {
+                icon.textContent = d === '1' ? '1️⃣' : (d === '2' ? '2️⃣' : '3️⃣');
+            }
+        });
+
+        if (showNotify && typeof showToast === 'function') {
+            showToast(`📱 Cuadrícula: ${d} ${d === '1' ? 'Columna' : 'Columnas'}`);
+        }
+    }
+    window.setGridDensity = setGridDensity;
+
+    function cycleGridDensity() {
+        const cur = localStorage.getItem('all18_grid_density') || '2';
+        const next = cur === '1' ? '2' : (cur === '2' ? '3' : '1');
+        setGridDensity(next, true);
+    }
+    window.cycleGridDensity = cycleGridDensity;
 
     // Expose Global Theme Helpers on window
     window.state = state;
