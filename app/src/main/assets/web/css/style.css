@@ -238,6 +238,10 @@ button, input, select, textarea {
     background: var(--primary-hover);
 }
 
+.btn-toggle-search-mobile {
+    display: none;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -2753,10 +2757,36 @@ button, input, select, textarea {
         flex-shrink: 0;
     }
 
+    .btn-toggle-search-mobile {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.2s;
+    }
+
+    .btn-toggle-search-mobile:active, .btn-toggle-search-mobile.active {
+        background: var(--primary);
+        color: #000;
+    }
+
     .search-container {
+        display: none;
         order: 3;
         width: 100%;
         max-width: 100%;
+        margin-top: 6px;
+    }
+
+    .search-container.active {
+        display: block !important;
     }
 
     .search-input {
