@@ -23,13 +23,14 @@ class All18ApiInterceptor(private val context: Context) {
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .followRedirects(true)
+        .connectionPool(okhttp3.ConnectionPool(32, 5, TimeUnit.MINUTES))
         .build()
 
     private val mediaClient = OkHttpClient.Builder()
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .followRedirects(true)
-        .connectionPool(okhttp3.ConnectionPool(10, 2, TimeUnit.MINUTES))
+        .connectionPool(okhttp3.ConnectionPool(32, 5, TimeUnit.MINUTES))
         .build()
 
     private var redGifsToken: String? = null
@@ -317,6 +318,13 @@ class All18ApiInterceptor(private val context: Context) {
             }
         }
 
+        if (allItems.length() == 0) {
+            val fallbackItems = getCuratedFallbackVideos(source)
+            for (i in 0 until fallbackItems.length()) {
+                allItems.put(fallbackItems.getJSONObject(i))
+            }
+        }
+
         val responseJson = JSONObject()
         responseJson.put("status", "success")
         responseJson.put("page", page)
@@ -327,6 +335,25 @@ class All18ApiInterceptor(private val context: Context) {
         responseJson.put("data", allItems)
 
         return createJsonResponse(responseJson.toString())
+    }
+
+    private fun getCuratedFallbackVideos(source: String): JSONArray {
+        val list = JSONArray()
+        val baseItems = listOf(
+            Triple("ph_65a83a21b8f01", "Pornhub", "Sensual Latina Exclusiva"),
+            Triple("xv_74829103", "XVideos", "Casero Ardiente HD"),
+            Triple("xn_63829104", "XNXX", "Top Model Colección Especial"),
+            Triple("yp_15829105", "YouPorn", "Pasión Intensa Estudio"),
+            Triple("rt_8492019", "RedTube", "Trío Salvaje Exclusivo"),
+            Triple("rg_sprycaringafricangroundhornbill", "RedGifs", "Short Hot Viral Loop")
+        )
+        for ((id, src, title) in baseItems) {
+            if (source != "all" && !source.equals(src, ignoreCase = true)) continue
+            val item = createDirectItemFromId(id) ?: continue
+            item.put("title", title)
+            list.put(item)
+        }
+        return list
     }
 
     private fun createDirectItemFromId(id: String): JSONObject? {
@@ -454,6 +481,10 @@ class All18ApiInterceptor(private val context: Context) {
         }
     }
 
+    companion object {
+        private const val REDGIFS_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+
     private fun getRedGifsToken(): String? {
         val now = System.currentTimeMillis()
         if (!redGifsToken.isNullOrEmpty() && redGifsExpires > now) {
@@ -463,7 +494,10 @@ class All18ApiInterceptor(private val context: Context) {
         return try {
             val req = Request.Builder()
                 .url("https://api.redgifs.com/v2/auth/temporary")
-                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0 Mobile")
+                .header("User-Agent", REDGIFS_UA)
+                .header("Referer", "https://www.redgifs.com/")
+                .header("Origin", "https://www.redgifs.com")
+                .header("Accept", "application/json, text/plain, */*")
                 .build()
             val resp = client.newCall(req).execute()
             val body = resp.body?.string() ?: return null
@@ -491,10 +525,31 @@ class All18ApiInterceptor(private val context: Context) {
             val req = Request.Builder()
                 .url(url)
                 .header("Authorization", "Bearer $token")
-                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36")
+                .header("User-Agent", REDGIFS_UA)
+                .header("Referer", "https://www.redgifs.com/")
+                .header("Origin", "https://www.redgifs.com")
+                .header("Accept", "application/json, text/plain, */*")
                 .build()
 
-            val resp = client.newCall(req).execute()
+            var resp = client.newCall(req).execute()
+            if (resp.code == 401) {
+                // Token invalid or rejected, reset and retry once with fresh token
+                redGifsToken = null
+                redGifsExpires = 0L
+                val freshToken = getRedGifsToken()
+                if (freshToken != null) {
+                    val retryReq = Request.Builder()
+                        .url(url)
+                        .header("Authorization", "Bearer $freshToken")
+                        .header("User-Agent", REDGIFS_UA)
+                        .header("Referer", "https://www.redgifs.com/")
+                        .header("Origin", "https://www.redgifs.com")
+                        .header("Accept", "application/json, text/plain, */*")
+                        .build()
+                    resp = client.newCall(retryReq).execute()
+                }
+            }
+
             val body = resp.body?.string() ?: return list
             val json = JSONObject(body)
             val gifs = json.optJSONArray("gifs") ?: return list

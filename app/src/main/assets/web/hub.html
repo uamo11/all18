@@ -202,6 +202,158 @@
             border-color: #ff9000;
         }
 
+        /* Multi-Instance Grid Controls & Layout */
+        .hub-btn-multi-instance {
+            background: linear-gradient(135deg, #ff9000, #ff5500);
+            border: none;
+            color: #000;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(255, 144, 0, 0.4);
+            transition: all 0.2s;
+        }
+        .hub-btn-multi-instance:hover, .hub-btn-multi-instance.active {
+            filter: brightness(1.2);
+            transform: scale(1.03);
+        }
+        .hub-btn-new-window {
+            background: #18181e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #00e676;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .hub-btn-new-window:hover {
+            border-color: #00e676;
+        }
+        .multi-instance-overlay {
+            background: #0e0e12;
+            border-bottom: 2px solid #ff9000;
+            padding: 14px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+        }
+        .multi-instance-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .multi-instance-title {
+            font-size: 14px;
+            font-weight: 900;
+            color: #ff9000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .multi-instance-presets {
+            display: flex;
+            gap: 6px;
+        }
+        .multi-preset-btn {
+            background: #18181e;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #efeff1;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .multi-preset-btn.active {
+            background: #ff9000;
+            color: #000;
+            font-weight: 900;
+            border-color: #ff9000;
+        }
+        .multi-stream-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        @media (max-width: 650px) {
+            .multi-stream-grid.grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+        .multi-slot-card {
+            background: #141418;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .multi-slot-card.active-audio {
+            border-color: #00e676;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+        }
+        .multi-slot-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: #1b1b22;
+            gap: 6px;
+            font-size: 11px;
+        }
+        .multi-slot-select {
+            background: #0a0a0c;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            padding: 2px 4px;
+            outline: none;
+        }
+        .multi-slot-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+        .multi-slot-btn:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        .multi-slot-btn.audio-on {
+            color: #00e676;
+            font-weight: bold;
+        }
+        .multi-slot-video-box {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+        }
+        .multi-slot-video-box iframe, .multi-slot-video-box video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* Unified Video Grid */
         .hub-grid-container {
             padding: 10px 12px;
@@ -417,9 +569,17 @@
                 <div class="hub-logo-text">All<span>18</span></div>
                 <span class="hub-badge-pill">Multi-Hub</span>
             </a>
-            <div class="hub-provider-count">
-                <span class="hub-pulse-dot"></span>
-                <span>6 Redes En Vivo</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="hub-provider-count">
+                    <span class="hub-pulse-dot"></span>
+                    <span>6 Redes En Vivo</span>
+                </div>
+                <button type="button" id="btnMultiInstanceToggle" class="hub-btn-multi-instance" onclick="toggleMultiInstanceGrid()">
+                    ⚡ Multi-Instancia (4x)
+                </button>
+                <button type="button" class="hub-btn-new-window" onclick="openSeparateWindow()" title="Abrir otra ventana/instancia de All18">
+                    ⧉ Nueva App
+                </button>
             </div>
         </div>
 
@@ -454,6 +614,113 @@
             </button>
         </div>
     </header>
+
+    <!-- Multi-Instance Live Stream Grid (4 Streams Simultáneos) -->
+    <section id="multiInstanceOverlay" class="multi-instance-overlay" style="display: none;">
+        <div class="multi-instance-header">
+            <div class="multi-instance-title">
+                <span>⚡ Multi-Instancia Ultra Boost</span>
+                <span style="font-size: 11px; color: #a1a1aa; font-weight: 500;">(4 Streams en Vivo Simultáneos)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="multi-instance-presets">
+                    <button class="multi-preset-btn" id="btnPreset2" onclick="setMultiInstanceLayout(2)">2 Pantallas</button>
+                    <button class="multi-preset-btn active" id="btnPreset4" onclick="setMultiInstanceLayout(4)">4 Pantallas</button>
+                </div>
+                <button type="button" class="multi-preset-btn" style="background: rgba(254,44,85,0.2); color: #fe2c55; border-color: #fe2c55;" onclick="toggleMultiInstanceGrid()">✕ Cerrar</button>
+            </div>
+        </div>
+
+        <div id="multiStreamGrid" class="multi-stream-grid grid-4">
+            <!-- Slot 1: Pornhub -->
+            <div class="multi-slot-card" id="slotCard_1">
+                <div class="multi-slot-toolbar">
+                    <select class="multi-slot-select" id="slotSelect_1" onchange="changeSlotProvider(1, this.value)">
+                        <option value="pornhub" selected>Pornhub</option>
+                        <option value="xvideos">XVideos</option>
+                        <option value="redtube">RedTube</option>
+                        <option value="youporn">YouPorn</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="redgifs">RedGifs</option>
+                    </select>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="multi-slot-btn" onclick="randomizeSlot(1)" title="Video Aleatorio">🎲 Random</button>
+                        <button class="multi-slot-btn" id="audioBtn_1" onclick="toggleSlotAudio(1)" title="Activar/Desactivar Audio">🔇 Mute</button>
+                        <button class="multi-slot-btn" onclick="fullscreenSlot(1)" title="Pantalla Completa">⛶</button>
+                    </div>
+                </div>
+                <div class="multi-slot-video-box" id="slotBox_1">
+                    <iframe id="slotFrame_1" src="https://www.pornhub.com/embed/65a83a21b8f01" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                </div>
+            </div>
+
+            <!-- Slot 2: XVideos -->
+            <div class="multi-slot-card" id="slotCard_2">
+                <div class="multi-slot-toolbar">
+                    <select class="multi-slot-select" id="slotSelect_2" onchange="changeSlotProvider(2, this.value)">
+                        <option value="pornhub">Pornhub</option>
+                        <option value="xvideos" selected>XVideos</option>
+                        <option value="redtube">RedTube</option>
+                        <option value="youporn">YouPorn</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="redgifs">RedGifs</option>
+                    </select>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="multi-slot-btn" onclick="randomizeSlot(2)" title="Video Aleatorio">🎲 Random</button>
+                        <button class="multi-slot-btn" id="audioBtn_2" onclick="toggleSlotAudio(2)" title="Activar/Desactivar Audio">🔇 Mute</button>
+                        <button class="multi-slot-btn" onclick="fullscreenSlot(2)" title="Pantalla Completa">⛶</button>
+                    </div>
+                </div>
+                <div class="multi-slot-video-box" id="slotBox_2">
+                    <iframe id="slotFrame_2" src="https://www.xvideos.com/embedframe/74829103" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                </div>
+            </div>
+
+            <!-- Slot 3: RedTube -->
+            <div class="multi-slot-card" id="slotCard_3">
+                <div class="multi-slot-toolbar">
+                    <select class="multi-slot-select" id="slotSelect_3" onchange="changeSlotProvider(3, this.value)">
+                        <option value="pornhub">Pornhub</option>
+                        <option value="xvideos">XVideos</option>
+                        <option value="redtube" selected>RedTube</option>
+                        <option value="youporn">YouPorn</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="redgifs">RedGifs</option>
+                    </select>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="multi-slot-btn" onclick="randomizeSlot(3)" title="Video Aleatorio">🎲 Random</button>
+                        <button class="multi-slot-btn" id="audioBtn_3" onclick="toggleSlotAudio(3)" title="Activar/Desactivar Audio">🔇 Mute</button>
+                        <button class="multi-slot-btn" onclick="fullscreenSlot(3)" title="Pantalla Completa">⛶</button>
+                    </div>
+                </div>
+                <div class="multi-slot-video-box" id="slotBox_3">
+                    <iframe id="slotFrame_3" src="https://embed.redtube.com/?id=8492019" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                </div>
+            </div>
+
+            <!-- Slot 4: RedGifs -->
+            <div class="multi-slot-card" id="slotCard_4">
+                <div class="multi-slot-toolbar">
+                    <select class="multi-slot-select" id="slotSelect_4" onchange="changeSlotProvider(4, this.value)">
+                        <option value="pornhub">Pornhub</option>
+                        <option value="xvideos">XVideos</option>
+                        <option value="redtube">RedTube</option>
+                        <option value="youporn">YouPorn</option>
+                        <option value="xnxx">XNXX</option>
+                        <option value="redgifs" selected>RedGifs</option>
+                    </select>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="multi-slot-btn" onclick="randomizeSlot(4)" title="Video Aleatorio">🎲 Random</button>
+                        <button class="multi-slot-btn" id="audioBtn_4" onclick="toggleSlotAudio(4)" title="Activar/Desactivar Audio">🔇 Mute</button>
+                        <button class="multi-slot-btn" onclick="fullscreenSlot(4)" title="Pantalla Completa">⛶</button>
+                    </div>
+                </div>
+                <div class="multi-slot-video-box" id="slotBox_4">
+                    <iframe id="slotFrame_4" src="https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Category Quick Chips -->
     <div class="hub-cat-bar">
@@ -679,7 +946,7 @@
                 const thumb = item.thumb || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500';
                 const author = item.author || '@CreadorAll18';
 
-                const watchUrl = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(sourceName)}`;
+                const watchUrl = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(sourceName)}&from=hub`;
 
                 return `
                     <a href="${watchUrl}" class="hub-card">
@@ -711,6 +978,127 @@
             state.page += 1;
             fetchHubVideos(false);
         }
+
+        // Multi-Instance Live Streams Controller
+        const MULTI_PRESETS = {
+            pornhub: [
+                'https://www.pornhub.com/embed/65a83a21b8f01',
+                'https://www.pornhub.com/embed/64d7c81921a22',
+                'https://www.pornhub.com/embed/660ad1129b8c3'
+            ],
+            xvideos: [
+                'https://www.xvideos.com/embedframe/74829103',
+                'https://www.xvideos.com/embedframe/72910294',
+                'https://www.xvideos.com/embedframe/71829105'
+            ],
+            xnxx: [
+                'https://www.xnxx.com/embedframe/63829104',
+                'https://www.xnxx.com/embedframe/62819205',
+                'https://www.xnxx.com/embedframe/61829106'
+            ],
+            youporn: [
+                'https://www.youporn.com/embed/15829105',
+                'https://www.youporn.com/embed/15920194',
+                'https://www.youporn.com/embed/16029183'
+            ],
+            redtube: [
+                'https://embed.redtube.com/?id=8492019',
+                'https://embed.redtube.com/?id=8501928',
+                'https://embed.redtube.com/?id=8512937'
+            ],
+            redgifs: [
+                'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill?autoplay=1',
+                'https://www.redgifs.com/ifr/richwaterloggedchinchilla?autoplay=1',
+                'https://www.redgifs.com/ifr/foolhardyillustriousalbatross?autoplay=1'
+            ]
+        };
+
+        window.toggleMultiInstanceGrid = function() {
+            const overlay = document.getElementById('multiInstanceOverlay');
+            const btn = document.getElementById('btnMultiInstanceToggle');
+            if (!overlay) return;
+            const isVisible = overlay.style.display !== 'none';
+            overlay.style.display = isVisible ? 'none' : 'block';
+            if (btn) btn.classList.toggle('active', !isVisible);
+            if (!isVisible) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        window.setMultiInstanceLayout = function(count) {
+            const grid = document.getElementById('multiStreamGrid');
+            const slot3 = document.getElementById('slotCard_3');
+            const slot4 = document.getElementById('slotCard_4');
+            const btn2 = document.getElementById('btnPreset2');
+            const btn4 = document.getElementById('btnPreset4');
+
+            if (count === 2) {
+                if (slot3) slot3.style.display = 'none';
+                if (slot4) slot4.style.display = 'none';
+                if (btn2) btn2.classList.add('active');
+                if (btn4) btn4.classList.remove('active');
+            } else {
+                if (slot3) slot3.style.display = 'flex';
+                if (slot4) slot4.style.display = 'flex';
+                if (btn2) btn2.classList.remove('active');
+                if (btn4) btn4.classList.add('active');
+            }
+        };
+
+        window.changeSlotProvider = function(slotNum, prov) {
+            const frame = document.getElementById(`slotFrame_${slotNum}`);
+            if (!frame) return;
+            const urls = MULTI_PRESETS[prov] || MULTI_PRESETS.pornhub;
+            const nextUrl = urls[Math.floor(Math.random() * urls.length)];
+            frame.src = nextUrl;
+        };
+
+        window.randomizeSlot = function(slotNum) {
+            const sel = document.getElementById(`slotSelect_${slotNum}`);
+            const prov = sel ? sel.value : 'pornhub';
+            window.changeSlotProvider(slotNum, prov);
+        };
+
+        window.toggleSlotAudio = function(slotNum) {
+            for (let i = 1; i <= 4; i++) {
+                const card = document.getElementById(`slotCard_${i}`);
+                const btn = document.getElementById(`audioBtn_${i}`);
+                if (i === slotNum) {
+                    const isMuted = btn.textContent.includes('Mute');
+                    if (isMuted) {
+                        btn.textContent = '🔊 Audio';
+                        btn.classList.add('audio-on');
+                        card.classList.add('active-audio');
+                    } else {
+                        btn.textContent = '🔇 Mute';
+                        btn.classList.remove('audio-on');
+                        card.classList.remove('active-audio');
+                    }
+                } else {
+                    if (btn) {
+                        btn.textContent = '🔇 Mute';
+                        btn.classList.remove('audio-on');
+                    }
+                    if (card) card.classList.remove('active-audio');
+                }
+            }
+        };
+
+        window.fullscreenSlot = function(slotNum) {
+            const frame = document.getElementById(`slotFrame_${slotNum}`);
+            if (frame) {
+                if (frame.requestFullscreen) frame.requestFullscreen();
+                else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+            }
+        };
+
+        window.openSeparateWindow = function() {
+            if (window.AndroidApp && typeof window.AndroidApp.openNewInstance === 'function') {
+                window.AndroidApp.openNewInstance('hub.html');
+            } else {
+                window.open('hub.html', '_blank');
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', initHub);
     </script>

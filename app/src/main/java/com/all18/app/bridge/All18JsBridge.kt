@@ -15,7 +15,32 @@ class All18JsBridge(private val activity: MainActivity) {
     fun isNativeApp(): Boolean = true
 
     @JavascriptInterface
-    fun getAppVersion(): String = "1.1.4"
+    fun getAppVersion(): String = "1.2.0"
+
+    @JavascriptInterface
+    fun isMultiInstanceSupported(): Boolean = true
+
+    @JavascriptInterface
+    fun openNewInstance(url: String) {
+        activity.runOnUiThread {
+            try {
+                val fullUrl = if (url.startsWith("http://") || url.startsWith("https://")) {
+                    url
+                } else {
+                    "https://appassets.androidplatform.net/assets/web/" + url.removePrefix("/")
+                }
+                val intent = Intent(activity, MainActivity::class.java).apply {
+                    action = Intent.ACTION_VIEW
+                    data = Uri.parse(fullUrl)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                }
+                activity.startActivity(intent)
+                showToast("Nueva instancia All18 iniciada")
+            } catch (e: Exception) {
+                showToast("Error al abrir instancia: ${e.message}")
+            }
+        }
+    }
 
     @JavascriptInterface
     fun vibrate(durationMs: Long) {

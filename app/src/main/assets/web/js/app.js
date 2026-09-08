@@ -1262,7 +1262,8 @@
             // Other themes or standard tube: open watch view
             if (!window.location.pathname.includes('watch.html') && !window.location.pathname.includes('watch.php') && !document.body.classList.contains('watch-page-body')) {
                 try { try { localStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch(e){}; sessionStorage.setItem('all18_current_watch', JSON.stringify(item)); } catch (err) {}
-                window.location.href = 'watch.html?v=' + encodeURIComponent(item.id);
+                const pageFrom = window.location.pathname.includes('hub.html') ? 'hub' : (window.location.pathname.includes('tiktok.html') ? 'tiktok' : (window.location.pathname.includes('twitter.html') ? 'twitter' : 'index'));
+                window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title || '')}&source=${encodeURIComponent(item.source || '')}&from=${pageFrom}`;
             } else {
                 openWatchView(item);
             }
@@ -1405,7 +1406,8 @@
         
         // If watchView is missing (e.g. on index.html standalone), redirect to watch.html
         if (!watchView) {
-            window.location.href = `watch.html?v=${item.id}`;
+            const pageFrom = window.location.pathname.includes('hub.html') ? 'hub' : (window.location.pathname.includes('tiktok.html') ? 'tiktok' : (window.location.pathname.includes('twitter.html') ? 'twitter' : 'index'));
+            window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&embed=${encodeURIComponent(item.embed_url || '')}&title=${encodeURIComponent(item.title || '')}&source=${encodeURIComponent(item.source || '')}&from=${pageFrom}`;
             return;
         }
 
@@ -1912,9 +1914,29 @@
     window.backToCatalog = function (pushHistory = true) {
         if (window.location.pathname.includes('watch.html') || window.location.pathname.includes('watch.php') || document.body.classList.contains('watch-page-body')) {
             const urlParams = new URLSearchParams(window.location.search);
-            const from = urlParams.get('from') || sessionStorage.getItem('all18_from_page');
-            if (from === 'twitter' || from === 'twitter.html' || (document.referrer && document.referrer.includes('twitter.html'))) {
+            const from = (urlParams.get('from') || sessionStorage.getItem('all18_from_page') || '').toLowerCase();
+            if (from === 'hub' || from.includes('hub') || (document.referrer && document.referrer.includes('hub.html'))) {
+                window.location.href = 'hub.html';
+                return;
+            }
+            if (from === 'tiktok' || from.includes('tiktok') || (document.referrer && document.referrer.includes('tiktok.html'))) {
+                window.location.href = 'tiktok.html';
+                return;
+            }
+            if (from === 'twitter' || from.includes('twitter') || (document.referrer && document.referrer.includes('twitter.html'))) {
                 window.location.href = 'twitter.html';
+                return;
+            }
+            if (from === 'onlyfans' || from.includes('onlyfans')) {
+                window.location.href = 'onlyfans.html';
+                return;
+            }
+            if (from === 'instagram' || from.includes('instagram')) {
+                window.location.href = 'instagram.html';
+                return;
+            }
+            if (document.referrer && document.referrer.includes('.html')) {
+                window.location.href = document.referrer;
                 return;
             }
             window.location.href = 'index.html';

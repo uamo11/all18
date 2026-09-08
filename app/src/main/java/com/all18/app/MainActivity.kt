@@ -60,9 +60,18 @@ class MainActivity : AppCompatActivity() {
         setupWebView()
         setupBackNavigation()
 
-        // Load Tube index
-        val targetUrl = "https://appassets.androidplatform.net/assets/web/index.html"
+        // Load Tube index or deep linked target URL
+        val targetUrl = intent?.dataString ?: intent?.getStringExtra("target_url") ?: "https://appassets.androidplatform.net/assets/web/index.html"
         binding.webView.loadUrl(targetUrl)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val url = intent?.dataString ?: intent?.getStringExtra("target_url")
+        if (!url.isNullOrEmpty()) {
+            binding.webView.loadUrl(url)
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -96,10 +105,10 @@ class MainActivity : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-        // Custom User Agent
+        // Custom User Agent (v1.2.0 Ultra Boost)
         val defaultUa = settings.userAgentString
-        settings.userAgentString = "$defaultUa All18App/1.1.4"
-        settings.setSupportMultipleWindows(false)
+        settings.userAgentString = "$defaultUa All18App/1.2.0"
+        settings.setSupportMultipleWindows(true)
 
         // Hardware acceleration
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
@@ -174,6 +183,28 @@ class MainActivity : AppCompatActivity() {
 
                 showSystemUI()
                 requestedOrientation = originalOrientation
+            }
+
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: android.os.Message?
+            ): Boolean {
+                val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
+                val tempWebView = WebView(this@MainActivity)
+                tempWebView.settings.javaScriptEnabled = true
+                tempWebView.settings.domStorageEnabled = true
+                tempWebView.webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                        val target = request?.url?.toString() ?: return false
+                        binding.webView.loadUrl(target)
+                        return true
+                    }
+                }
+                transport.webView = tempWebView
+                resultMsg.sendToTarget()
+                return true
             }
 
             override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -264,6 +295,15 @@ class MainActivity : AppCompatActivity() {
                     })();
                 """.trimIndent()
                 view?.evaluateJavascript(autoBypassScript, null)
+            }
+
+            override fun onReceivedSslError(
+                view: WebView?,
+                handler: android.webkit.SslErrorHandler?,
+                error: android.net.http.SslError?
+            ) {
+                // Ensure edge media/video CDNs load smoothly without silent blocks
+                handler?.proceed()
             }
         }
     }
