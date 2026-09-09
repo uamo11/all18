@@ -647,13 +647,38 @@
     function saveFeedCache() {
         if (!state.items || state.items.length === 0 || state.query) return;
         try {
+            const isTT = document.body.dataset.theme === 'tiktok' || document.body.classList.contains('tiktok-standalone-body');
+            const targetGrid = elements.grid || document.getElementById('mediaGrid');
+            let gridScrollTop = 0;
+            let activeIndex = 0;
+
+            if (isTT && targetGrid) {
+                gridScrollTop = targetGrid.scrollTop;
+                const cards = targetGrid.querySelectorAll('.video-card');
+                if (cards.length > 0) {
+                    const cardHeight = cards[0].clientHeight || window.innerHeight;
+                    if (cardHeight > 0) {
+                        activeIndex = Math.round(gridScrollTop / cardHeight);
+                    }
+                }
+            }
+
             const key = FEED_CACHE_PREFIX + getFeedCacheKey();
             const payload = {
                 items: state.items.slice(0, 48),
                 scrollY: window.scrollY || window.pageYOffset || 0,
+                gridScrollTop: gridScrollTop,
+                activeIndex: activeIndex,
                 savedAt: Date.now()
             };
             sessionStorage.setItem(key, JSON.stringify(payload));
+            if (isTT) {
+                sessionStorage.setItem('all18_tiktok_state', JSON.stringify({
+                    gridScrollTop,
+                    activeIndex,
+                    savedAt: Date.now()
+                }));
+            }
         } catch (e) {}
     }
 
@@ -661,6 +686,7 @@
         if (state.query) return false;
         try {
             const key = FEED_CACHE_PREFIX + getFeedCacheKey();
+            const isTT = document.body.dataset.theme === 'tiktok' || document.body.classList.contains('tiktok-standalone-body');
             const raw = sessionStorage.getItem(key);
             if (raw) {
                 const data = JSON.parse(raw);
@@ -672,7 +698,19 @@
                         renderCards(state.items);
                         const badge = elements.itemCount || document.getElementById('itemCount');
                         if (badge) badge.textContent = `(${state.items.length}+ videos)`;
-                        if (data.scrollY > 0) {
+
+                        if (isTT) {
+                            const targetIdx = data.activeIndex || 0;
+                            const targetScroll = data.gridScrollTop || 0;
+                            setTimeout(() => {
+                                const cards = targetGrid.querySelectorAll('.video-card');
+                                if (cards && cards[targetIdx]) {
+                                    cards[targetIdx].scrollIntoView({ behavior: 'instant', block: 'start' });
+                                } else if (targetScroll > 0) {
+                                    targetGrid.scrollTop = targetScroll;
+                                }
+                            }, 50);
+                        } else if (data.scrollY > 0) {
                             setTimeout(() => window.scrollTo({ top: data.scrollY, behavior: 'instant' }), 40);
                         }
                         return true;
@@ -685,11 +723,11 @@
 
     function getCuratedLocalFeed(src) {
         return [
-            { id: 'ph_65a83a21b8f01', source: 'Pornhub', title: 'Sensual Latina Exclusiva HD', duration: '12:30', views: '280K vistas', rating: '98%', author: '@PornhubStar', thumb: 'https://ci.phncdn.com/videos/202401/15/sample.jpg', embed_url: 'https://www.pornhub.com/embed/65a83a21b8f01', quality: '1080p HD' },
-            { id: 'xv_ommelke9c80', source: 'XVideos', title: 'Hot College Blonde HD Special', duration: '15:20', views: '320K vistas', rating: '97%', author: '@XVideosStar', thumb: 'https://thumbs-gcore.xvideos-cdn.com/videos/thumbs169poster/sample.jpg', embed_url: 'https://www.xvideos.com/embedframe/ommelke9c80', quality: '1080p HD' },
-            { id: 'xn_1imfom09', source: 'XNXX', title: 'Top Model Colección Ardiente', duration: '11:45', views: '240K vistas', rating: '96%', author: '@XNXXCreator', thumb: 'https://thumb-cdn77.xnxx-cdn.com/videos/thumbs169poster/sample_xn.jpg', embed_url: 'https://www.xnxx.com/embedframe/1imfom09', quality: '1080p HD' },
-            { id: 'rg_sprycaringafricangroundhornbill', source: 'RedGifs', title: 'Short Hot Loop Viral', duration: 'Short', views: '150K vistas', rating: '99%', author: '@All18Creator', thumb: 'https://media.redgifs.com/sprycaringafricangroundhornbill-poster.jpg', media_url: 'https://media.redgifs.com/sprycaringafricangroundhornbill.mp4', embed_url: 'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill', type: 'short', quality: '1080p HD' },
-            { id: 'ep_cIG0retUIzC', source: 'Eporner', title: 'Exclusivo Pure 1080p Ultra', duration: '14:10', views: '190K vistas', rating: '99%', author: '@EpornerStar', thumb: 'https://static-eporner.com/sample.jpg', embed_url: 'https://www.eporner.com/embed/cIG0retUIzC/', quality: '1080p HD' }
+            { id: 'ph_65a83a21b8f01', source: 'Pornhub', title: 'Sensual Latina Exclusiva HD', duration: '12:30', views: '280K vistas', rating: '98%', author: '@PornhubStar', thumb: window.FALLBACK_THUMB, embed_url: 'https://www.pornhub.com/embed/65a83a21b8f01', quality: '1080p HD' },
+            { id: 'xv_ommelke9c80', source: 'XVideos', title: 'Hot College Blonde HD Special', duration: '15:20', views: '320K vistas', rating: '97%', author: '@XVideosStar', thumb: window.FALLBACK_THUMB, embed_url: 'https://www.xvideos.com/embedframe/ommelke9c80', quality: '1080p HD' },
+            { id: 'xn_1imfom09', source: 'XNXX', title: 'Top Model Colección Ardiente', duration: '11:45', views: '240K vistas', rating: '96%', author: '@XNXXCreator', thumb: window.FALLBACK_THUMB, embed_url: 'https://www.xnxx.com/embedframe/1imfom09', quality: '1080p HD' },
+            { id: 'rg_sprycaringafricangroundhornbill', source: 'RedGifs', title: 'Short Hot Loop Viral', duration: 'Short', views: '150K vistas', rating: '99%', author: '@All18Creator', thumb: window.FALLBACK_THUMB, media_url: 'https://media.redgifs.com/sprycaringafricangroundhornbill.mp4', embed_url: 'https://www.redgifs.com/ifr/sprycaringafricangroundhornbill', type: 'short', quality: '1080p HD' },
+            { id: 'ep_cIG0retUIzC', source: 'Eporner', title: 'Exclusivo Pure 1080p Ultra', duration: '14:10', views: '190K vistas', rating: '99%', author: '@EpornerStar', thumb: window.FALLBACK_THUMB, embed_url: 'https://www.eporner.com/embed/cIG0retUIzC/', quality: '1080p HD' }
         ];
     }
 
@@ -751,10 +789,25 @@
             const targetGrid = elements.grid || document.getElementById('mediaGrid');
             if (!targetGrid) return;
 
-            const existingIds = new Set(state.items.map(i => i.id));
+            const existingKeys = new Set();
+            state.items.forEach(i => {
+                if (i.id) existingKeys.add(i.id);
+                if (i.raw_id) existingKeys.add(i.raw_id);
+                if (i.url) existingKeys.add(i.url);
+                if (i.title) existingKeys.add(i.title.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
+            });
             const uniqueItems = items.filter(i => {
-                if (existingIds.has(i.id)) return false;
+                const normTitle = i.title ? i.title.trim().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                if (i.id && existingKeys.has(i.id)) return false;
+                if (i.raw_id && existingKeys.has(i.raw_id)) return false;
+                if (i.url && existingKeys.has(i.url)) return false;
+                if (normTitle && normTitle.length > 6 && existingKeys.has(normTitle)) return false;
                 if (isTikTokMode && (globalSeenShortsIds.has(i.id) || (i.raw_id && globalSeenShortsIds.has(i.raw_id)))) return false;
+
+                if (i.id) existingKeys.add(i.id);
+                if (i.raw_id) existingKeys.add(i.raw_id);
+                if (i.url) existingKeys.add(i.url);
+                if (normTitle) existingKeys.add(normTitle);
                 return true;
             });
             if (uniqueItems.length === 0) return;
@@ -917,13 +970,13 @@
                 providerTasks.push(epTask);
             }
 
-            // 8. Dynamic X Feed: Mix in Booru Hot Photos on Initial Page
-            if (document.body.dataset.theme === 'twitter' && src === 'all' && page === 1) {
-                const xPhotoTask = fetch(`api.php?action=photos&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=1`)
+            // 8. Dynamic X Feed: Mix in HD Photos & Booru Galleries on Every Page for a Rich Social Timeline
+            if (document.body.dataset.theme === 'twitter' && src === 'all') {
+                const xPhotoTask = fetch(`api.php?action=photos&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}&page=${page}`)
                     .then(r => r.ok ? r.json() : null)
                     .then(data => {
                         if (data && data.data && data.data.length > 0) {
-                            appendProgressiveItems(data.data.slice(0, 6));
+                            appendProgressiveItems(data.data.slice(0, 5));
                         }
                     })
                     .catch(() => {});
@@ -1164,7 +1217,7 @@
                         ${escapeHTML(item.title || '').replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>').replace(/(@[a-zA-Z0-9_]+)/g, '<span class="x-mention">$1</span>')}
                     </p>
                     <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
-                        <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded');"/>
+                        <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');"/>
                         ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                         ${!isPhoto ? `<span class="duration-badge">${item.duration || '0:34'}</span>` : ''}
                         ${!isPhoto && savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
@@ -1224,7 +1277,7 @@
                     <button class="ig-post-more-btn" type="button" title="Opciones" onclick="event.stopPropagation()">···</button>
                 </div>
                 <div class="thumb-container">
-                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded');"/>
+                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');"/>
                     ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                     <button class="ig-media-tagged-btn" type="button" title="Etiquetados" onclick="event.stopPropagation()">👤</button>
@@ -1281,7 +1334,7 @@
         else if (currentTheme === 'tiktok') {
             card.innerHTML = `
                 <div class="thumb-container">
-                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || ''}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=window.FALLBACK_THUMB; this.classList.add('loaded');"/>
+                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || ''}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');" onerror="this.onerror=null; this.dataset.failed='true'; this.src=window.FALLBACK_THUMB; this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');"/>
                     ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     <div class="tiktok-center-play">
                         <svg viewBox="0 0 24 24" width="64" height="64" fill="rgba(255,255,255,0.85)"><path d="M8 5v14l11-7z"/></svg>
@@ -1335,7 +1388,7 @@
         else {
             card.innerHTML = `
                 <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
-                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded');"/>
+                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');"/>
                     ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     ${!isPhoto ? `<span class="duration-badge">${item.duration || '18:50'}</span>` : ''}
                     ${!isPhoto ? `<span class="source-badge-pill ${item.source || 'Pornhub'}">${item.source || 'Pornhub'}</span>` : ''}
@@ -1681,15 +1734,28 @@
 
                         const isTT = document.body.dataset.theme === 'tiktok' || document.body.classList.contains('tiktok-standalone-body');
 
-                        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
                             if (!v.src && v.dataset.src) {
                                 v.src = v.dataset.src;
                             }
                             v.muted = window.isTikTokMuted !== false;
                             v.defaultMuted = window.isTikTokMuted !== false;
-                            v.play().then(() => {
-                                targetCard.classList.add('video-playing');
-                            }).catch(() => {});
+                            const playPromise = v.play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(() => {
+                                    targetCard.classList.add('video-playing');
+                                }).catch(err => {
+                                    v.muted = true;
+                                    v.play().then(() => {
+                                        targetCard.classList.add('video-playing');
+                                    }).catch(() => {});
+                                });
+                            }
+
+                            v.onended = () => {
+                                v.currentTime = 0;
+                                v.play().catch(() => {});
+                            };
 
                             // Preload next card video
                             const nextCard = targetCard.nextElementSibling;
@@ -1710,7 +1776,7 @@
                             }
                         }
                     });
-                }, { threshold: [0.1, 0.5, 0.8] });
+                }, { threshold: [0.1, 0.35, 0.7], rootMargin: "0px 0px 0px 0px" });
             }
             window.feedVideoObserver.observe(card);
         }
@@ -2855,6 +2921,23 @@
 
         if (state.view === 'favorites') {
             renderFavorites();
+        }
+
+        // Live update profile counters & panes if open
+        const statFavs = document.getElementById('statUserFavs');
+        if (statFavs) statFavs.textContent = state.favorites.length;
+        const ttStatFavs = document.getElementById('ttStatLikes');
+        if (ttStatFavs) ttStatFavs.textContent = state.favorites.length;
+        const profFavCount = document.getElementById('profileFavCount');
+        if (profFavCount) profFavCount.textContent = state.favorites.length;
+
+        const pFavs = document.getElementById('pPaneFavs');
+        if (pFavs && pFavs.style.display !== 'none' && typeof window.renderProfileFavorites === 'function') {
+            window.renderProfileFavorites();
+        }
+        const ttFavs = document.getElementById('ttPaneFavs');
+        if (ttFavs && ttFavs.style.display !== 'none' && typeof window.switchTikTokProfileTab === 'function') {
+            window.switchTikTokProfileTab('favorites');
         }
     }
 
@@ -4111,6 +4194,99 @@
         } else {
             if (paneVideos) paneVideos.style.display = 'block';
             if (paneFavs) paneFavs.style.display = 'none';
+        }
+    };
+
+    // Standard Universal Profile Modal Helpers
+    window.updateStandardProfileData = function () {
+        const nameEl = document.getElementById('modalUserName');
+        const handleEl = document.getElementById('modalUserHandle');
+        const avatarEl = document.getElementById('modalUserAvatar');
+        const statFavs = document.getElementById('statUserFavs');
+        const statPosts = document.getElementById('statUserPosts');
+        const countFavsPill = document.getElementById('profileFavCount');
+
+        const dispName = (userProfile && userProfile.displayName) || 'Usuario';
+        const dispHandle = (userProfile && userProfile.handle) || ('@' + dispName.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+        const dispAvatar = (userProfile && userProfile.photoURL) || CREATOR_AVATARS[0];
+
+        if (nameEl) nameEl.textContent = dispName;
+        if (handleEl) handleEl.textContent = dispHandle;
+        if (avatarEl) avatarEl.src = dispAvatar;
+        const favCount = state.favorites ? state.favorites.length : 0;
+        if (statFavs) statFavs.textContent = favCount;
+        if (countFavsPill) countFavsPill.textContent = favCount;
+        if (statPosts) statPosts.textContent = (state.userPosts || []).filter(p => p.author === dispName || p.is_user_post).length;
+    };
+
+    window.switchProfileTab = function (tab) {
+        document.querySelectorAll('.profile-tab-button').forEach(btn => {
+            const isTarget = (tab === 'videos' && btn.id === 'pTabBtnVideos') ||
+                             ((tab === 'favorites' || tab === 'liked') && btn.id === 'pTabBtnFavs') ||
+                             (tab === 'edit' && btn.id === 'pTabBtnEdit');
+            btn.classList.toggle('active', isTarget);
+        });
+
+        const pVideos = document.getElementById('pPaneVideos');
+        const pFavs = document.getElementById('pPaneFavs');
+        const pEdit = document.getElementById('pPaneEdit');
+
+        if (tab === 'favorites' || tab === 'liked') {
+            if (pVideos) pVideos.style.display = 'none';
+            if (pEdit) pEdit.style.display = 'none';
+            if (pFavs) pFavs.style.display = 'block';
+            window.renderProfileFavorites();
+        } else if (tab === 'edit') {
+            if (pVideos) pVideos.style.display = 'none';
+            if (pFavs) pFavs.style.display = 'none';
+            if (pEdit) pEdit.style.display = 'block';
+        } else {
+            if (pVideos) pVideos.style.display = 'block';
+            if (pFavs) pFavs.style.display = 'none';
+            if (pEdit) pEdit.style.display = 'none';
+            window.renderProfileVideos();
+        }
+    };
+
+    window.renderProfileFavorites = function () {
+        const grid = document.getElementById('userProfileFavsGrid');
+        const emptyBox = document.getElementById('userProfileNoFavs');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        const favs = state.favorites || [];
+
+        if (favs.length === 0) {
+            if (emptyBox) emptyBox.style.display = 'flex';
+            grid.style.display = 'none';
+        } else {
+            if (emptyBox) emptyBox.style.display = 'none';
+            grid.style.display = 'grid';
+            favs.forEach((item, idx) => {
+                const card = createVideoCard(item, idx);
+                grid.appendChild(card);
+            });
+        }
+    };
+
+    window.renderProfileVideos = function () {
+        const grid = document.getElementById('userProfileVideosGrid');
+        const emptyBox = document.getElementById('userProfileNoVideos');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        const myVideos = (state.userPosts || []).filter(p => p.author === (userProfile.displayName || 'Usuario') || p.is_user_post);
+
+        if (myVideos.length === 0) {
+            if (emptyBox) emptyBox.style.display = 'flex';
+            grid.style.display = 'none';
+        } else {
+            if (emptyBox) emptyBox.style.display = 'none';
+            grid.style.display = 'grid';
+            myVideos.forEach((v, idx) => {
+                const card = createVideoCard(v, idx);
+                grid.appendChild(card);
+            });
         }
     };
 

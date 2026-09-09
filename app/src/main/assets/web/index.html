@@ -57,11 +57,6 @@
                 <button class="ph-search-btn btn-grid-density" type="button" title="Cambiar cuadrícula (1, 2, 3 columnas)" onclick="window.cycleGridDensity && window.cycleGridDensity()">
                     <span class="density-icon" style="font-size: 15px;">▦</span>
                 </button>
-                <button class="ph-search-btn" type="button" title="Abrir en Nueva Instancia / Ventana" onclick="window.openNewInstance ? window.openNewInstance('index.html') : window.open('index.html', '_blank')">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
-                    </svg>
-                </button>
                 <button class="ph-search-btn" type="button" title="Buscar" onclick="window.toggleSearchModal && window.toggleSearchModal()">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                         <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
@@ -100,9 +95,6 @@
             </button>
             <button class="ph-chip ph-chip-shorties" type="button" onclick="window.location.href='tiktok.html'">
                 <span class="ph-chip-arrow">➤</span> Shorts
-            </button>
-            <button class="ph-chip" type="button" onclick="window.location.href='twitter.html'">
-                𝕏 Feed
             </button>
             <button class="ph-chip active" type="button" onclick="window.filterByCategory && window.filterByCategory('')">
                 Destacados
@@ -228,10 +220,66 @@
                 <h2 id="modalUserName" class="profile-name">Mi Perfil AllTube</h2>
                 <p id="modalUserHandle" class="profile-handle">@usuario</p>
             </div>
-            <div class="profile-actions" style="margin-top: 16px; text-align: center;">
-                <button class="btn-primary" type="button" onclick="window.loginWithGoogle && window.loginWithGoogle()" style="background: #ff9000; color: #000; font-weight: 700; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer;">
-                    Iniciar Sesión con Google
+
+            <!-- Profile Stats Bar -->
+            <div class="profile-stats-bar">
+                <div class="profile-stat-box">
+                    <strong id="statUserPosts">0</strong>
+                    <span>Videos</span>
+                </div>
+                <div class="profile-stat-box">
+                    <strong id="statUserFavs">0</strong>
+                    <span>Me Gusta</span>
+                </div>
+                <div class="profile-stat-box">
+                    <strong>100%</strong>
+                    <span>Reputación</span>
+                </div>
+            </div>
+
+            <!-- Profile Nav Tabs -->
+            <div class="profile-nav-tabs">
+                <button id="pTabBtnVideos" class="profile-tab-button" type="button" onclick="window.switchProfileTab('videos')">
+                    📹 Mis Videos
                 </button>
+                <button id="pTabBtnFavs" class="profile-tab-button active" type="button" onclick="window.switchProfileTab('favorites')">
+                    ❤️ Mis Favoritos (<span id="profileFavCount">0</span>)
+                </button>
+                <button id="pTabBtnEdit" class="profile-tab-button" type="button" onclick="window.switchProfileTab('edit')">
+                    ⚙️ Editar
+                </button>
+            </div>
+
+            <!-- Tab Content Panes -->
+            <div class="profile-tab-content">
+                <!-- Videos Tab Pane -->
+                <div id="pPaneVideos" class="profile-pane" style="display: none;">
+                    <div id="userProfileVideosGrid" class="media-grid"></div>
+                    <div id="userProfileNoVideos" class="empty-state" style="display: none; padding: 25px 15px; text-align: center;">
+                        <div class="empty-icon" style="font-size: 38px; margin-bottom: 8px;">🎬</div>
+                        <h3 style="font-size: 16px; margin-bottom: 6px;">Aún no has publicado videos</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Comparte tus videos con la comunidad.</p>
+                    </div>
+                </div>
+
+                <!-- Favorites Tab Pane (Default Active) -->
+                <div id="pPaneFavs" class="profile-pane active" style="display: block;">
+                    <div id="userProfileFavsGrid" class="media-grid"></div>
+                    <div id="userProfileNoFavs" class="empty-state" style="display: none; padding: 25px 15px; text-align: center;">
+                        <div class="empty-icon" style="font-size: 38px; margin-bottom: 8px;">❤️</div>
+                        <h3 style="font-size: 16px; margin-bottom: 6px;">No tienes favoritos guardados</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Haz clic en el corazón de cualquier video para guardarlo aquí.</p>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Tab Pane -->
+                <div id="pPaneEdit" class="profile-pane" style="display: none;">
+                    <div style="padding: 15px; text-align: center;">
+                        <button class="btn-primary" type="button" onclick="window.loginWithGoogle && window.loginWithGoogle()" style="background: #ff9000; color: #000; font-weight: 700; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer;">
+                            Iniciar Sesión con Google
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -409,12 +409,61 @@
             transform: scale(0.97);
         }
 
+        @keyframes hubThumbShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes hubThumbSpinner {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .hub-thumb-box {
             position: relative;
             width: 100%;
             padding-top: 56.25%; /* 16:9 */
-            background: #000;
+            background: #111116;
             overflow: hidden;
+        }
+
+        .hub-thumb-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #111115 0%, #1c1c24 40%, #292934 50%, #1c1c24 60%, #111115 100%);
+            background-size: 200% 100%;
+            animation: hubThumbShimmer 1.8s infinite linear;
+            z-index: 1;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .hub-thumb-box::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 26px;
+            height: 26px;
+            margin-top: -13px;
+            margin-left: -13px;
+            border: 2.5px solid rgba(255, 255, 255, 0.12);
+            border-top-color: #ff9000;
+            border-radius: 50%;
+            animation: hubThumbSpinner 0.8s linear infinite;
+            z-index: 2;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .hub-thumb-box.loaded::before,
+        .hub-thumb-box.loaded::after {
+            display: none !important;
+            opacity: 0 !important;
         }
 
         .hub-thumb-img {
@@ -424,7 +473,13 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: opacity 0.3s;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            z-index: 3;
+        }
+
+        .hub-thumb-img.loaded {
+            opacity: 1;
         }
 
         .hub-badge-source {
@@ -807,9 +862,6 @@
             <button class="hub-prov-chip" data-source="xnxx" onclick="filterBySource('xnxx')">
                 ❌ XNXX
             </button>
-            <button class="hub-prov-chip" data-source="redgifs" onclick="filterBySource('redgifs')">
-                ⚡ RedGifs
-            </button>
             <button class="hub-prov-chip" data-source="beeg" onclick="filterBySource('beeg')">
                 🐝 Beeg
             </button>
@@ -929,8 +981,7 @@
             xnxx: 'XNXX (Oficial)',
             beeg: 'Beeg (Oficial)',
             youporn: 'YouPorn (Oficial)',
-            redtube: 'RedTube (Oficial)',
-            redgifs: 'RedGifs (Shorts HD)'
+            redtube: 'RedTube (Oficial)'
         };
 
         const HUB_CACHE_KEY = 'all18_hub_cache_v2';
@@ -1145,7 +1196,7 @@
             if (btnMore) btnMore.style.display = 'none';
             if (countEl) countEl.textContent = 'Cargando contenido...';
 
-            const url = `api.php?action=search&source=${encodeURIComponent(state.source)}&category=${encodeURIComponent(state.category)}&q=${encodeURIComponent(state.query)}&page=${state.page}`;
+            const url = `api.php?action=search&source=${encodeURIComponent(state.source)}&category=${encodeURIComponent(state.category)}&q=${encodeURIComponent(state.query)}&page=${state.page}&exclude_shorts=1`;
 
             fetch(url)
                 .then(res => res.json())
@@ -1154,14 +1205,27 @@
                     if (loadingEl) loadingEl.style.display = 'none';
 
                     if (data && data.status === 'success' && data.data) {
-                        // Strict video-only filtering: Multi-Hub must display only playable videos
-                        const newItems = data.data.filter(item => {
-                            if (item.type === 'photo') return false;
-                            if (item.isPhoto === true) return false;
+                        // Strict video-only filtering: Multi-Hub must display only full videos (NO SHORTS, NO PHOTOS)
+                        const filtered = data.data.filter(item => {
+                            if (item.type === 'photo' || item.isPhoto === true) return false;
                             if (item.duration === 'Foto HD' || item.duration === 'Foto') return false;
                             if (item.category === 'Fotos' || item.category === 'Photos') return false;
+                            if (item.source === 'redgifs' || item.source === 'RedGifs') return false;
+                            if (item.type === 'short' || item.isShort) return false;
+                            if (item.duration_raw && item.duration_raw > 0 && item.duration_raw < 60) return false;
                             return true;
                         });
+
+                        // Deduplicate items to prevent repeated cards
+                        const existingIds = new Set(reset ? [] : state.items.map(it => it.id || it.url || it.title));
+                        const newItems = [];
+                        for (const it of filtered) {
+                            const key = it.id || it.url || it.title;
+                            if (!existingIds.has(key)) {
+                                existingIds.add(key);
+                                newItems.push(it);
+                            }
+                        }
 
                         state.items = reset ? newItems : state.items.concat(newItems);
                         renderCards(newItems, reset);
@@ -1201,7 +1265,7 @@
                 return `
                     <a href="${watchUrl}" class="hub-card">
                         <div class="hub-thumb-box">
-                            <img class="hub-thumb-img" src="${thumb}" data-retry-src="${item.thumb || ''}" alt="${item.title}" loading="lazy" decoding="async" onerror="this.dataset.failed='true'; this.src='${AMOLED_FALLBACK_SVG}'">
+                            <img class="hub-thumb-img" src="${thumb}" data-retry-src="${item.thumb || ''}" alt="${item.title}" loading="lazy" decoding="async" onload="this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');" onerror="this.dataset.failed='true'; this.src='${AMOLED_FALLBACK_SVG}'; this.classList.add('loaded'); this.parentElement && this.parentElement.classList.add('loaded');">
                             ${previewVid ? `<video class="hub-preview-video" src="${previewVid}" loop playsinline muted preload="none" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;"></video>` : ''}
                             <span class="hub-badge-source ${sourceClass}">${sourceName}</span>
                             <span class="hub-badge-dur">${duration}</span>
