@@ -873,12 +873,14 @@ body[data-theme="instagram"] .x-bottom-nav {
 .ig-media-lightbox {
     position: fixed !important;
     inset: 0 !important;
-    background: #000000 !important;
+    background: rgba(0, 0, 0, 0.96) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     z-index: 100000 !important;
     display: none !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    align-items: stretch !important;
+    align-items: center !important;
     overflow: hidden !important;
 }
 
@@ -887,18 +889,17 @@ body[data-theme="instagram"] .x-bottom-nav {
 }
 
 .ig-lightbox-topbar {
-    height: 54px !important;
+    height: 52px !important;
     padding: 0 16px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
     width: 100% !important;
+    max-width: 600px !important;
     z-index: 30 !important;
-    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 70%, transparent 100%) !important;
     box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    background: transparent !important;
 }
 
 .ig-lb-top-left {
@@ -908,17 +909,24 @@ body[data-theme="instagram"] .x-bottom-nav {
 }
 
 .ig-lightbox-close-btn {
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     border: none !important;
     color: #ffffff !important;
     cursor: pointer !important;
-    padding: 4px !important;
+    padding: 6px !important;
+    border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.15s ease !important;
+}
+
+.ig-lightbox-close-btn:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
 }
 
 .ig-lb-title {
-    font-size: 21px !important;
+    font-size: 20px !important;
     font-weight: 800 !important;
     color: #ffffff !important;
     margin: 0 !important;
@@ -965,34 +973,97 @@ body[data-theme="instagram"] .x-bottom-nav {
     align-items: center !important;
 }
 
+/* Compact Centered Reel Viewport (haz los videos algo más pequeños) */
+.ig-reel-stage {
+    flex: 1 !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4px 12px 16px 12px !important;
+    box-sizing: border-box !important;
+    min-height: 0 !important;
+}
+
+.ig-reel-viewport {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    height: 100% !important;
+    max-height: 72vh !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    background: #000000 !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 .ig-lightbox-media-container {
     width: 100% !important;
     height: 100% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    position: absolute !important;
-    inset: 0 !important;
+    position: relative !important;
     overflow: hidden !important;
     background: #000000 !important;
 }
 
 .ig-lightbox-media-container video,
-.ig-lightbox-media-container img {
+.ig-lightbox-media-container img,
+.ig-lightbox-media-container iframe {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     background: #000000 !important;
+    border: none !important;
+}
+
+.ig-reel-sound-btn {
+    position: absolute !important;
+    top: 14px !important;
+    right: 14px !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    background: rgba(0, 0, 0, 0.65) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 28 !important;
+    font-size: 15px !important;
+}
+
+.ig-reel-cinema-overlay-btn {
+    position: absolute !important;
+    top: 14px !important;
+    left: 14px !important;
+    background: rgba(0, 149, 246, 0.85) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #fff !important;
+    border-radius: 9999px !important;
+    padding: 5px 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    z-index: 28 !important;
 }
 
 .ig-lightbox-right-actions {
     position: absolute !important;
-    right: 12px !important;
-    bottom: 75px !important;
+    right: 10px !important;
+    bottom: 20px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 18px !important;
+    gap: 16px !important;
     z-index: 25 !important;
 }
 
@@ -1004,24 +1075,24 @@ body[data-theme="instagram"] .x-bottom-nav {
     flex-direction: column !important;
     align-items: center !important;
     gap: 3px !important;
-    font-size: 11.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     cursor: pointer !important;
     padding: 0 !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
 }
 
 .ig-lb-action-btn svg {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8)) !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) !important;
 }
 
 .ig-lb-disc-wrap {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
     border-radius: 6px !important;
     overflow: hidden !important;
     border: 1.5px solid #ffffff !important;
-    margin-top: 4px !important;
+    margin-top: 2px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
 }
 
@@ -1033,14 +1104,14 @@ body[data-theme="instagram"] .x-bottom-nav {
 
 .ig-lightbox-bottom-info {
     position: absolute !important;
-    left: 14px !important;
-    bottom: 70px !important;
-    max-width: calc(100% - 90px) !important;
+    left: 12px !important;
+    bottom: 14px !important;
+    max-width: calc(100% - 80px) !important;
     z-index: 25 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+    gap: 7px !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
 }
 
 .ig-lb-author-row {

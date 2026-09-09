@@ -783,8 +783,6 @@
 
         const providerTasks = [];
 
-        const isTikTokMode = document.body.dataset.theme === 'tiktok' || state.view === 'shorts';
-
         // 1. Instant User Posts (Page 1)
         if (page === 1) {
             const userTask = fetch(`api.php?action=user_posts&q=${encodeURIComponent(q)}&category=${encodeURIComponent(cat)}`)
@@ -1856,6 +1854,12 @@
                 if (backBtn) {
                     backBtn.href = 'twitter.html';
                     backBtn.innerHTML = '<span>◀</span> Volver a Timeline (𝕏)';
+                }
+            } else if (fromParam === 'instagram' || fromParam === 'instagram.html' || (document.referrer && document.referrer.includes('instagram.html'))) {
+                const backBtn = document.querySelector('.btn-back-feed');
+                if (backBtn) {
+                    backBtn.href = 'instagram.html';
+                    backBtn.innerHTML = '<span>◀</span> Volver a Instagram';
                 }
             }
         } catch(e) {}
@@ -3971,67 +3975,79 @@
     window.currentXModalItem = null;
 
     function resolveVideoSources(item) {
-        if (!item) return { mediaUrl: '', embedUrl: '' };
+        if (!item) return { mediaUrl: '', embedUrl: '', isPhoto: false };
         const isUserPost = !!item.is_user_post;
-        let mediaUrl = item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '');
+        const isExplicitPhoto = item.type === 'photo';
+
+        // 1. Direct Video Streams (MP4 / WebM / CDN Previews)
+        let mediaUrl = item.media_url || item.preview_url || item.preview_video || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || '';
         let embedUrl = item.embed_url || '';
         const rawId = item.raw_id || (item.id ? String(item.id).replace(/^[a-z]+_/, '') : '');
+        const id = String(item.id || '');
 
-        // Fallback provider URL resolution based on standard ID prefixes
-        if (!mediaUrl && !embedUrl && item.id) {
-            const id = String(item.id);
-            if (id.startsWith('ph_')) {
-                embedUrl = `https://www.pornhub.com/embed/${rawId}`;
-            } else if (id.startsWith('xv_')) {
-                embedUrl = `https://www.xvideos.com/embedframe/${rawId}`;
-            } else if (id.startsWith('xn_')) {
-                embedUrl = `https://www.xnxx.com/embedframe/${rawId}`;
-            } else if (id.startsWith('yp_')) {
-                embedUrl = `https://www.youporn.com/embed/${rawId}`;
-            } else if (id.startsWith('rt_')) {
-                embedUrl = `https://embed.redtube.com/?id=${rawId}`;
-            } else if (id.startsWith('rg_')) {
-                mediaUrl = `https://media.redgifs.com/${rawId}.mp4`;
-                embedUrl = `https://www.redgifs.com/ifr/${rawId}?autoplay=1`;
+        if (item.source === 'RedGifs' || id.startsWith('rg_')) {
+            if (rawId) {
+                if (!mediaUrl) mediaUrl = `https://media.redgifs.com/${rawId}.mp4`;
+                if (!embedUrl) embedUrl = `https://www.redgifs.com/ifr/${rawId}?autoplay=1`;
             }
         }
+
+        // Provider URL resolution based on standard ID prefixes and sources
+        if (!mediaUrl && !embedUrl && rawId) {
+            if (id.startsWith('ph_') || item.source === 'Pornhub') {
+                embedUrl = `https://www.pornhub.com/embed/${rawId}`;
+            } else if (id.startsWith('xv_') || item.source === 'XVideos') {
+                embedUrl = `https://www.xvideos.com/embedframe/${rawId}`;
+            } else if (id.startsWith('xn_') || item.source === 'XNXX') {
+                embedUrl = `https://www.xnxx.com/embedframe/${rawId}`;
+            } else if (id.startsWith('yp_') || item.source === 'YouPorn') {
+                embedUrl = `https://www.youporn.com/embed/${rawId}`;
+            } else if (id.startsWith('rt_') || item.source === 'RedTube') {
+                embedUrl = `https://embed.redtube.com/?id=${rawId}`;
+            } else if (id.startsWith('ep_') || item.source === 'Eporner') {
+                embedUrl = `https://www.eporner.com/embed/${rawId}/`;
+            }
+        }
+
         if (!embedUrl && item.url && !item.url.endsWith('.mp4') && !item.url.endsWith('.webm')) {
             embedUrl = item.url;
         }
         if (!mediaUrl && item.url && (item.url.endsWith('.mp4') || item.url.endsWith('.webm') || item.url.includes('.mp4?'))) {
             mediaUrl = item.url;
         }
-        if (!embedUrl && item.source === 'RedGifs' && rawId) {
-            embedUrl = `https://www.redgifs.com/ifr/${rawId}?autoplay=1`;
-        }
-        if (!mediaUrl && item.source === 'RedGifs' && rawId) {
-            mediaUrl = `https://media.redgifs.com/${rawId}.mp4`;
-        }
 
-        return { mediaUrl, embedUrl };
+        // Determine if this is truly a photo post
+        const isPhoto = isExplicitPhoto || (!item.duration && !mediaUrl && !embedUrl && (item.photo_url || item.image_url));
+
+        return { mediaUrl, embedUrl, isPhoto };
     }
 
     window.openCurrentWatchCinema = function(targetSection = '') {
-        const item = window.currentXModalItem;
+        const item = window.currentXModalItem || window.currentIgModalItem;
         if (!item) return;
         try {
             sessionStorage.setItem('all18_current_watch', JSON.stringify(item));
             localStorage.setItem('all18_current_watch', JSON.stringify(item));
-            sessionStorage.setItem('all18_from_page', 'twitter.html');
+            const fromPage = window.location.pathname.includes('instagram.html') ? 'instagram' : 'twitter';
+            sessionStorage.setItem('all18_from_page', fromPage + '.html');
         } catch(e) {}
-        window.closeXMediaModal(false);
+        if (typeof window.closeXMediaModal === 'function') window.closeXMediaModal(false);
+        if (typeof window.closeIgMediaModal === 'function') window.closeIgMediaModal(false);
+        const fromPage = window.location.pathname.includes('instagram.html') ? 'instagram' : 'twitter';
         const hash = targetSection === 'comments' ? '#watchCommentsSection' : '';
-        window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&from=twitter${hash}`;
+        window.location.href = `watch.html?v=${encodeURIComponent(item.id)}&from=${fromPage}${hash}`;
     };
 
     window.openWatchCinemaItem = function(itemId) {
-        const item = state.items.find(i => String(i.id) === String(itemId)) || { id: itemId };
+        const item = (state.items && state.items.find(i => String(i.id) === String(itemId))) || { id: itemId };
         try {
             sessionStorage.setItem('all18_current_watch', JSON.stringify(item));
             localStorage.setItem('all18_current_watch', JSON.stringify(item));
-            sessionStorage.setItem('all18_from_page', 'twitter.html');
+            const fromPage = window.location.pathname.includes('instagram.html') ? 'instagram' : 'twitter';
+            sessionStorage.setItem('all18_from_page', fromPage + '.html');
         } catch(e) {}
-        window.location.href = `watch.html?v=${encodeURIComponent(itemId)}&from=twitter`;
+        const fromPage = window.location.pathname.includes('instagram.html') ? 'instagram' : 'twitter';
+        window.location.href = `watch.html?v=${encodeURIComponent(itemId)}&from=${fromPage}`;
     };
 
     window.openXMediaModal = function(item) {
@@ -4047,7 +4063,7 @@
             try { v.pause(); } catch(e) {}
         });
 
-        const { mediaUrl, embedUrl } = resolveVideoSources(item);
+        const { mediaUrl, embedUrl, isPhoto } = resolveVideoSources(item);
         const initialThumb = item.thumb || FALLBACK_THUMB;
 
         // Clear previous media
@@ -4061,12 +4077,15 @@
             mediaContainer.innerHTML = `
                 <div class="x-lightbox-iframe-container">
                     <iframe id="xLightboxIframe" src="${finalUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" referrerpolicy="no-referrer"></iframe>
+                    <button type="button" class="x-lightbox-cinema-floating-btn" onclick="window.openCurrentWatchCinema && window.openCurrentWatchCinema()" title="Ver en Modo Cine">
+                        <span>🎬 Modo Cine</span>
+                    </button>
                 </div>
             `;
         }
 
-        if (item.type === 'photo') {
-            const photoUrl = item.image_url || item.thumb || initialThumb;
+        if (isPhoto) {
+            const photoUrl = item.image_url || item.photo_url || item.thumb || initialThumb;
             const wrapper = document.createElement('div');
             wrapper.className = 'x-lightbox-photo-wrapper';
             wrapper.style.cssText = 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; overflow: auto; padding: 8px;';
@@ -4120,7 +4139,6 @@
             if (v) {
                 // Video tap toggle
                 v.onclick = (e) => {
-                    // Clicking video toggles un-mute if it was muted during autoplay
                     if (v.muted) {
                         v.muted = false;
                         updateSoundUI(false);
@@ -4135,7 +4153,6 @@
                     playPromise.then(() => {
                         updateSoundUI(false);
                     }).catch((err) => {
-                        // Policy fallback to muted autoplay
                         console.warn('Unmuted autoplay blocked, falling back to muted:', err);
                         v.muted = true;
                         v.play().catch(() => {});
@@ -4155,7 +4172,12 @@
             renderEmbedPlayer(embedUrl);
         } else {
             mediaContainer.innerHTML = `
-                <img src="${initialThumb}" alt="${escapeHTML(item.title || 'Media')}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; padding: 24px; text-align: center;">
+                    <img src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" style="max-width: 80%; max-height: 50%; object-fit: contain; border-radius: 12px; margin-bottom: 16px;" />
+                    <button type="button" onclick="window.openCurrentWatchCinema && window.openCurrentWatchCinema()" style="background: #1d9bf0; color: #fff; border: none; border-radius: 9999px; padding: 12px 24px; font-weight: 700; font-size: 14px; cursor: pointer;">
+                        ▶ Reproducir en Modo Cine
+                    </button>
+                </div>
             `;
         }
 
@@ -4279,28 +4301,117 @@
     // =========================================================================
     // INSTAGRAM 1:1 FULLSCREEN REELS / PLAYER VIEWER
     // =========================================================================
+    window.currentIgModalItem = null;
+
     window.openIgMediaModal = function(item) {
+        if (!item) return;
+        window.currentIgModalItem = item;
+
         const modal = document.getElementById('igMediaModal');
         const mediaContainer = document.getElementById('igLightboxMedia');
         if (!modal || !mediaContainer) return;
 
-        const isUserPost = !!item.is_user_post;
-        const mediaVideoUrl = item.media_url || (isUserPost && item.video_url ? item.video_url : '');
+        // Pause any running videos in the feed to avoid competing audio
+        document.querySelectorAll('.feed-video-player').forEach(v => {
+            try { v.pause(); } catch(e) {}
+        });
+
+        const { mediaUrl, embedUrl, isPhoto } = resolveVideoSources(item);
         const initialThumb = item.thumb || FALLBACK_THUMB;
 
-        if (item.type === 'photo' || !mediaVideoUrl) {
-            const photoUrl = item.image_url || initialThumb;
+        mediaContainer.innerHTML = '';
+
+        function renderIgEmbed(ifrSrc) {
+            let finalUrl = ifrSrc;
+            if (!finalUrl.includes('autoplay=')) {
+                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+            }
             mediaContainer.innerHTML = `
-                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000;">
-                    <img src="${photoUrl}" alt="${escapeHTML(item.title || 'Foto HD')}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                <div style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 18px; overflow: hidden;">
+                    <iframe src="${finalUrl}" frameborder="0" width="100%" height="100%" scrolling="no" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen="true" referrerpolicy="no-referrer" style="border: none; border-radius: 18px; width: 100%; height: 100%; object-fit: contain;"></iframe>
+                    <button type="button" class="ig-reel-cinema-overlay-btn" onclick="window.openCurrentWatchCinema && window.openCurrentWatchCinema()" title="Ver en Pantalla Completa / Modo Cine">
+                        <span>🎬 Modo Cine</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        if (isPhoto) {
+            const photoUrl = item.image_url || item.photo_url || initialThumb;
+            mediaContainer.innerHTML = `
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 18px;">
+                    <img src="${photoUrl}" alt="${escapeHTML(item.title || 'Foto HD')}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 18px;" />
                 </div>
             `;
             if (window.AlgorithmEngine) {
                 window.AlgorithmEngine.recordEngagement(item, 'photo_click', { context: 'instagram' });
             }
+        } else if (mediaUrl) {
+            mediaContainer.innerHTML = `
+                <div style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 18px;">
+                    <video class="ig-reel-video" src="${mediaUrl}" poster="${initialThumb}" autoplay loop playsinline controls style="width: 100%; height: 100%; object-fit: contain; background: #000; border-radius: 18px;"></video>
+                    <button type="button" class="ig-reel-sound-btn" id="igLbSoundBtn" title="Activar/Silenciar sonido">
+                        <span class="ig-sound-icon">🔊</span>
+                    </button>
+                    <button type="button" class="ig-reel-cinema-overlay-btn" onclick="window.openCurrentWatchCinema && window.openCurrentWatchCinema()" title="Ver en Pantalla Completa / Modo Cine">
+                        <span>🎬 Modo Cine</span>
+                    </button>
+                </div>
+            `;
+
+            const v = mediaContainer.querySelector('video');
+            const soundBtn = mediaContainer.querySelector('#igLbSoundBtn');
+
+            function updateIgSoundUI(muted) {
+                if (!soundBtn) return;
+                const icon = soundBtn.querySelector('.ig-sound-icon');
+                if (icon) icon.textContent = muted ? '🔇' : '🔊';
+            }
+
+            if (soundBtn && v) {
+                soundBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    v.muted = !v.muted;
+                    updateIgSoundUI(v.muted);
+                    if (v.paused) v.play().catch(() => {});
+                };
+            }
+
+            if (v) {
+                v.onclick = (e) => {
+                    if (v.muted) {
+                        v.muted = false;
+                        updateIgSoundUI(false);
+                    }
+                };
+
+                v.muted = false;
+                v.volume = 1.0;
+                const p = v.play();
+                if (p !== undefined) {
+                    p.then(() => updateIgSoundUI(false)).catch(() => {
+                        v.muted = true;
+                        v.play().catch(() => {});
+                        updateIgSoundUI(true);
+                    });
+                }
+                v.onerror = () => {
+                    console.warn('Direct Reel video error, attempting embed fallback:', item.id);
+                    if (embedUrl) {
+                        renderIgEmbed(embedUrl);
+                    }
+                };
+            }
+        } else if (embedUrl) {
+            renderIgEmbed(embedUrl);
         } else {
             mediaContainer.innerHTML = `
-                <video src="${mediaVideoUrl}" poster="${initialThumb}" autoplay loop playsinline controls style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; padding: 20px; text-align: center; border-radius: 18px;">
+                    <img src="${initialThumb}" alt="preview" style="max-width: 80%; max-height: 50%; object-fit: cover; border-radius: 12px; margin-bottom: 16px;" />
+                    <button type="button" onclick="window.openCurrentWatchCinema && window.openCurrentWatchCinema()" style="background: #0095f6; color: #fff; border: none; border-radius: 20px; padding: 10px 22px; font-weight: 700; font-size: 14px; cursor: pointer;">
+                        ▶ Reproducir Video
+                    </button>
+                </div>
             `;
         }
 
@@ -4362,7 +4473,7 @@
         if (commentBtn) {
             commentBtn.onclick = (e) => {
                 e.stopPropagation();
-                showToast('💬 Comentarios del Reel');
+                window.openCurrentWatchCinema('comments');
             };
         }
 
@@ -4399,22 +4510,44 @@
         modal.classList.add('active');
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+
+        try {
+            history.pushState({ modal: 'igMediaModal' }, '');
+        } catch(e) {}
     };
 
-    window.closeIgMediaModal = function() {
+    window.closeIgMediaModal = function(popHistory = true) {
         const modal = document.getElementById('igMediaModal');
         const mediaContainer = document.getElementById('igLightboxMedia');
         if (modal) {
             if (mediaContainer) {
                 const v = mediaContainer.querySelector('video');
-                if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+                if (v) {
+                    try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {}
+                }
+                const ifr = mediaContainer.querySelector('iframe');
+                if (ifr) {
+                    try { ifr.src = 'about:blank'; } catch(e) {}
+                }
                 mediaContainer.innerHTML = '';
             }
+            window.currentIgModalItem = null;
             modal.classList.remove('active');
             modal.style.display = 'none';
             document.body.style.overflow = '';
+
+            if (popHistory && history.state && history.state.modal === 'igMediaModal') {
+                try { history.back(); } catch(e) {}
+            }
         }
     };
+
+    window.addEventListener('popstate', (e) => {
+        const igModal = document.getElementById('igMediaModal');
+        if (igModal && igModal.classList.contains('active')) {
+            window.closeIgMediaModal(false);
+        }
+    });
 
 
 

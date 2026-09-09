@@ -803,11 +803,15 @@ body[data-theme="twitter"] .tiktok-bottom-nav {
 .x-lightbox-video-wrapper {
     position: relative !important;
     width: 100% !important;
+    max-width: 680px !important;
     height: 100% !important;
+    max-height: 72vh !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: #000000 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
 }
 
 .x-lightbox-video {
@@ -853,12 +857,18 @@ body[data-theme="twitter"] .tiktok-bottom-nav {
 
 .x-lightbox-iframe-container {
     width: 100% !important;
-    height: 100% !important;
+    max-width: 680px !important;
+    aspect-ratio: 16 / 9 !important;
+    max-height: 70vh !important;
+    margin: auto !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
     background: #000000 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85) !important;
 }
 
 .x-lightbox-iframe-container iframe {
@@ -866,6 +876,23 @@ body[data-theme="twitter"] .tiktok-bottom-nav {
     height: 100% !important;
     border: none !important;
     background: #000000 !important;
+}
+
+.x-lightbox-cinema-floating-btn {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    background: rgba(29, 155, 240, 0.88) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #fff !important;
+    border-radius: 9999px !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    z-index: 25 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6) !important;
 }
 
 .x-lightbox-media-container img {
