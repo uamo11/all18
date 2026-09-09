@@ -1154,7 +1154,15 @@
                     if (loadingEl) loadingEl.style.display = 'none';
 
                     if (data && data.status === 'success' && data.data) {
-                        const newItems = data.data;
+                        // Strict video-only filtering: Multi-Hub must display only playable videos
+                        const newItems = data.data.filter(item => {
+                            if (item.type === 'photo') return false;
+                            if (item.isPhoto === true) return false;
+                            if (item.duration === 'Foto HD' || item.duration === 'Foto') return false;
+                            if (item.category === 'Fotos' || item.category === 'Photos') return false;
+                            return true;
+                        });
+
                         state.items = reset ? newItems : state.items.concat(newItems);
                         renderCards(newItems, reset);
 
@@ -1193,7 +1201,7 @@
                 return `
                     <a href="${watchUrl}" class="hub-card">
                         <div class="hub-thumb-box">
-                            <img class="hub-thumb-img" src="${thumb}" alt="${item.title}" loading="lazy" onerror="this.src='${AMOLED_FALLBACK_SVG}'">
+                            <img class="hub-thumb-img" src="${thumb}" data-retry-src="${item.thumb || ''}" alt="${item.title}" loading="lazy" decoding="async" onerror="this.dataset.failed='true'; this.src='${AMOLED_FALLBACK_SVG}'">
                             ${previewVid ? `<video class="hub-preview-video" src="${previewVid}" loop playsinline muted preload="none" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;"></video>` : ''}
                             <span class="hub-badge-source ${sourceClass}">${sourceName}</span>
                             <span class="hub-badge-dur">${duration}</span>
@@ -1238,6 +1246,17 @@
             state.page += 1;
             fetchHubVideos(false);
         }
+
+        // Auto-reload failed thumbnails when Wi-Fi / connection is back
+        window.addEventListener('online', () => {
+            document.querySelectorAll('.hub-thumb-img[data-failed="true"]').forEach(img => {
+                const retry = img.getAttribute('data-retry-src');
+                if (retry) {
+                    img.src = retry.includes('?') ? `${retry}&_r=${Date.now()}` : `${retry}?_r=${Date.now()}`;
+                    img.removeAttribute('data-failed');
+                }
+            });
+        });
 
         window.addEventListener('beforeunload', saveHubState);
         window.addEventListener('pagehide', saveHubState);

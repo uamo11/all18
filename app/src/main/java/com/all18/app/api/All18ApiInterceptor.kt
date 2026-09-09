@@ -74,7 +74,13 @@ class All18ApiInterceptor(private val context: Context) {
             }
         }
 
-        // 2. Intercept api.php calls
+        // 2. Intercept Pornhub Embed: Override utmSource and whitelist checks to prevent "Este video no se puede ver aquí" block
+        if (host.contains("pornhub.com") && path.startsWith("/embed/")) {
+            val unblocked = proxyPornhubEmbed(request)
+            if (unblocked != null) return unblocked
+        }
+
+        // 3. Intercept api.php calls
         if (path.endsWith("api.php") || path.contains("/api.php")) {
             return try {
                 handleApiRequest(uri)
@@ -84,8 +90,43 @@ class All18ApiInterceptor(private val context: Context) {
             }
         }
 
-
         return null
+    }
+
+    private fun proxyPornhubEmbed(request: WebResourceRequest): WebResourceResponse? {
+        return try {
+            val url = request.url.toString()
+            val req = Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36")
+                .header("Referer", "https://www.pornhub.com/")
+                .header("Accept-Language", "es-ES,es;q=0.9,en;q=0.8")
+                .build()
+
+            val resp = client.newCall(req).execute()
+            var html = resp.body?.string() ?: return null
+
+            // Override utmSource to official partner Keezmovies and enforce whiteListEmbedSite to true
+            html = html.replace("function whiteListEmbedSite(){", "function whiteListEmbedSite(){return true;")
+            html = html.replace("var utmSource = document.referrer.split('/')[2];", "var utmSource = 'www.keezmovies.com';")
+            html = html.replace("</head>", "<style>#removedwrapper, .embedBlock .removed-wrap, .embed-removed, .embedBlock .ph-embed-block { display: none !important; }</style></head>")
+
+            val headers = mutableMapOf<String, String>()
+            headers["Access-Control-Allow-Origin"] = "*"
+            headers["Content-Type"] = "text/html; charset=utf-8"
+
+            WebResourceResponse(
+                "text/html",
+                "UTF-8",
+                200,
+                "OK",
+                headers,
+                ByteArrayInputStream(html.toByteArray(Charsets.UTF_8))
+            )
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error unblocking Pornhub embed: ${e.message}")
+            null
+        }
     }
 
     private fun proxyRedGifsRequest(request: WebResourceRequest): WebResourceResponse? {
@@ -1355,13 +1396,82 @@ class All18ApiInterceptor(private val context: Context) {
 
     private fun fetchPhotos(query: String, category: String, page: Int): JSONArray {
         val list = JSONArray()
+
+        // 1. Scrape Real Model Photos from Pornhub Albums
+        try {
+            val phAlbumsUrl = if (query.isNotBlank()) {
+                "https://www.pornhub.com/albums/female-straight-uncategorized?search=${Uri.encode(query)}&page=$page"
+            } else {
+                "https://www.pornhub.com/albums/female-straight-uncategorized?page=$page"
+            }
+            val phReq = Request.Builder()
+                .url(phAlbumsUrl)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                .header("Accept-Language", "es-ES,es;q=0.9,en;q=0.8")
+                .build()
+
+            val phResp = client.newCall(phReq).execute()
+            val phHtml = phResp.body?.string() ?: ""
+            if (phHtml.isNotEmpty()) {
+                val anchorPattern = Pattern.compile("<a\\s+href=\"(/album/(\\d+))\"[^>]*>([\\s\\S]*?)</a>")
+                val imgPattern = Pattern.compile("(?:src|data-src|data-bkg|data-thumb_url)=\"([^\"]+)\"")
+                val titlePattern = Pattern.compile("class=\"title-album\"[^>]*>([^<]+)<")
+
+                val matcher = anchorPattern.matcher(phHtml)
+                var count = 0
+                while (matcher.find() && count < 25) {
+                    val albumPath = matcher.group(1) ?: ""
+                    val albumId = matcher.group(2) ?: ""
+                    val content = matcher.group(3) ?: ""
+
+                    val imgMatcher = imgPattern.matcher(content)
+                    val titleMatcher = titlePattern.matcher(content)
+
+                    if (imgMatcher.find()) {
+                        val thumbUrl = imgMatcher.group(1) ?: ""
+                        if (thumbUrl.startsWith("http")) {
+                            count++
+                            val rawTitle = if (titleMatcher.find()) titleMatcher.group(1)?.trim() ?: "" else "Álbum VIP #$albumId"
+                            val cleanTitle = if (rawTitle.isNotBlank()) rawTitle else "Álbum VIP #$albumId"
+
+                            val item = JSONObject().apply {
+                                put("id", "pha_$albumId")
+                                put("raw_id", albumId)
+                                put("title", cleanTitle)
+                                put("duration", "Foto HD")
+                                put("views", "${(1200 + albumId.hashCode().mod(15000).let { if (it < 0) -it else it })} vistas")
+                                put("rating", "${92 + albumId.hashCode().mod(8).let { if (it < 0) -it else it }}%")
+                                put("author", "@Pornhub")
+                                put("thumb", thumbUrl)
+                                put("photo_url", thumbUrl)
+                                put("image_url", thumbUrl)
+                                put("media_url", thumbUrl)
+                                put("embed_url", "https://www.pornhub.com$albumPath")
+                                put("url", "https://www.pornhub.com$albumPath")
+                                put("width", 1280)
+                                put("height", 850)
+                                put("aspect_ratio", 1.5f)
+                                put("source", "Pornhub Photos")
+                                put("type", "photo")
+                                put("isPhoto", true)
+                                put("quality", "Álbum HD")
+                            }
+                            list.put(item)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("All18Api", "Error fetching Pornhub albums: ${e.message}")
+        }
+
         val cleanTag = when {
             query.isNotBlank() -> query.trim().lowercase().replace(" ", "_")
             category.isNotBlank() && category != "photos" && category != "hentai" -> category.trim().lowercase().replace(" ", "_")
             else -> "rating:questionable"
         }
 
-        // 1. Try Yande.re Booru API
+        // 2. Try Yande.re Booru API
         try {
             val yandeUrl = "https://yande.re/post.json?limit=25&page=$page&tags=${Uri.encode(cleanTag)}"
             val req = Request.Builder()

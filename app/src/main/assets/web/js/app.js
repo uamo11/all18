@@ -324,7 +324,7 @@
                         const hdUrl = (g.urls?.hd && g.urls.hd.includes('.mp4')) ? g.urls.hd : '';
                         const sdUrl = (g.urls?.sd && g.urls.sd.includes('.mp4')) ? g.urls.sd : '';
                         const silentUrl = (g.urls?.silent && g.urls.silent.includes('.mp4')) ? g.urls.silent : '';
-                        const mp4 = sdUrl || hdUrl || silentUrl;
+                        const mp4 = hdUrl || sdUrl || silentUrl;
 
                         if (!mp4) return null;
 
@@ -1017,6 +1017,9 @@
     const FALLBACK_THUMB = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%230e0e12'/%3E%3Ccircle cx='320' cy='170' r='42' fill='%231a1a22' stroke='%232a2a36' stroke-width='2'/%3E%3Cpolygon points='314,154 334,170 314,186' fill='%23ff9000'/%3E%3Ctext x='320' y='245' font-family='-apple-system,BlinkMacSystemFont,sans-serif' font-size='22' font-weight='900' fill='%23ff9000' text-anchor='middle'%3EALL18%3C/text%3E%3Ctext x='320' y='270' font-family='-apple-system,BlinkMacSystemFont,sans-serif' font-size='13' font-weight='600' fill='%23666677' text-anchor='middle'%3EVideo Exclusivo%3C/text%3E%3C/svg%3E";
     window.FALLBACK_THUMB = FALLBACK_THUMB;
 
+    const FALLBACK_PHOTO_THUMB = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%230b0b0e'/%3E%3Ccircle cx='320' cy='155' r='38' fill='%2316161f' stroke='%23282834' stroke-width='2'/%3E%3Cpath d='M306,170 L315,156 L323,166 L331,150 L342,170 Z' fill='%2300aff0'/%3E%3Ccircle cx='312' cy='147' r='4' fill='%23ffd700'/%3E%3Ctext x='320' y='230' font-family='-apple-system,BlinkMacSystemFont,sans-serif' font-size='20' font-weight='900' fill='%2300aff0' text-anchor='middle'%3EALL18 FOTO HD%3C/text%3E%3Ctext x='320' y='255' font-family='-apple-system,BlinkMacSystemFont,sans-serif' font-size='12' font-weight='600' fill='%23777788' text-anchor='middle'%3EGaler%C3%ADa Fotogr%C3%A1fica%3C/text%3E%3C/svg%3E";
+    window.FALLBACK_PHOTO_THUMB = FALLBACK_PHOTO_THUMB;
+
     // =========================================================
     // CONTINUAR VIENDO / WATCH HISTORY & RESUME ENGINE (v1.3.1)
     // =========================================================
@@ -1102,10 +1105,22 @@
 
         const isFav = state.favorites.some(f => f.id === item.id);
         const isUserPost = !!item.is_user_post;
-        const isPhoto = item.type === 'photo';
+        const isPhoto = item.type === 'photo' || item.duration === 'Foto HD' || item.source === 'Photos' || item.source === 'Pornhub Photos' || item.source === 'Yande.re' || item.source === 'Konachan';
         const savedProgress = getWatchHistoryProgress(item.id);
-        const initialThumb = item.thumb || FALLBACK_THUMB;
-        const mediaVideoUrl = item.preview_url || item.preview_video || item.media_url || item.hd_url || item.sd_url || (isUserPost && item.video_url ? item.video_url : '') || (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '');
+        const currentTheme = document.body.dataset.theme || 
+            (document.body.classList.contains('tiktok-standalone-body') ? 'tiktok' : 
+            (document.body.classList.contains('twitter-standalone-body') ? 'twitter' : 
+            (document.body.classList.contains('instagram-standalone-body') ? 'instagram' : 'pornhub')));
+        const isTikTok = currentTheme === 'tiktok' || state.view === 'shorts';
+
+        const initialThumb = item.thumb || item.photo_url || (isPhoto ? FALLBACK_PHOTO_THUMB : FALLBACK_THUMB);
+        // For shorts/tiktok, prioritize full video stream (never default to 2s preview teaser)
+        const mediaVideoUrl = isPhoto ? '' : (
+            (isTikTok ? (item.hd_url || item.media_url || item.sd_url || item.video_url) : '') ||
+            item.media_url || item.hd_url || item.sd_url || item.preview_url || item.preview_video ||
+            (isUserPost && item.video_url ? item.video_url : '') ||
+            (item.source === 'RedGifs' && item.raw_id ? `https://media.redgifs.com/${item.raw_id}.mp4` : '')
+        );
 
         // Dynamic realistic stats
         const seed = Math.abs(String(item.id || '123').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0));
@@ -1117,11 +1132,6 @@
         const formattedLikes = rawLikes > 999 ? (rawLikes / 1000).toFixed(1) + ' mil' : rawLikes;
         const authorHandle = (item.author || 'creador').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() || 'all18creator';
         const authorAvatar = item.author_avatar || getCreatorAvatar(item.author, item.id);
-
-        const currentTheme = document.body.dataset.theme || 
-            (document.body.classList.contains('tiktok-standalone-body') ? 'tiktok' : 
-            (document.body.classList.contains('twitter-standalone-body') ? 'twitter' : 
-            (document.body.classList.contains('instagram-standalone-body') ? 'instagram' : 'pornhub')));
 
         // -------------------------------------------------------------
         // 1. THEME: TWITTER / 𝕏 TIMELINE
@@ -1141,9 +1151,10 @@
                             <span class="x-post-time">${timeAgo}</span>
                         </div>
                         <div class="x-header-right-actions" style="display: flex; align-items: center; gap: 4px;">
+                            ${!isPhoto ? `
                             <button class="x-card-cinema-btn" type="button" title="Ver en Modo Cine / Watch" onclick="event.stopPropagation(); window.openWatchCinemaItem && window.openWatchCinemaItem('${item.id}');">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 6h16v12H4z M10 9v6l5-3z"/></svg>
-                            </button>
+                            </button>` : ''}
                             <span class="x-more-btn" title="Más opciones">
                                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
                             </span>
@@ -1153,7 +1164,7 @@
                         ${escapeHTML(item.title || '').replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>').replace(/(@[a-zA-Z0-9_]+)/g, '<span class="x-mention">$1</span>')}
                     </p>
                     <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
-                        <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
+                        <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded');"/>
                         ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                         ${!isPhoto ? `<span class="duration-badge">${item.duration || '0:34'}</span>` : ''}
                         ${!isPhoto && savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
@@ -1213,7 +1224,7 @@
                     <button class="ig-post-more-btn" type="button" title="Opciones" onclick="event.stopPropagation()">···</button>
                 </div>
                 <div class="thumb-container">
-                    <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
+                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded');"/>
                     ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     ${savedProgress > 0 ? `<div class="card-watch-progress"><div class="card-watch-progress-fill" style="width:${savedProgress}%;"></div></div>` : ''}
                     <button class="ig-media-tagged-btn" type="button" title="Etiquetados" onclick="event.stopPropagation()">👤</button>
@@ -1270,7 +1281,7 @@
         else if (currentTheme === 'tiktok') {
             card.innerHTML = `
                 <div class="thumb-container">
-                    <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
+                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || ''}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=window.FALLBACK_THUMB; this.classList.add('loaded');"/>
                     ${mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     <div class="tiktok-center-play">
                         <svg viewBox="0 0 24 24" width="64" height="64" fill="rgba(255,255,255,0.85)"><path d="M8 5v14l11-7z"/></svg>
@@ -1304,7 +1315,7 @@
                             <svg viewBox="0 0 24 24" width="34" height="34" fill="${isFav ? '#face15' : '#ffffff'}"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
                             <span class="tiktok-action-count">${repostsCount}</span>
                         </button>
-                        <button class="tiktok-action-item" type="button" title="Compartir" onclick="if(navigator.clipboard){navigator.clipboard.writeText(window.location.href);window.showToast && window.showToast('🔗 Enlace copiado');}" style="background: transparent !important; border: none !important; -webkit-appearance: none !important;">
+                        <button class="tiktok-action-item tiktok-btn-share" type="button" title="Compartir" style="background: transparent !important; border: none !important; -webkit-appearance: none !important;">
                             <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
                             <span class="tiktok-action-count">Compartir</span>
                         </button>
@@ -1324,7 +1335,7 @@
         else {
             card.innerHTML = `
                 <div class="thumb-container${isPhoto ? ' is-photo-card' : ''}">
-                    <img class="thumb-img" src="${initialThumb}" alt="${escapeHTML(item.title || 'Video')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.src=window.FALLBACK_THUMB||''; this.classList.add('loaded');"/>
+                    <img class="thumb-img" src="${initialThumb}" data-retry-src="${item.thumb || item.photo_url || ''}" alt="${escapeHTML(item.title || (isPhoto ? 'Foto' : 'Video'))}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('loaded')" onerror="this.onerror=null; this.dataset.failed='true'; this.src=(${isPhoto} ? window.FALLBACK_PHOTO_THUMB : window.FALLBACK_THUMB); this.classList.add('loaded');"/>
                     ${!isPhoto && mediaVideoUrl ? `<video class="feed-video-player" referrerpolicy="no-referrer" loop playsinline muted preload="none" data-src="${mediaVideoUrl}" poster="${initialThumb}"></video>` : ''}
                     ${!isPhoto ? `<span class="duration-badge">${item.duration || '18:50'}</span>` : ''}
                     ${!isPhoto ? `<span class="source-badge-pill ${item.source || 'Pornhub'}">${item.source || 'Pornhub'}</span>` : ''}
@@ -1433,6 +1444,15 @@
             });
         }
 
+        // Share Button Interaction (TikTok)
+        const ttShareBtn = card.querySelector('.tiktok-btn-share');
+        if (ttShareBtn) {
+            ttShareBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.shareVideoItem(item);
+            });
+        }
+
         // Instagram Like Interaction
         const igLikeBtn = card.querySelector('.ig-action-like');
         if (igLikeBtn) {
@@ -1466,10 +1486,7 @@
         if (igDmBtn) {
             igDmBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(window.location.href);
-                    showToast('🔗 Enlace de publicación copiado');
-                }
+                window.shareVideoItem(item);
             });
         }
 
@@ -1552,9 +1569,22 @@
             if (isTikTok && videoEl) {
                 if (videoEl.paused) {
                     if (!videoEl.src && videoEl.dataset.src) videoEl.src = videoEl.dataset.src;
-                    videoEl.play().then(() => {
-                        card.classList.add('video-playing');
-                    }).catch(() => {});
+                    if (videoEl.ended || (videoEl.duration && videoEl.currentTime >= videoEl.duration - 0.2)) {
+                        videoEl.currentTime = 0;
+                    }
+                    videoEl.muted = window.isTikTokMuted !== false;
+                    const p = videoEl.play();
+                    if (p !== undefined) {
+                        p.then(() => {
+                            card.classList.add('video-playing');
+                        }).catch(err => {
+                            console.warn('Playback error, retrying muted:', err);
+                            videoEl.muted = true;
+                            videoEl.play().then(() => {
+                                card.classList.add('video-playing');
+                            }).catch(() => {});
+                        });
+                    }
                 } else {
                     videoEl.pause();
                     card.classList.remove('video-playing');
@@ -1606,8 +1636,19 @@
             }
         });
 
-        // Desktop Hover Preview for Video Thumbnails
+        // Desktop Hover Preview and Loop Handlers for Video Thumbnails
         if (videoEl) {
+            videoEl.addEventListener('ended', () => {
+                videoEl.currentTime = 0;
+                videoEl.play().catch(() => {});
+            });
+            videoEl.addEventListener('play', () => {
+                card.classList.add('video-playing');
+            });
+            videoEl.addEventListener('pause', () => {
+                card.classList.remove('video-playing');
+            });
+
             const thumbContainer = card.querySelector('.thumb-container');
             if (thumbContainer) {
                 thumbContainer.addEventListener('mouseenter', () => {
@@ -1975,6 +2016,8 @@
 
         if (comments.length === 0) {
             if (badgeEl) badgeEl.textContent = '(0)';
+            const pillEl = document.getElementById('watchCommentsCountPill');
+            if (pillEl) pillEl.textContent = '0';
             listEl.innerHTML = `
                 <div class="empty-comments-state" style="text-align: center; padding: 28px 16px; color: #71767b; font-size: 13px;">
                     <span style="font-size: 24px; display: block; margin-bottom: 6px;">💬</span>
@@ -1985,6 +2028,8 @@
         }
 
         if (badgeEl) badgeEl.textContent = `(${comments.length})`;
+        const pillEl = document.getElementById('watchCommentsCountPill');
+        if (pillEl) pillEl.textContent = String(comments.length);
 
         comments.forEach(c => {
             const itemEl = document.createElement('div');
@@ -2005,35 +2050,38 @@
 
     window.submitComment = async function () {
         const input = document.getElementById('commentTextInput');
-        if (!input || !state.activeModalItem) return;
+        if (!input) return;
         const text = input.value.trim();
         if (!text) {
-            showToast('Escribe algo en tu comentario');
+            showToast('Escribe algo para comentar');
             return;
         }
 
-        const videoId = state.activeModalItem.id;
+        const videoId = state.activeModalItem?.id || (new URLSearchParams(window.location.search).get('v') || 'default');
+        const user = auth ? auth.currentUser : null;
+
         const newComment = {
-            id: 'c_' + Date.now(),
             video_id: videoId,
-            user_uid: userProfile.uid,
-            user_name: userProfile.handle || userProfile.displayName || 'Anónimo',
-            user_avatar: userProfile.photoURL || CREATOR_AVATARS[0],
+            user_name: user ? (user.displayName || 'Usuario All18') : 'Visitante VIP',
+            user_avatar: user ? (user.photoURL || CREATOR_AVATARS[0]) : CREATOR_AVATARS[0],
             text: text,
-            created_at: 'Hace un momento'
+            created_at: 'Ahora'
         };
 
-        // Prepend to UI
+        // Prepend to UI immediately
         const listEl = document.getElementById('commentsFeedList');
         if (listEl) {
+            const empty = listEl.querySelector('.empty-comments-state');
+            if (empty) empty.remove();
+
             const itemEl = document.createElement('div');
-            itemEl.className = 'comment-card-item';
+            itemEl.className = 'comment-card-item highlight-new';
             itemEl.innerHTML = `
                 <img src="${newComment.user_avatar}" alt="Avatar" class="comment-item-avatar">
                 <div class="comment-item-content">
                     <div class="comment-item-author-row">
                         <span class="comment-item-name">${escapeHTML(newComment.user_name)}</span>
-                        <span class="comment-item-time">Ahora</span>
+                        <span class="comment-item-time">${escapeHTML(newComment.created_at)}</span>
                     </div>
                     <p class="comment-item-text">${escapeHTML(newComment.text)}</p>
                 </div>
@@ -2041,10 +2089,10 @@
             listEl.insertBefore(itemEl, listEl.firstChild);
         }
 
-        // Save local
+        // Save Local
         const localKey = 'all18_comments_' + videoId;
-        const cached = localStorage.getItem(localKey);
         let comments = [];
+        const cached = localStorage.getItem(localKey);
         if (cached) {
             try { comments = JSON.parse(cached); } catch (e) {}
         }
@@ -2053,6 +2101,8 @@
 
         const badgeEl = document.getElementById('commentsCountBadge');
         if (badgeEl) badgeEl.textContent = `(${comments.length})`;
+        const submitPillEl = document.getElementById('watchCommentsCountPill');
+        if (submitPillEl) submitPillEl.textContent = String(comments.length);
 
         // Save Firestore
         if (db && navigator.onLine) {
@@ -2349,6 +2399,43 @@
             !item.url.includes('androidplatform.net') && !item.url.includes('android_asset')) {
             return item.url;
         }
+        if (item.link && typeof item.link === 'string' && item.link.startsWith('http') && 
+            !item.link.includes('androidplatform.net') && !item.link.includes('android_asset')) {
+            return item.link;
+        }
+        if (item.source_url && typeof item.source_url === 'string' && item.source_url.startsWith('http') && 
+            !item.source_url.includes('androidplatform.net') && !item.source_url.includes('android_asset')) {
+            return item.source_url;
+        }
+
+        const idStr = String(item.raw_id || item.id || '');
+        if (idStr.startsWith('ph_')) {
+            return `https://www.pornhub.com/view_video.php?viewkey=${idStr.replace(/^ph_/, '')}`;
+        }
+        if (idStr.startsWith('pha_')) {
+            return `https://www.pornhub.com/album/${idStr.replace(/^pha_/, '')}`;
+        }
+        if (idStr.startsWith('xv_')) {
+            return `https://www.xvideos.com/video.${idStr.replace(/^xv_/, '')}/`;
+        }
+        if (idStr.startsWith('xn_')) {
+            return `https://www.xnxx.com/video-${idStr.replace(/^xn_/, '')}/`;
+        }
+        if (idStr.startsWith('rg_')) {
+            return `https://www.redgifs.com/watch/${idStr.replace(/^rg_/, '')}`;
+        }
+        if (idStr.startsWith('yp_')) {
+            return `https://www.youporn.com/watch/${idStr.replace(/^yp_/, '')}/`;
+        }
+        if (idStr.startsWith('rt_')) {
+            return `https://www.redtube.com/${idStr.replace(/^rt_/, '')}`;
+        }
+        if (idStr.startsWith('ep_')) {
+            return `https://www.eporner.com/video/${idStr.replace(/^ep_/, '')}/`;
+        }
+        if (idStr.startsWith('sb_')) {
+            return `https://spankbang.com/${idStr.replace(/^sb_/, '')}/video/`;
+        }
 
         const embedUrl = item.embed_url || '';
         if (embedUrl.includes('pornhub.com/embed/')) {
@@ -2383,8 +2470,20 @@
             const id = embedUrl.split('/embed/')[1]?.split(/[?&#]/)[0];
             return `https://www.youporn.com/watch/${id}/`;
         }
-        if (item.media_url && typeof item.media_url === 'string' && item.media_url.startsWith('http')) {
+        if (item.isPhoto && item.photo_url && typeof item.photo_url === 'string' && item.photo_url.startsWith('http')) {
+            return item.photo_url;
+        }
+        if (item.isPhoto && item.image_url && typeof item.image_url === 'string' && item.image_url.startsWith('http')) {
+            return item.image_url;
+        }
+        if (item.media_url && typeof item.media_url === 'string' && item.media_url.startsWith('http') && !item.media_url.includes('androidplatform.net')) {
             return item.media_url;
+        }
+        if (item.video_url && typeof item.video_url === 'string' && item.video_url.startsWith('http') && !item.video_url.includes('androidplatform.net')) {
+            return item.video_url;
+        }
+        if (item.thumb && typeof item.thumb === 'string' && item.thumb.startsWith('http') && !item.thumb.includes('androidplatform.net')) {
+            return item.thumb;
         }
         if (embedUrl.startsWith('http') && !embedUrl.includes('androidplatform.net')) {
             return embedUrl;
@@ -2411,20 +2510,67 @@
         }
 
         if (navigator.share) {
-            navigator.share({ title: title, url: shareUrl }).catch(() => {});
+            navigator.share({ title: title, url: shareUrl }).catch(() => {
+                copyToClipboard(shareUrl);
+            });
             return;
         }
 
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                showToast('🔗 ¡Enlace oficial copiado al portapapeles!');
+        copyToClipboard(shareUrl);
+    };
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('🔗 ¡Enlace oficial copiado!');
             }).catch(() => {
-                showToast('URL: ' + shareUrl);
+                showToast('URL: ' + text);
             });
         } else {
-            showToast('URL: ' + shareUrl);
+            showToast('URL: ' + text);
+        }
+    }
+
+    window.toggleWatchCommentsDrawer = function (open) {
+        const backdrop = document.getElementById('commentsDrawerBackdrop');
+        if (!backdrop) return;
+        if (open === undefined) {
+            backdrop.classList.toggle('open');
+        } else if (open) {
+            backdrop.classList.add('open');
+            // Auto focus comment input if opened explicitly
+            setTimeout(() => {
+                const txt = document.getElementById('commentTextInput');
+                if (txt) txt.focus();
+            }, 300);
+        } else {
+            backdrop.classList.remove('open');
         }
     };
+
+    // Auto-reload failed images when Wi-Fi / connection is restored
+    window.addEventListener('online', () => {
+        showToast('📶 Conexión restaurada, recargando imágenes...');
+        reloadFailedImages();
+    });
+
+    function reloadFailedImages() {
+        const failedImgs = document.querySelectorAll('img[data-failed="true"][data-retry-src]');
+        failedImgs.forEach(img => {
+            const originalSrc = img.getAttribute('data-retry-src');
+            if (originalSrc) {
+                const retryUrl = originalSrc.includes('?') ? `${originalSrc}&_r=${Date.now()}` : `${originalSrc}?_r=${Date.now()}`;
+                const temp = new Image();
+                temp.onload = () => {
+                    img.src = originalSrc;
+                    img.removeAttribute('data-failed');
+                    img.classList.add('loaded');
+                };
+                temp.src = retryUrl;
+            }
+        });
+    }
+    window.reloadFailedImages = reloadFailedImages;
 
     window.shareCurrentVideo = function () {
         if (state.activeModalItem) {
